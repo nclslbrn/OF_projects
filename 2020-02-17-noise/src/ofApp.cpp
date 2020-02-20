@@ -20,11 +20,11 @@ void ofApp::setup() {
     animFrame = 320;
     width = ofGetWidth();
     height = ofGetHeight();
-    stepX = 4;
-    stepY = 12;
-    radius = stepX;
-    noiseScale = 0.005;
-
+    depth = 64;
+    stepX = 8;
+    stepY = 16;
+    radius = stepX / 2;
+    noiseScale = 0.0075;
     ofSetFrameRate(50);
     ofBackground(255, 255, 255);
 
@@ -33,7 +33,6 @@ void ofApp::setup() {
             Line lineTemp;
             lineTemp.a = ofPoint(x, y, 0);
             lineTemp.b = ofPoint(x + stepX, y, 0);
-
             lines.push_back(lineTemp);
         }
     }
@@ -72,14 +71,14 @@ void ofApp::update() {
             radius * (glm::cos(t * (glm::pi<float>() * 2))),
             radius * (glm::sin(t * (glm::pi<float>() * 2))));
 
-        float scale = 64 * softPlus((yDif + xDif) / 2, t);
+        float scale = depth * pow((yDif + xDif) / 2, 3);
 
         //std::cout << "xDif: " << ofToString(xDif) << endl;
-        float z1 = line.a.y + glm::sin(noise1) * scale;
-        float z2 = line.b.y + glm::sin(noise2) * scale;
+        float y1 = line.a.y + glm::sin(noise1) * scale;
+        float y2 = line.b.y + glm::sin(noise2) * scale;
         Line noisedlineTemp;
-        noisedlineTemp.a = ofPoint(line.a.x, line.a.y, z1);
-        noisedlineTemp.b = ofPoint(line.b.x, line.b.y, z2);
+        noisedlineTemp.a = ofPoint(line.a.x, y1);
+        noisedlineTemp.b = ofPoint(line.b.x, y2);
 
         noisedLines.push_back(noisedlineTemp);
     }
@@ -90,14 +89,25 @@ void ofApp::draw() {
     ofEnableAlphaBlending();
     ofSetColor(50, 50, 50, 120);
     ofSetLineWidth(2);
-    easyCam.begin();
+
     ofPushMatrix();
-    ofTranslate(-width / 2, -height / 2);
-    for (Line line : noisedLines) {
-        ofDrawLine(line.a, line.b);
+    //ofTranslate(0, -height * 0.25, 0);
+    //ofRotateX(320);
+    // ofTranslate(-width / 2, -height / 2);
+    for (int i = 0; i < noisedLines.size() - 1; i += 2) {
+        Line line1 = noisedLines[i];
+        Line line2 = noisedLines[i + 1];
+        /*         
+        mesh.addVertex(line1.a);
+        mesh.addVertex(line2.a);
+        mesh.addVertex(line2.b);
+        mesh.addVertex(line1.b);
+
+         */
+        ofDrawLine(line1.a, line1.b);
+        ofDrawLine(line2.a, line2.b);
     }
     ofPopMatrix();
-    easyCam.end();
 }
 
 //--------------------------------------------------------------
@@ -110,6 +120,9 @@ void ofApp::keyReleased(int key) {
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
+    /*  translateX = ofGetMouseY();
+        std::cout << "translateX: " << ofToString(translateX) << endl;
+    */
 }
 
 //--------------------------------------------------------------

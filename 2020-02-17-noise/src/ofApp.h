@@ -34,6 +34,7 @@ class ofApp : public ofBaseApp {
     float radius;
     int width;
     int height;
+    int depth;
     int stepX;
     int stepY;
 
@@ -41,6 +42,4 @@ class ofApp : public ofBaseApp {
     vector<ofPoint> drawnPoints;
     vector<Line> lines;
     vector<Line> noisedLines;
-
-    ofEasyCam easyCam;
 };
