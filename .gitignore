@@ -35,3 +35,8 @@
 bin/
 obj/
 .vscode/
+Makefile
+addons.make
+config.make
+icon.rc
+vscode_oF.code-workspace
