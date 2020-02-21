@@ -38,4 +38,5 @@ obj/
 Makefile
 config.make
 icon.rc
-vscode_oF.code-workspace
+*.code-workspace
+*.qbs
