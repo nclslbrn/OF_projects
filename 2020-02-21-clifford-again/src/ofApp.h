@@ -9,6 +9,9 @@ class ofApp : public ofBaseApp {
     void update();
     void draw();
 
+    void initConstants();
+    void reinitConstantsButtonClick();
+    void saveConstantsButtonClick();
     void keyPressed(int key);
     void keyReleased(int key);
     void mouseMoved(int x, int y);
@@ -21,7 +24,9 @@ class ofApp : public ofBaseApp {
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
-    ofxButton reinitButton, saveConstants;
+    ofxPanel gui;
+    ofxButton reinitConstantsButton, saveConstantsButton;
+
     // Attractor constants
     float A, B, C, D;
     ofVec2f position;
