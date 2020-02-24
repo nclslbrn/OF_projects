@@ -8,7 +8,7 @@ class ofApp : public ofBaseApp {
     void setup();
     void update();
     void draw();
-
+    void exit();
     void initConstants();
     void reinitConstantsButtonClick();
     void saveConstantsButtonClick();

@@ -28,13 +28,20 @@ void ofApp::setup() {
     // GUI
     reinitConstantsButton.addListener(this, &ofApp::reinitConstantsButtonClick);
     saveConstantsButton.addListener(this, &ofApp::saveConstantsButtonClick);
-    gui.setup("Constants controls");
-    gui.add()
+    gui.setup("Controls");
+    gui.add(reinitConstantsButton.setup("INIT"));
+    gui.add(saveConstantsButton.setup("SAVE"));
 }
+//--------------------------------------------------------------
+void ofApp::exit() {
+    reinitConstantsButton.removeListener(this, &ofApp::reinitConstantsButtonClick);
+    saveConstantsButton.removeListener(this, &ofApp::saveConstantsButtonClick);
+}
+
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    if (i < iterations) {
+    do {
         float xn = glm::sin(A * position.y) + C * glm::cos(A * position.x);
         float yn = glm::sin(B * position.x) + D * glm::cos(B * position.y);
 
@@ -49,9 +56,10 @@ void ofApp::update() {
         position.x = xn;
         position.y = yn;
         i++;
-    } else {
+    } while( i <= iterations);
+    if( i == iterations ) {
         img.save("A" + ofToString(A) + "B" + ofToString(B) + "C" + ofToString(C) + "D" + ofToString(D) + ".png");
-    }
+    } 
 }
 
 //--------------------------------------------------------------
@@ -62,11 +70,17 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::reinitConstantsButtonClick() {
+
+    img.allocate(ofGetWidth(), ofGetHeight(), OF_IMAGE_GRAYSCALE);
+    img.setColor(ofColor::black);
     initConstants();
 }
 //--------------------------------------------------------------
 void ofApp::saveConstantsButtonClick() {
     // TODO
+    std::cout << "X: " << position.x << " Y: " << position.y << endl;
+    std::cout << "I: " << i << endl;
+
 }
 
 //--------------------------------------------------------------
