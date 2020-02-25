@@ -9,6 +9,13 @@ void ofApp::initConstants() {
     std::cout << "A: " << ofToString(A) << " B:" << ofToString(B) << " C:" << ofToString(C) << " D:" << ofToString(D) << endl;
 }
 //--------------------------------------------------------------
+void ofApp::increasePixelBrightness(int x, int y, int amount) {
+    ofColor pxColor = img.getColor(x, y);
+    int pxBrightness = pxColor.getBrightness();
+    pxColor.setBrightness( pxBrightness + amount);
+    img.setColor(x, y, pxColor);
+}
+//--------------------------------------------------------------
 void ofApp::setup() {
     ofSetVerticalSync(true);
 
@@ -46,9 +53,15 @@ void ofApp::update() {
         float xi = (position.x - minX) * ofGetWidth() / (maxX - minX);
         float yi = (position.y - minY) * ofGetHeight() / (maxY - minY);
 
-        // skip the first ten point
+        // skip the first ten points
         if (i > 10) {
-            img.setColor(xi, yi, ofColor::white);
+            increasePixelBrightness(xi-1, yi, 15);
+            increasePixelBrightness(xi, yi-1, 15);
+            increasePixelBrightness(xi+1, yi, 15);
+            increasePixelBrightness(xi, yi+1, 15);
+
+            increasePixelBrightness(xi, yi, 200);
+
         }
         // save for the next iteration
         position.x = xn;
@@ -57,6 +70,7 @@ void ofApp::update() {
 
         img.update();
     } while (i <= iterations);
+
     if (i == iterations) {
         img.save("A_" + ofToString(A) + "_B_" + ofToString(B) + "_C_" + ofToString(C) + "_D_" + ofToString(D) + ".png");
     }
@@ -76,9 +90,7 @@ void ofApp::reinitConstantsButtonClick() {
 }
 //--------------------------------------------------------------
 void ofApp::saveConstantsButtonClick() {
-    // TODO
-    std::cout << "X: " << position.x << " Y: " << position.y << endl;
-    std::cout << "I: " << i << endl;
+    img.save("A_" + ofToString(A) + "_B_" + ofToString(B) + "_C_" + ofToString(C) + "_D_" + ofToString(D) + ".png");
 }
 
 //--------------------------------------------------------------

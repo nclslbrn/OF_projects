@@ -10,6 +10,7 @@ class ofApp : public ofBaseApp {
     void draw();
     void exit();
     void initConstants();
+    void increasePixelBrightness(int x, int y, int amount);
     void reinitConstantsButtonClick();
     void saveConstantsButtonClick();
     void keyPressed(int key);
