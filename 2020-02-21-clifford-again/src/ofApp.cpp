@@ -37,8 +37,6 @@ void ofApp::exit() {
     reinitConstantsButton.removeListener(this, &ofApp::reinitConstantsButtonClick);
     saveConstantsButton.removeListener(this, &ofApp::saveConstantsButtonClick);
 }
-
-
 //--------------------------------------------------------------
 void ofApp::update() {
     do {
@@ -52,14 +50,16 @@ void ofApp::update() {
         if (i > 10) {
             img.setColor(xi, yi, ofColor::white);
         }
-        // save for the next ieration
+        // save for the next iteration
         position.x = xn;
         position.y = yn;
         i++;
-    } while( i <= iterations);
-    if( i == iterations ) {
-        img.save("A" + ofToString(A) + "B" + ofToString(B) + "C" + ofToString(C) + "D" + ofToString(D) + ".png");
-    } 
+
+        img.update();
+    } while (i <= iterations);
+    if (i == iterations) {
+        img.save("A_" + ofToString(A) + "_B_" + ofToString(B) + "_C_" + ofToString(C) + "_D_" + ofToString(D) + ".png");
+    }
 }
 
 //--------------------------------------------------------------
@@ -70,7 +70,6 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::reinitConstantsButtonClick() {
-
     img.allocate(ofGetWidth(), ofGetHeight(), OF_IMAGE_GRAYSCALE);
     img.setColor(ofColor::black);
     initConstants();
@@ -80,7 +79,6 @@ void ofApp::saveConstantsButtonClick() {
     // TODO
     std::cout << "X: " << position.x << " Y: " << position.y << endl;
     std::cout << "I: " << i << endl;
-
 }
 
 //--------------------------------------------------------------
