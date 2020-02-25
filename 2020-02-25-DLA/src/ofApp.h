@@ -4,18 +4,17 @@
 #include "ofMain.h"
 
 class ofApp : public ofBaseApp {
-   public:
-    void setup();
-    void update();
-    void draw();
-    ofVec3f randomPos();
+public:
+  void setup();
+  void update();
+  void draw();
+  ofVec3f randomPos();
+  ofVec3f onRadius();
+  deque<Walker> tree;
+  deque<Walker> walkers;
+  ofEasyCam cam;
 
-    deque<Walker> tree;
-    deque<Walker> walkers;
+  int walkerNum, steps;
+  float walkerSize, decrease, radius;
 
-    int walkerNum;
-    float initSize;
-    float decrease;
-
-    ofEasyCam cam;
 };
