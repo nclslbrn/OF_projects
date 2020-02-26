@@ -1,11 +1,20 @@
 #include "ofApp.h"
 //--------------------------------------------------------------
-void ofApp::initConstants() {
+void ofApp::reset() {
     A = ofRandom(4) - 2;
     B = ofRandom(4) - 2;
     C = ofRandom(4) - 2;
     D = ofRandom(4) - 2;
+    iterations = 50000;
+    step = 100;
+    i = 0;
 
+    imgName = "A_"+ofToString(A)+"_B_"+ofToString(B)+"_C_"+ ofToString(C)+"_D_"+ofToString(A)+".png";
+
+    img.allocate(ofGetWidth(), ofGetHeight(), OF_IMAGE_GRAYSCALE);
+    img.setColor(ofColor::black);
+    img.update();
+    
     std::cout << "A: " << ofToString(A) << " B:" << ofToString(B) << " C:" << ofToString(C) << " D:" << ofToString(D) << endl;
 }
 //--------------------------------------------------------------
@@ -18,9 +27,9 @@ void ofApp::increasePixelBrightness(int x, int y, int amount) {
 //--------------------------------------------------------------
 void ofApp::setup() {
     ofSetVerticalSync(true);
-
+    
     // Generate new constants for attracors
-    initConstants();
+    reset();
     // Set start position
     position.set(0, 0);
     // Set scale for polar coordinate
@@ -29,50 +38,57 @@ void ofApp::setup() {
     maxX = 4.0;
     maxY = maxX * ofGetHeight() / ofGetWidth();
 
-    img.allocate(ofGetWidth(), ofGetHeight(), OF_IMAGE_GRAYSCALE);
-    img.setColor(ofColor::black);
-
     // GUI
     reinitConstantsButton.addListener(this, &ofApp::reinitConstantsButtonClick);
+    saveImageButton.addListener(this, &ofApp::saveImageButtonClick);
     saveConstantsButton.addListener(this, &ofApp::saveConstantsButtonClick);
     gui.setup("Controls");
-    gui.add(reinitConstantsButton.setup("INIT"));
-    gui.add(saveConstantsButton.setup("SAVE"));
+    gui.add(reinitConstantsButton.setup("Reset constant"));
+    gui.add(saveImageButton.setup("Save image"));
+    gui.add(saveConstantsButton.setup("Save constants"));
+
+    //std::string dbFilePath = "constants.json";
+    //bool parsingSuccess = dbFile.open(dbFilePath);
+
 }
 //--------------------------------------------------------------
 void ofApp::exit() {
     reinitConstantsButton.removeListener(this, &ofApp::reinitConstantsButtonClick);
+    saveImageButton.removeListener(this, &ofApp::saveImageButtonClick);
     saveConstantsButton.removeListener(this, &ofApp::saveConstantsButtonClick);
 }
 //--------------------------------------------------------------
 void ofApp::update() {
-    do {
-        float xn = glm::sin(A * position.y) + C * glm::cos(A * position.x);
-        float yn = glm::sin(B * position.x) + D * glm::cos(B * position.y);
+    if( i < iterations ) {
+        for( int j = 0; j < step; j++ ) {
+            float xn = glm::sin(A * position.y) + C * glm::cos(A * position.x);
+            float yn = glm::sin(B * position.x) + D * glm::cos(B * position.y);
 
-        float xi = (position.x - minX) * ofGetWidth() / (maxX - minX);
-        float yi = (position.y - minY) * ofGetHeight() / (maxY - minY);
+            float xi = (position.x - minX) * ofGetWidth() / (maxX - minX);
+            float yi = (position.y - minY) * ofGetHeight() / (maxY - minY);
 
-        // skip the first ten points
-        if (i > 10) {
-            increasePixelBrightness(xi-1, yi, 15);
-            increasePixelBrightness(xi, yi-1, 15);
-            increasePixelBrightness(xi+1, yi, 15);
-            increasePixelBrightness(xi, yi+1, 15);
+            // skip the first ten points
+            if (i > 10) {
+                increasePixelBrightness(xi-1,   yi,     50);
+                increasePixelBrightness(xi,     yi-1,   50);
+                increasePixelBrightness(xi+1,   yi,     50);
+                increasePixelBrightness(xi,     yi+1,   50);
 
-            increasePixelBrightness(xi, yi, 200);
+                increasePixelBrightness(xi,     yi,     170);
 
+            }
+            // save for the next iteration
+            position.x = xn;
+            position.y = yn;
         }
-        // save for the next iteration
-        position.x = xn;
-        position.y = yn;
-        i++;
-
+        i+=step;
         img.update();
-    } while (i <= iterations);
+    } 
 
     if (i == iterations) {
-        img.save("A_" + ofToString(A) + "_B_" + ofToString(B) + "_C_" + ofToString(C) + "_D_" + ofToString(D) + ".png");
+        img.save(imgName);
+        std::cout << "Image generated" << endl;
+        reset();
     }
 }
 
@@ -84,13 +100,19 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::reinitConstantsButtonClick() {
-    img.allocate(ofGetWidth(), ofGetHeight(), OF_IMAGE_GRAYSCALE);
-    img.setColor(ofColor::black);
-    initConstants();
+    reset();
+}
+//--------------------------------------------------------------
+void ofApp::saveImageButtonClick() {
+    img.save(imgName);
+    std::cout << "Image generation : " << ofToString(i) << "/" << ofToString(iterations) << endl;
 }
 //--------------------------------------------------------------
 void ofApp::saveConstantsButtonClick() {
-    img.save("A_" + ofToString(A) + "_B_" + ofToString(B) + "_C_" + ofToString(C) + "_D_" + ofToString(D) + ".png");
+    //if( parsingSuccess ) {
+        //TODO: create constants class with method to get ad save A, B, C & D
+        //dbFile.push_front()
+    //}
 }
 
 //--------------------------------------------------------------
