@@ -18,11 +18,23 @@ ofVec3f ofApp::onRadius() {
 }
 //--------------------------------------------------------------
 void ofApp::setup() {
+
+    ofSetFrameRate(25);
+    ofSetVerticalSync(true);
+    ofEnableDepthTest();
+    ofEnableAlphaBlending();
+    ofEnableSmoothing();
+    ofSetGlobalAmbientColor(ofColor(0, 0, 0));
+    ofSetSmoothLighting(true);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
     radius = min(ofGetWidth(), ofGetHeight()) / 3;
-    steps = 100;
+    steps = 500;
     walkerNum = 500;
-    walkerSize = 8;
-    decrease = 0.95;
+    walkerSize = 10;
+    decrease = 0.93;
+    zRot = 0;
     ofVec3f center = ofVec3f(ofGetWidth() / 2, ofGetHeight() / 2, ofGetHeight() / 2);
     Walker seed = Walker(center, walkerSize);
     tree.push_front(seed);
@@ -31,6 +43,8 @@ void ofApp::setup() {
         Walker newWalker = Walker(newPos, walkerSize);
         walkers.push_front(newWalker);
     }
+    point.setDiffuseColor(ofColor(200.0, 255.0, 255.0));
+    point.setPointLight();
 }
 
 //--------------------------------------------------------------
@@ -38,8 +52,13 @@ void ofApp::update() {
     for (int i = 0; i < walkerNum; i++) {
         for (int t = 0; t <= steps; t++) {
             walkers[i].walk();
-            if (walkers[i].isCloseTo(tree) != -1) {
+            int treeID = walkers[i].isCloseTo(tree);
+
+            if ( treeID != -1) {
+                Branch newBranch = Branch(tree[treeID].pos, walkers[i].pos, walkerSize);
+                branches.push_front(newBranch);
                 tree.push_front(walkers[i]);
+
                 walkerSize *= decrease;
                 walkers[i].pos = onRadius();
                 walkers[i].size = walkerSize;
@@ -47,33 +66,24 @@ void ofApp::update() {
         }
         walkers[i].pos = onRadius();
     }
+    zRot+= 0.1;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
     ofBackground(ofColor::black);
     cam.begin();
+    point.setPosition(0, 0, (float)ofGetHeight() * 0.75);
+    point.enable();
     ofPushMatrix();
+    //ofRotateZ(zRot);
     ofTranslate(-ofGetWidth() / 2, -ofGetHeight() / 2, -ofGetHeight() / 2);
     //--------------------------
     ofSetColor(ofColor::white);
-    for (int i = 0; i < tree.size(); i++) {
-        ofDrawSphere(tree[i].pos.x, tree[i].pos.y, tree[i].pos.z, tree[i].size);
-        /* 
-        if (i + 1 < tree.size()) {
-            ofDrawLine(
-                tree[i].pos.x, tree[i].pos.y, tree[i].pos.z,
-                tree[i + 1].pos.x, tree[i + 1].pos.y, tree[i + 1].pos.z);
-        }
-         */
+    for( int i = 0; i < branches.size(); i++ ) {
+        branches[i].draw();
     }
-
-    ofSetColor(ofColor::blue);
-    for (int i = 0; i < walkers.size(); i++) {
-        ofDrawSphere(walkers[i].pos.x, walkers[i].pos.y, walkers[i].pos.z,
-                     walkers[i].size);
-    }
-    //--------------------------
     ofPopMatrix();
+    point.disable();
     cam.end();
 }

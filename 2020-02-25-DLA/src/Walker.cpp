@@ -15,7 +15,8 @@ Walker::Walker(ofVec3f _pos, float _size) {
 //--------------------------------------------------------------
 
 void Walker::walk() {
-    int randomDirection = (int)ofRandom(1) % 6 + 1;
+    int randomDirection = (int) rand() % 6;
+    //std::cout << randomDirection << " ";
     switch (randomDirection) {
         case 0:
             pos.x += size;
@@ -41,10 +42,11 @@ void Walker::walk() {
 //--------------------------------------------------------------
 int Walker::isCloseTo(deque<Walker> tree) {
     for (int i = 0; i < tree.size(); i++) {
-        float minDist = (size + tree[i].size) / 2;
-        float dx = std::abs(tree[i].pos.x - pos.x);
-        float dy = std::abs(tree[i].pos.y - pos.y);
-        float dz = std::abs(tree[i].pos.z - pos.z);
+        float minDist = (size + tree[i].size) / 1.5;
+        
+        float dx = std::fabs(tree[i].pos.x - pos.x);
+        float dy = std::fabs(tree[i].pos.y - pos.y);
+        float dz = std::fabs(tree[i].pos.z - pos.z);
 
         if (dx <= minDist && dy <= minDist && dz <= minDist) {
             isStuck = true;
