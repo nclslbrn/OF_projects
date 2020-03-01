@@ -1,43 +1,32 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofxGui.h"
-//#include "ofxJSON.h"
+#include "Point.h"
 
 class ofApp : public ofBaseApp {
    public:
     void setup();
     void update();
     void draw();
-    void exit();
     void reset();
-    void increasePixelBrightness(int x, int y, int amount);
-    void reinitConstantsButtonClick();
-    void saveImageButtonClick();
-    void saveConstantsButtonClick();
+    void saveLargeImage(string imgName);
     void keyPressed(int key);
     void keyReleased(int key);
-    void mouseMoved(int x, int y);
-    void mouseDragged(int x, int y, int button);
-    void mousePressed(int x, int y, int button);
-    void mouseReleased(int x, int y, int button);
-    void mouseEntered(int x, int y);
-    void mouseExited(int x, int y);
     void windowResized(int w, int h);
-    void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
-    ofxPanel gui;
-    ofxButton reinitConstantsButton, saveImageButton, saveConstantsButton;
+    ofColor createHue( int n);
     //ofxJSONElement dbFile;
     // Attractor constants
-    float A, B, C, D;
+    double A, B, C, D;
     ofVec2f position;
+    deque<Point> points;
+    float maxSize, minSize;
     // how displacement on pos, displacement counter
-    int iterations, step, i;
+    int iterations, steps, i, width, height;
     // expand coordinate (polar system)
     float minX, minY, maxX, maxY;
     // our canvas
-    ofImage img;
+    ofFbo fbo;
     std::string imgName;
 };
