@@ -36,8 +36,8 @@ void ofApp::setup() {
     iterations = 500000;
     width = 3840;
     height = 3840;
-    steps = 500;
-    maxSize = 2;
+    steps = 1000;
+    maxSize = 12;
     minSize = 0.25;
     // Generate new constants for attracors
     reset();
@@ -65,7 +65,7 @@ void ofApp::update() {
                     Point(
                         ofVec2f(xi, yi), 
                         createHue(i),
-                        ofMap(j, 0, steps, minSize, maxSize)
+                        1
                     )
                 );
             }

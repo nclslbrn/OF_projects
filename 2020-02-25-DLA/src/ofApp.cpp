@@ -32,8 +32,8 @@ void ofApp::setup() {
     radius = min(ofGetWidth(), ofGetHeight()) / 3;
     steps = 500;
     walkerNum = 500;
-    walkerSize = 10;
-    decrease = 0.93;
+    walkerSize = 52;
+    decrease = 0.85;
     zRot = 0;
     ofVec3f center = ofVec3f(ofGetWidth() / 2, ofGetHeight() / 2, ofGetHeight() / 2);
     Walker seed = Walker(center, walkerSize);
