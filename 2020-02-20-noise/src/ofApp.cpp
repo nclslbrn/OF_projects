@@ -15,25 +15,30 @@ float ofApp::softPlus(float q, float p) {
 }
 //--------------------------------------------------------------
 void ofApp::setup() {
+    ofEnableLighting();
+    ofEnableDepthTest();
+    ofEnableSmoothing();
+    ofSetSmoothLighting(true);
+    ofSetGlobalAmbientColor(ofFloatColor(0, 0, 0));
+
     animFrame = 320;
-    width = 160;
-    height = 90;
+    width = 200;
+    height = 112;
     depth = 32;
     noiseRadius = 0.5;
-    noiseScale = 0.05;
+    noiseScale = 0.035;
     mainCam.setPosition(0, 0, 80);
-    pointLight.setPointLight();
-    pointLight.setPosition(0, ofGetHeight(), ofGetHeight());
+
+    //pointLight.setPointLight();
+    pointLight.setup();
+    pointLight.enable();
+    pointLight.setPosition(16, 9, 340);
     pointLight.setDiffuseColor(ofColor(250, 235, 215));
-    ofSetFrameRate(50);
-    ofBackground(0, 0, 0);
 
-    ofEnableDepthTest();
-
-    ofSetGlobalAmbientColor(ofColor(250, 235, 215));
-    ofSetSmoothLighting(true);
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    material.setAmbientColor(ofColor(0, 0, 0));
+    material.setDiffuseColor(ofColor(0, 0, 0));
+    material.setSpecularColor(ofColor(150, 150, 150));
+    material.setShininess(30);
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
@@ -89,17 +94,63 @@ void ofApp::update() {
             i++;
         }
     }
+    setNormals(mainMesh);
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    pointLight.enable();
+    ofBackground(ofColor::black);
+    /* ofEnableLighting();
+    pointLight.enable(); */
     mainCam.begin();
-    // mainMesh.drawVertices();
-    //mainMesh.drawFaces();
+    material.begin();
+    mainMesh.drawFaces();
+    ofSetColor(0, 0, 0);
+    mainMesh.drawVertices();
     mainMesh.drawWireframe();
+    material.end();
     mainCam.end();
-    pointLight.disable();
+}
+//--------------------------------------------------------------
+
+void ofApp::setNormals(ofMesh &mesh) {
+    mesh.clearNormals();
+
+    //The number of the vertices
+    int nV = mesh.getNumVertices();
+
+    //The number of the triangles
+    int nT = mesh.getNumIndices() / 3;
+
+    vector<ofPoint> norm(nV);  //Array for the normals
+
+    //Scan all the triangles. For each triangle add its
+    //normal to norm's vectors of triangle's vertices
+    for (int t = 0; t < nT; t++) {
+        //Get indices of the triangle t
+        int i1 = mesh.getIndex(3 * t);
+        int i2 = mesh.getIndex(3 * t + 1);
+        int i3 = mesh.getIndex(3 * t + 2);
+
+        //Get vertices of the triangle
+        const ofPoint &v1 = mesh.getVertex(i1);
+        const ofPoint &v2 = mesh.getVertex(i2);
+        const ofPoint &v3 = mesh.getVertex(i3);
+
+        //Compute the triangle's normal
+        ofPoint dir = ((v2 - v1).crossed(v3 - v1)).normalized();
+
+        //Accumulate it to norm array for i1, i2, i3
+        norm[i1] += dir;
+        norm[i2] += dir;
+        norm[i3] += dir;
+    }
+
+    //Normalize the normal's length
+    for (int i = 0; i < nV; i++) {
+        norm[i].normalize();
+        mesh.addNormal(norm[i]);
+    }
 }
 
 //--------------------------------------------------------------

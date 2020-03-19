@@ -19,11 +19,13 @@ class ofApp : public ofBaseApp {
     void windowResized(int w, int h);
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
+    void setNormals(ofMesh &mesh);
     float ease(float p);
     float softPlus(float q, float p);
 
     ofLight pointLight;
     ofMesh mainMesh;
+    ofMaterial material;
     ofEasyCam mainCam;
 
     float noiseScale, noiseRadius;
