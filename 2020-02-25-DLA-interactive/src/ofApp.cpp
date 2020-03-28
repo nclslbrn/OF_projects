@@ -5,22 +5,23 @@ ofVec3f ofApp::randomPos() {
                    ofRandom(ofGetHeight()));
 }
 //--------------------------------------------------------------
-ofVec3f ofApp::onRadius() {
+ofVec3f ofApp::onEmitter() {
     ofVec3f center = ofVec3f(0, 0, 0);
     float theta = ofRandom(1) * glm::pi<float>() * 2;
     float phi = glm::acos(1 - ofRandom(1) * 20);
 
-    center.x += glm::sin(phi) * glm::cos(theta) * radius;
-    center.y += glm::sin(phi) * glm::sin(theta) * radius;
-    center.z += glm::cos(phi) * radius;
+    center.x += glm::sin(phi) * glm::cos(theta) * emitterDistance;
+    center.y += glm::sin(phi) * glm::sin(theta) * emitterDistance;
+    center.z += glm::cos(phi) * emitterDistance;
 
     return center;
 }
 //--------------------------------------------------------------
-ofColor ofApp::indexColor(float indexPercent) {
+ofColor ofApp::indexColor(int index) {
+    float cursor = ofMap(index, 0, tree.size(), 0, 1);
     ofColor startColor = ofColor::steelBlue;
     ofColor endColor = ofColor::tomato;
-    return startColor.getLerped(endColor, indexPercent);
+    return startColor.getLerped(endColor, cursor);
 }
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -60,12 +61,13 @@ void ofApp::update() {
                 if (treeID != -1) {
                     tree.push_front(walkers[i]);
 
-                    walkerSize *= decrease;
-                    walkers[i].pos = onRadius();
+                    walkerSize *= decreaseWalkerSize;
+                    emitterDistance *= increaseEmitterDistance;
+                    walkers[i].pos = onEmitter();
                     walkers[i].size = walkerSize;
                 }
             }
-            walkers[i].pos = onRadius();
+            walkers[i].pos = onEmitter();
         }
     }
 }
@@ -85,13 +87,12 @@ void ofApp::draw() {
     ofRotateZ(zRot);
 
     for (int i = 0; i < tree.size(); i++) {
-        //ofPushStyle();
-        ofFill();
-        ofSetColor(indexColor(i / tree.size()));
+        ofPushStyle();
+        ofSetColor(indexColor(i));
         ofDrawIcoSphere(
             ofPoint(tree[i].pos.x, tree[i].pos.y, tree[i].pos.z),
             tree[i].size);
-        //ofPopStyle();
+        ofPopStyle();
     }
 
     ofPopMatrix();
@@ -108,17 +109,26 @@ void ofApp::initGui() {
     walkerNum.addListener(this, &ofApp::walkerNumChanged);
     steps.addListener(this, &ofApp::stepsValueChaged);
     initWalkerSize.addListener(this, &ofApp::initWalkersSizeChanged);
-    decrease.addListener(this, &ofApp::decreaseValueChanged);
-    radius.addListener(this, &ofApp::radiusValueChanged);
+    decreaseWalkerSize.addListener(this, &ofApp::decreaseValueChanged);
+    initEmitterDistance.addListener(this, &ofApp::emitterDistanceChanged);
+    increaseEmitterDistance.addListener(this, &ofApp::increaseValueChanged);
     treeSize.addListener(this, &ofApp::treeSizeChanged);
     gui.setup("PARAMETERS");
 
-    gui.add(walkerNum.set("walkerNum", 50, 100, 500));
-    gui.add(steps.set("steps", 150, 0, 1000));
-    gui.add(initWalkerSize.set("initWalkerSize", 32, 24, 76));
-    gui.add(decrease.set("decrease", 1, 0.7, 1));
-    gui.add(radius.set("radius", 480, 320, 720));
-    gui.add(treeSize.set("treeSize", 500, 500, 10000));
+    gui.add(walkerNum.set(
+        "Walker moved", 50, 100, 500));
+    gui.add(steps.set(
+        "Move step", 150, 0, 1000));
+    gui.add(initWalkerSize.set(
+        "W. init size", 32, 24, 76));
+    gui.add(decreaseWalkerSize.set(
+        "Decrease w. size", 1, 0.7, 1));
+    gui.add(initEmitterDistance.set(
+        "Emitter dist.", 480, 320, 720));
+    gui.add(increaseEmitterDistance.set(
+        "Increase emit. dist.", 1.05, 1, 1.25));
+    gui.add(treeSize.set(
+        "Total w.", 500, 500, 10000));
 }
 //--------------------------------------------------------------
 void ofApp::init() {
@@ -126,12 +136,13 @@ void ofApp::init() {
     tree.clear();
     walkers.clear();
     walkerSize = initWalkerSize;
+    emitterDistance = initEmitterDistance;
     ofVec3f center = ofVec3f(0, 0, 0);
     Walker seed = Walker(center, walkerSize);
     tree.push_front(seed);
 
     for (int i = 0; i < walkerNum; i++) {
-        ofVec3f newPos = onRadius();
+        ofVec3f newPos = onEmitter();
         Walker newWalker = Walker(newPos, walkerSize);
         walkers.push_front(newWalker);
     }
@@ -149,11 +160,15 @@ void ofApp::initWalkersSizeChanged(float& walkerSize) {
     init();
 }
 //--------------------------------------------------------------
-void ofApp::decreaseValueChanged(float& decrease) {
+void ofApp::decreaseValueChanged(float& decreaseWalkerSize) {
     init();
 }
 //--------------------------------------------------------------
-void ofApp::radiusValueChanged(float& radius) {
+void ofApp::emitterDistanceChanged(float& initEmitterDistance) {
+    init();
+}
+//--------------------------------------------------------------
+void ofApp::increaseValueChanged(float& increaseEmitterDistance) {
     init();
 }
 //--------------------------------------------------------------
