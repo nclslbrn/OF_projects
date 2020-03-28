@@ -28,6 +28,6 @@ class ofApp : public ofBaseApp {
     ofMaterial material;
     ofEasyCam mainCam;
 
-    float noiseScale, noiseRadius;
+    float noiseScale, noiseRadius, zRot;
     int animFrame, width, height, depth;
 };

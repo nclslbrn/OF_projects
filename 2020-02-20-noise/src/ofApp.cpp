@@ -22,33 +22,35 @@ void ofApp::setup() {
     ofSetGlobalAmbientColor(ofFloatColor(0, 0, 0));
 
     animFrame = 320;
-    width = 200;
-    height = 112;
-    depth = 32;
-    noiseRadius = 0.5;
-    noiseScale = 0.035;
-    mainCam.setPosition(0, 0, 80);
+    width = 256;
+    height = 256;
+    depth = 24;
+    noiseRadius = 0.25;
+    noiseScale = 0.05;
+    mainCam.setPosition(0, -100, depth);
+    mainCam.lookAt(ofVec3f(0, 0, 0));
 
     //pointLight.setPointLight();
     pointLight.setup();
     pointLight.enable();
-    pointLight.setPosition(16, 9, 340);
+    pointLight.setPosition(0, 0, 340);
     pointLight.setDiffuseColor(ofColor(250, 235, 215));
 
-    material.setAmbientColor(ofColor(0, 0, 0));
+    material.setAmbientColor(ofColor(25, 25, 25));
     material.setDiffuseColor(ofColor(0, 0, 0));
     material.setSpecularColor(ofColor(150, 150, 150));
-    material.setShininess(30);
+    material.setShininess(5);
 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             mainMesh.addVertex(ofPoint(x - width / 2, y - height / 2));
-
+            /* 
             if (y % 2 == 0 || x % 2 == 0) {
                 mainMesh.addColor(ofFloatColor(0, 0, 0));
             } else {
                 mainMesh.addColor(ofFloatColor(255, 255, 255));
-            }
+            } 
+            */
         }
     }
     for (int y = 0; y < height - 1; y++) {
@@ -95,21 +97,30 @@ void ofApp::update() {
         }
     }
     setNormals(mainMesh);
+    zRot += 0.1;
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
     ofBackground(ofColor::black);
-    /* ofEnableLighting();
-    pointLight.enable(); */
+    ofEnableLighting();
+    pointLight.enable();
     mainCam.begin();
+
+    ofPushMatrix();
+    ofRotateZ(zRot);
+
     material.begin();
-    mainMesh.drawFaces();
-    ofSetColor(0, 0, 0);
-    mainMesh.drawVertices();
-    mainMesh.drawWireframe();
+    mainMesh.draw();
     material.end();
+
+    ofSetColor(0, 0, 0);
+    mainMesh.drawWireframe();
+
+    ofPopMatrix();
+
     mainCam.end();
+    ofDisableLighting();
 }
 //--------------------------------------------------------------
 
