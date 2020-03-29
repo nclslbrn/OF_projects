@@ -19,39 +19,50 @@ ofVec3f ofApp::onEmitter() {
 //--------------------------------------------------------------
 ofColor ofApp::indexColor(int index) {
     float cursor = ofMap(index, 0, tree.size(), 0, 1);
-    ofColor startColor = ofColor::steelBlue;
-    ofColor endColor = ofColor::tomato;
+    ofColor startColor = ofColor(41, 128, 185, 255);
+    ofColor endColor = ofColor(192, 57, 43, 255);
     return startColor.getLerped(endColor, cursor);
 }
 //--------------------------------------------------------------
 void ofApp::setup() {
     ofSetVerticalSync(true);
     ofEnableSmoothing();
-    //ofSetGlobalAmbientColor(ofColor(150, 150, 150));
+    ofSetGlobalAmbientColor(ofColor(150, 150, 150));
     ofSetSmoothLighting(true);
-    //ofDisableArbTex();
-    //glShadeModel(GL_FLAT);
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
+    ofDisableArbTex();
+    ofEnableDepthTest();
 
-    initGui();
+    initDatGui();
     init();
 
     zRot = 0;
     xRot = 0;
-    zoom = 0;
+    zoom = ofGetHeight() / 4;
     mouseScrollSensivity = 16;
 
-    pointLight.setPointLight();
-    pointLight.setDiffuseColor(ofFloatColor(.85, .85, .85));
-    pointLight.setSpecularColor(ofFloatColor(1, 1, 1));
-    pointLight.setPosition(0, 0, ofGetHeight() * 2);
+    cam.setupPerspective();
+    cam.setPosition(0, 0, ofGetHeight());
+    cam.lookAt(ofVec3f(0, 0, 0));
 
-    ofSetSphereResolution(24);
+    pointLight.setPointLight();
+    /* pointLight.setAmbientColor(ofFloatColor(.5, .5, .5));
+    pointLight.setDiffuseColor(ofFloatColor(.6, .6, .6));*/
+    pointLight.setSpecularColor(ofFloatColor(255, 255, 255));
+    pointLight.setPosition(0, -ofGetHeight(), ofGetHeight() / 2);
+
+    treeMat.setShininess(15);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
+    /* walkerNumSlider->update();
+    stepsSlider->update();
+    initWalkerSizeSlider->update();
+    decreaseWalkerSizeSlider->update();
+    initEmitterDistanceSlider->update();
+    increaseEmitterDistanceSlider->update();
+    treeSizeSlider->update(); */
+
     if (tree.size() < treeSize) {
         for (int i = 0; i < walkerNum; i++) {
             for (int t = 0; t <= steps; t++) {
@@ -76,28 +87,32 @@ void ofApp::update() {
 void ofApp::draw() {
     ofBackground(ofColor::black);
     ofDisableDepthTest();
-    gui.draw();
-    ofEnableDepthTest();
+
+    cam.begin();
     ofEnableLighting();
     pointLight.enable();
 
     ofPushMatrix();
-    ofTranslate(ofGetWidth() / 2, ofGetHeight() / 2, zoom);
+    ofTranslate(0, 0, zoom);
     ofRotateX(xRot);
     ofRotateZ(zRot);
 
     for (int i = 0; i < tree.size(); i++) {
         ofPushStyle();
-        ofSetColor(indexColor(i));
+        treeMat.setDiffuseColor(indexColor(i));
+        treeMat.begin();
         ofDrawIcoSphere(
             ofPoint(tree[i].pos.x, tree[i].pos.y, tree[i].pos.z),
             tree[i].size);
+        treeMat.end();
         ofPopStyle();
     }
 
     ofPopMatrix();
     pointLight.disable();
+
     ofDisableLighting();
+    cam.end();
 
     ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL_BILLBOARD);
     ofDrawBitmapStringHighlight(
@@ -106,6 +121,8 @@ void ofApp::draw() {
 }
 //--------------------------------------------------------------
 void ofApp::initGui() {
+    /* ofxGui first setup
+    
     walkerNum.addListener(this, &ofApp::walkerNumChanged);
     steps.addListener(this, &ofApp::stepsValueChaged);
     initWalkerSize.addListener(this, &ofApp::initWalkersSizeChanged);
@@ -124,11 +141,33 @@ void ofApp::initGui() {
     gui.add(decreaseWalkerSize.set(
         "Decrease w. size", 1, 0.7, 1));
     gui.add(initEmitterDistance.set(
-        "Emitter dist.", 480, 320, 720));
+        "Emitter dist.", 376, 320, 720));
     gui.add(increaseEmitterDistance.set(
-        "Increase emit. dist.", 1.05, 1, 1.25));
+        "Increase emit. dist.", 1.0075, 1, 1.25));
     gui.add(treeSize.set(
         "Total w.", 500, 500, 10000));
+    */
+}
+//--------------------------------------------------------------
+void ofApp::initDatGui() {
+    walkerNum.set("walkerNum", 50, 100, 500);
+    steps.set("steps", 150, 0, 1000);
+    initWalkerSize.set("initWalkerSize", 32, 24, 76);
+    decreaseWalkerSize.set("decreaseWalkerSize", 1, 0.7, 1);
+    initEmitterDistance.set("initEmitterDistance", 376, 320, 720);
+    increaseEmitterDistance.set("increaseEmitterDistance", 1.0075, 1, 1.25);
+    treeSize.set("treeSize", 500, 500, 10000);
+
+    gui = new ofxDatGui(ofxDatGuiAnchor::TOP_LEFT);
+    gui->addLabel("DLA parameters");
+    gui->addSlider(walkerNum);
+    gui->addSlider(steps);
+    gui->addSlider(initWalkerSize);
+    gui->addSlider(decreaseWalkerSize);
+    gui->addSlider(initEmitterDistance);
+    gui->addSlider(increaseEmitterDistance);
+    gui->addSlider(treeSize);
+    gui->onSliderEvent(this, &ofApp::onSliderEvent);
 }
 //--------------------------------------------------------------
 void ofApp::init() {
@@ -147,37 +186,24 @@ void ofApp::init() {
         walkers.push_front(newWalker);
     }
 }
+
 //--------------------------------------------------------------
-void ofApp::walkerNumChanged(int& walkerNum) {
-    init();
-}
-//--------------------------------------------------------------
-void ofApp::stepsValueChaged(int& steps) {
-    //init();
-}
-//--------------------------------------------------------------
-void ofApp::initWalkersSizeChanged(float& walkerSize) {
-    init();
-}
-//--------------------------------------------------------------
-void ofApp::decreaseValueChanged(float& decreaseWalkerSize) {
-    init();
-}
-//--------------------------------------------------------------
-void ofApp::emitterDistanceChanged(float& initEmitterDistance) {
-    init();
-}
-//--------------------------------------------------------------
-void ofApp::increaseValueChanged(float& increaseEmitterDistance) {
-    init();
-}
-//--------------------------------------------------------------
-void ofApp::treeSizeChanged(int& treeSize) {
+
+void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
+    string param = e.target->getName();
+    if (
+        param == "walkerNum" ||
+        param == "walkerSize" ||
+        param == "decreaseWalkerSize" ||
+        param == "initEmitterDistance" ||
+        param == "increaseEmitterDistance") {
+        init();
+    }
 }
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
-    xRot = ofMap(y, 0, ofGetHeight(), 0, 360);
     zRot = ofMap(x, 0, ofGetWidth(), 0, 360);
+    xRot = ofMap(y, 0, ofGetHeight(), 0, 360);
 }
 //--------------------------------------------------------------
 void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY) {
