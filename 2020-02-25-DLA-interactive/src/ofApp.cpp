@@ -30,7 +30,8 @@ void ofApp::setup() {
     ofSetGlobalAmbientColor(ofColor(150, 150, 150));
     ofSetSmoothLighting(true);
     ofDisableArbTex();
-    ofEnableDepthTest();
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 
     initDatGui();
     init();
@@ -40,30 +41,34 @@ void ofApp::setup() {
     zoom = ofGetHeight() / 4;
     mouseScrollSensivity = 16;
 
-    cam.setupPerspective();
     cam.setPosition(0, 0, ofGetHeight());
     cam.lookAt(ofVec3f(0, 0, 0));
 
-    pointLight.setPointLight();
-    /* pointLight.setAmbientColor(ofFloatColor(.5, .5, .5));
-    pointLight.setDiffuseColor(ofFloatColor(.6, .6, .6));*/
-    pointLight.setSpecularColor(ofFloatColor(255, 255, 255));
-    pointLight.setPosition(0, -ofGetHeight(), ofGetHeight() / 2);
+    ofEnableLighting();
+    // white light
+    wLight.setPointLight();
+    wLight.setDiffuseColor(ofFloatColor(1, 1, 1));
+    wLight.setPosition(0, -ofGetHeight(), ofGetHeight() / 2);
+    wLight.enable();
 
-    treeMat.setShininess(15);
+    // orange light
+    oLight.setPointLight();
+    oLight.setDiffuseColor(ofFloatColor(1, 0.75, 0));
+    oLight.setPosition(-ofGetWidth(), -ofGetWidth() / 2, 0);
+    oLight.enable();
+
+    // blue light
+    bLight.setPointLight();
+    bLight.setDiffuseColor(ofFloatColor(0, 0, 1));
+    bLight.setPosition(ofGetWidth(), ofGetWidth() / 2, 0);
+    bLight.enable();
+
+    treeMat.setShininess(128);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    /* walkerNumSlider->update();
-    stepsSlider->update();
-    initWalkerSizeSlider->update();
-    decreaseWalkerSizeSlider->update();
-    initEmitterDistanceSlider->update();
-    increaseEmitterDistanceSlider->update();
-    treeSizeSlider->update(); */
-
-    if (tree.size() < treeSize) {
+    if (tree.size() < treeSize && !isExporting) {
         for (int i = 0; i < walkerNum; i++) {
             for (int t = 0; t <= steps; t++) {
                 walkers[i].walk();
@@ -85,12 +90,10 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    ofBackground(ofColor::black);
-    ofDisableDepthTest();
+    ofBackgroundGradient(ofColor(50, 50, 50), ofColor::black);
+    ofEnableDepthTest();
 
     cam.begin();
-    ofEnableLighting();
-    pointLight.enable();
 
     ofPushMatrix();
     ofTranslate(0, 0, zoom);
@@ -98,67 +101,40 @@ void ofApp::draw() {
     ofRotateZ(zRot);
 
     for (int i = 0; i < tree.size(); i++) {
-        ofPushStyle();
         treeMat.setDiffuseColor(indexColor(i));
         treeMat.begin();
         ofDrawIcoSphere(
             ofPoint(tree[i].pos.x, tree[i].pos.y, tree[i].pos.z),
             tree[i].size);
         treeMat.end();
-        ofPopStyle();
     }
 
     ofPopMatrix();
-    pointLight.disable();
 
-    ofDisableLighting();
     cam.end();
 
     ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL_BILLBOARD);
     ofDrawBitmapStringHighlight(
         ofToString(tree.size()) + "/" + ofToString(treeSize),
         ofVec3f(0, ofGetHeight(), 0));
-}
-//--------------------------------------------------------------
-void ofApp::initGui() {
-    /* ofxGui first setup
-    
-    walkerNum.addListener(this, &ofApp::walkerNumChanged);
-    steps.addListener(this, &ofApp::stepsValueChaged);
-    initWalkerSize.addListener(this, &ofApp::initWalkersSizeChanged);
-    decreaseWalkerSize.addListener(this, &ofApp::decreaseValueChanged);
-    initEmitterDistance.addListener(this, &ofApp::emitterDistanceChanged);
-    increaseEmitterDistance.addListener(this, &ofApp::increaseValueChanged);
-    treeSize.addListener(this, &ofApp::treeSizeChanged);
-    gui.setup("PARAMETERS");
 
-    gui.add(walkerNum.set(
-        "Walker moved", 50, 100, 500));
-    gui.add(steps.set(
-        "Move step", 150, 0, 1000));
-    gui.add(initWalkerSize.set(
-        "W. init size", 32, 24, 76));
-    gui.add(decreaseWalkerSize.set(
-        "Decrease w. size", 1, 0.7, 1));
-    gui.add(initEmitterDistance.set(
-        "Emitter dist.", 376, 320, 720));
-    gui.add(increaseEmitterDistance.set(
-        "Increase emit. dist.", 1.0075, 1, 1.25));
-    gui.add(treeSize.set(
-        "Total w.", 500, 500, 10000));
-    */
+    // Fix black ofxDatGui
+    // https://github.com/braitsch/ofxDatGui/issues/111#issuecomment-264457723
+    ofDisableDepthTest();
 }
 //--------------------------------------------------------------
+
 void ofApp::initDatGui() {
     walkerNum.set("walkerNum", 50, 100, 500);
-    steps.set("steps", 150, 0, 1000);
+    steps.set("steps", 150, 15, 200);
     initWalkerSize.set("initWalkerSize", 32, 24, 76);
-    decreaseWalkerSize.set("decreaseWalkerSize", 1, 0.7, 1);
-    initEmitterDistance.set("initEmitterDistance", 376, 320, 720);
-    increaseEmitterDistance.set("increaseEmitterDistance", 1.0075, 1, 1.25);
+    decreaseWalkerSize.set("decreaseWalkerSize", 0.99, 0.95, 1);
+    initEmitterDistance.set("initEmitterDistance", 300, 220, 720);
+    increaseEmitterDistance.set("increaseEmitterDistance", 1.0075, 1, 1.05);
     treeSize.set("treeSize", 500, 500, 10000);
 
     gui = new ofxDatGui(ofxDatGuiAnchor::TOP_LEFT);
+    gui->setTheme(new ofxDatGuiThemeSmoke());
     gui->addLabel("DLA parameters");
     gui->addSlider(walkerNum);
     gui->addSlider(steps);
@@ -167,11 +143,14 @@ void ofApp::initDatGui() {
     gui->addSlider(initEmitterDistance);
     gui->addSlider(increaseEmitterDistance);
     gui->addSlider(treeSize);
+    gui->addButton("Export");
     gui->onSliderEvent(this, &ofApp::onSliderEvent);
+    gui->onButtonEvent(this, &ofApp::onButtonEvent);
 }
 //--------------------------------------------------------------
 void ofApp::init() {
     /* erase previous computed element */
+    isExporting = false;
     tree.clear();
     walkers.clear();
     walkerSize = initWalkerSize;
@@ -208,4 +187,29 @@ void ofApp::mouseMoved(int x, int y) {
 //--------------------------------------------------------------
 void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY) {
     zoom += (scrollY * mouseScrollSensivity);
+}
+//--------------------------------------------------------------
+void ofApp::onButtonEvent(ofxDatGuiButtonEvent e) {
+    std::cout << "Button clicked" << endl;
+    exportTree();
+}
+//--------------------------------------------------------------
+void ofApp::exportTree() {
+    isExporting = true;
+    string path = "output/";
+    string fileName = "DLA-tree-" + ofGetTimestampString() + ".csv";
+    csv.createFile(path + fileName);
+
+    for (int i = 0; i < tree.size(); i++) {
+        ofxCsvRow& row = csv.getRow(i);
+        row.setFloat(0, tree[i].size);
+        row.setFloat(1, tree[i].pos.x);
+        row.setFloat(2, tree[i].pos.y);
+        row.setFloat(3, tree[i].pos.z);
+
+        csv.addRow(row);
+    }
+    csv.save(path + fileName);
+    isExporting = false;
+    std::cout << "Exporting" << endl;
 }

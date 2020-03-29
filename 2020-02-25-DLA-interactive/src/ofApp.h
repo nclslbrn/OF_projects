@@ -1,6 +1,7 @@
 #pragma once
 #include "Walker.h"
 #include "ofMain.h"
+#include "ofxCsv.h"
 #include "ofxDatGui.h"
 
 class ofApp : public ofBaseApp {
@@ -15,6 +16,8 @@ class ofApp : public ofBaseApp {
     void mouseMoved(int x, int y);
     void mouseScrolled(int x, int y, float scrollX, float scrollY);
     void onSliderEvent(ofxDatGuiSliderEvent e);
+    void onButtonEvent(ofxDatGuiButtonEvent e);
+    void exportTree();
 
     ofVec3f randomPos();
     ofVec3f onEmitter();
@@ -22,7 +25,7 @@ class ofApp : public ofBaseApp {
 
     deque<Walker> tree;
     deque<Walker> walkers;
-    ofLight pointLight;
+    ofLight wLight, oLight, bLight;
     ofMaterial treeMat;
     ofCamera cam;
 
@@ -33,6 +36,10 @@ class ofApp : public ofBaseApp {
     ofParameter<float> initEmitterDistance;
     ofParameter<float> increaseEmitterDistance;
 
+    ofxCsv csv;
+    ofxCsv csvRecorder;
+
     float walkerSize, xRot, zRot, emitterDistance;
     int zoom, mouseScrollSensivity;
+    bool isExporting;
 };
