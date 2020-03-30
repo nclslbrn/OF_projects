@@ -33,6 +33,10 @@ void ofApp::setup() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
+    isExporting = false;
+    increaseEmitterDistance = 1.05;
+    decreaseWalkerSize = 0.995;
+
     initDatGui();
     init();
 
@@ -46,6 +50,7 @@ void ofApp::setup() {
 
     ofEnableLighting();
     // white light
+    isExporting = false;
     wLight.setPointLight();
     wLight.setDiffuseColor(ofFloatColor(1, 1, 1));
     wLight.setPosition(0, -ofGetHeight(), ofGetHeight() / 2);
@@ -63,7 +68,7 @@ void ofApp::setup() {
     bLight.setPosition(ofGetWidth(), ofGetWidth() / 2, 0);
     bLight.enable();
 
-    treeMat.setShininess(128);
+    treeMat.setShininess(0.1);
 }
 
 //--------------------------------------------------------------
@@ -103,7 +108,7 @@ void ofApp::draw() {
     for (int i = 0; i < tree.size(); i++) {
         treeMat.setDiffuseColor(indexColor(i));
         treeMat.begin();
-        ofDrawIcoSphere(
+        ofDrawBox(
             ofPoint(tree[i].pos.x, tree[i].pos.y, tree[i].pos.z),
             tree[i].size);
         treeMat.end();
@@ -115,8 +120,8 @@ void ofApp::draw() {
 
     ofSetDrawBitmapMode(OF_BITMAPMODE_MODEL_BILLBOARD);
     ofDrawBitmapStringHighlight(
-        ofToString(tree.size()) + "/" + ofToString(treeSize),
-        ofVec3f(0, ofGetHeight(), 0));
+        ofToString(tree.size()) + "/" + ofToString(treeSize) + factorInfo,
+        ofVec3f(0, ofGetHeight() - 5, 0));
 
     // Fix black ofxDatGui
     // https://github.com/braitsch/ofxDatGui/issues/111#issuecomment-264457723
@@ -125,13 +130,13 @@ void ofApp::draw() {
 //--------------------------------------------------------------
 
 void ofApp::initDatGui() {
-    walkerNum.set("walkerNum", 50, 100, 500);
-    steps.set("steps", 150, 15, 200);
-    initWalkerSize.set("initWalkerSize", 32, 24, 76);
-    decreaseWalkerSize.set("decreaseWalkerSize", 0.99, 0.95, 1);
-    initEmitterDistance.set("initEmitterDistance", 300, 220, 720);
-    increaseEmitterDistance.set("increaseEmitterDistance", 1.0075, 1, 1.05);
-    treeSize.set("treeSize", 500, 500, 10000);
+    walkerNum.set("Living w.", 200, 100, 500);
+    steps.set("W. step", 150, 15, 200);
+    initWalkerSize.set("W. size", 24, 12, 76);
+    decreaseParam.set("Shrink w. size", 50, 0, 100);
+    initEmitterDistance.set("Emitter distance", 100, 50, 300);
+    increaseParam.set("Grow emit. dist.", 50, 0, 100);
+    treeSize.set("Dead w.", 500, 500, 10000);
 
     gui = new ofxDatGui(ofxDatGuiAnchor::TOP_LEFT);
     gui->setTheme(new ofxDatGuiThemeSmoke());
@@ -139,18 +144,20 @@ void ofApp::initDatGui() {
     gui->addSlider(walkerNum);
     gui->addSlider(steps);
     gui->addSlider(initWalkerSize);
-    gui->addSlider(decreaseWalkerSize);
+    gui->addSlider(decreaseParam);
     gui->addSlider(initEmitterDistance);
-    gui->addSlider(increaseEmitterDistance);
+    gui->addSlider(increaseParam);
     gui->addSlider(treeSize);
-    gui->addButton("Export");
+    gui->addButton("EXPORT DLA TO CSV");
     gui->onSliderEvent(this, &ofApp::onSliderEvent);
     gui->onButtonEvent(this, &ofApp::onButtonEvent);
 }
 //--------------------------------------------------------------
 void ofApp::init() {
     /* erase previous computed element */
-    isExporting = false;
+
+    factorInfo = getInfoString();
+
     tree.clear();
     walkers.clear();
     walkerSize = initWalkerSize;
@@ -171,11 +178,23 @@ void ofApp::init() {
 void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
     string param = e.target->getName();
     if (
-        param == "walkerNum" ||
-        param == "walkerSize" ||
-        param == "decreaseWalkerSize" ||
-        param == "initEmitterDistance" ||
-        param == "increaseEmitterDistance") {
+        param == "Living w." ||
+        param == "W. step" ||
+        param == "W. size" ||
+        param == "Shrink w. size" ||
+        param == "Emitter distance" ||
+        param == "Grow emit. dist.") {
+        if (param == "Shrink w. size") {
+            std::printf("Shrink %f\n", decreaseParam);
+            decreaseWalkerSize = 1.00f - decreaseParam / 100;
+            factorInfo = getInfoString();
+        }
+        if (param == "Grow emit. dist.") {
+            std::printf("Grow %f\n", increaseParam);
+            increaseEmitterDistance = 1.000f + increaseParam / 1000;
+            factorInfo = getInfoString();
+        }
+
         init();
     }
 }
@@ -190,9 +209,16 @@ void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY) {
 }
 //--------------------------------------------------------------
 void ofApp::onButtonEvent(ofxDatGuiButtonEvent e) {
-    std::cout << "Button clicked" << endl;
     exportTree();
 }
+//--------------------------------------------------------------
+string ofApp::getInfoString() {
+    string shrinkWalkerInfo = "Shrink walker size: " + ofToString(decreaseWalkerSize);
+    string growEmitterInfo = "Grow emitter distance: " + ofToString(increaseEmitterDistance);
+
+    return " | " + shrinkWalkerInfo + " | " + growEmitterInfo;
+}
+
 //--------------------------------------------------------------
 void ofApp::exportTree() {
     isExporting = true;
@@ -211,5 +237,4 @@ void ofApp::exportTree() {
     }
     csv.save(path + fileName);
     isExporting = false;
-    std::cout << "Exporting" << endl;
 }

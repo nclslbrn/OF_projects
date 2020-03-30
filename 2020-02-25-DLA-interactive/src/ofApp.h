@@ -22,6 +22,7 @@ class ofApp : public ofBaseApp {
     ofVec3f randomPos();
     ofVec3f onEmitter();
     ofColor indexColor(int index);
+    string getInfoString();
 
     deque<Walker> tree;
     deque<Walker> walkers;
@@ -32,9 +33,12 @@ class ofApp : public ofBaseApp {
     ofxDatGui* gui;
     ofParameter<int> walkerNum, steps, treeSize;
     ofParameter<float> initWalkerSize;
-    ofParameter<float> decreaseWalkerSize;
     ofParameter<float> initEmitterDistance;
-    ofParameter<float> increaseEmitterDistance;
+    ofParameter<int> decreaseParam;
+    ofParameter<int> increaseParam;
+
+    double decreaseWalkerSize, increaseEmitterDistance;
+    string factorInfo;
 
     ofxCsv csv;
     ofxCsv csvRecorder;
