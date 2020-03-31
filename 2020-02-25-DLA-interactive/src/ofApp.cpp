@@ -186,12 +186,12 @@ void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
         param == "Grow emit. dist.") {
         if (param == "Shrink w. size") {
             std::printf("Shrink %f\n", decreaseParam);
-            decreaseWalkerSize = 1.00f - decreaseParam / 100;
+            decreaseWalkerSize = ofMap(decreaseParam, 0, 100, 0.9, 1);
             factorInfo = getInfoString();
         }
         if (param == "Grow emit. dist.") {
             std::printf("Grow %f\n", increaseParam);
-            increaseEmitterDistance = 1.000f + increaseParam / 1000;
+            increaseEmitterDistance = ofMap(increaseParam, 0, 100, 1, 1.1);
             factorInfo = getInfoString();
         }
 
