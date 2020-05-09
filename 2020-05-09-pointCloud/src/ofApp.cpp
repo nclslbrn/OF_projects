@@ -2,6 +2,8 @@
 
 //--------------------------------------------------------------
 void ofApp::setup() {
+    animFrame = 800;
+
     ofBackground(0);
     ofSetFrameRate(30);
     ofSetVerticalSync(true);
@@ -13,8 +15,6 @@ void ofApp::setup() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    cam.setAutoDistance(false);
-    cam.setDistance(12);
     streetModel.load("plys/GT_Madame1_2-from-meshlab.ply");
 
     point.setDiffuseColor(ofColor(255.0, 120.0, 120.0));
@@ -25,6 +25,7 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update() {
+    cameraMove();
 }
 
 //--------------------------------------------------------------
@@ -35,11 +36,54 @@ void ofApp::draw() {
     ofSetColor(200, 200, 200, 255);
     point.setPosition(0, 0, (float)ofGetHeight() * 0.75);
     point.enable();
+
+    debugAxis();
+
     shader.begin();
     streetModel.drawVertices();
     shader.end();
     point.disable();
     cam.end();
+}
+//--------------------------------------------------------------
+void ofApp::cameraMove() {
+    float tweenvalue = 1.f * (ofGetFrameNum() % animFrame) / animFrame;
+
+    ofQuaternion startQuat;
+    ofQuaternion targetQuat;
+    ofVec3f startPos;
+    ofVec3f targetPos;
+    startQuat.makeRotate(90, 1, 0, 0);
+    targetQuat.makeRotate(90, 1, 0, 0);
+
+    startPos.set(0, -35, 0);
+    targetPos.set(0, 25, 0);
+
+    ofQuaternion tweenedCameraQuaternion;
+    tweenedCameraQuaternion.slerp(tweenvalue, startQuat, targetQuat);
+
+    ofVec3f lerpPos;
+    lerpPos.x = ofLerp(startPos.x, targetPos.x, tweenvalue);
+    lerpPos.y = ofLerp(startPos.y, targetPos.y, tweenvalue);
+    lerpPos.z = ofLerp(startPos.z, targetPos.z, tweenvalue);
+
+    cam.setOrientation(tweenedCameraQuaternion);
+    cam.setGlobalPosition(lerpPos);
+}
+
+//--------------------------------------------------------------
+void ofApp::debugAxis() {
+    ofSetHexColor(0xff0000);
+    ofFill();
+    ofDrawLine(0, 0, 0, 100, 0, 0);
+
+    ofSetHexColor(0x00ff00);
+    ofFill();
+    ofDrawLine(0, 0, 0, 0, 100, 0);
+
+    ofSetHexColor(0x0000ff);
+    ofFill();
+    ofDrawLine(0, 0, 0, 0, 0, 100);
 }
 
 //--------------------------------------------------------------

@@ -19,9 +19,18 @@ class ofApp : public ofBaseApp {
     void windowResized(int w, int h);
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
-
+    void debugAxis();
+    void cameraMove();
+    int animFrame;
     ofMesh streetModel;
     ofLight point;
-    ofEasyCam cam;
+    ofCamera cam;
     ofShader shader;
+    /*
+    int travelingDuration;
+    ofVec3f camPosStart;
+    ofVec3f camPosEnd;
+    ofVec4f camRotStart;
+    ofVec4f camRotEnd;
+*/
 };
