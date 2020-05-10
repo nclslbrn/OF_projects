@@ -3,6 +3,8 @@
 #include "ofMain.h"
 /* https://github.com/AmnonOwed/ofxPointInMesh */
 #include "ofxPointInMesh.h"
+/* https://github.com/braitsch/ofxDatGui */
+#include "ofxDatGui.h"
 
 class ofApp : public ofBaseApp {
    public:
@@ -21,24 +23,24 @@ class ofApp : public ofBaseApp {
     void windowResized(int w, int h);
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
+
+    void initDatGui();
     void debugAxis();
     void cameraMove();
     void pointCloudErode();
+    void onSliderEvent(ofxDatGuiSliderEvent e);
 
-    int animFrame;
-    ofBoxPrimitive camGroup;
-    int cameraColliderSize;
-    ofMesh cameraCollider;
-    ofMesh streetModel;
+    ofxDatGui* gui;
+
+    int animFrame, cameraColliderSize;
+    bool debug;
+    ofParameter<float> cameraXAngle, cameraXPos;
+    ofVec3f camStartPos, camTargetPos;
+    ofBoxPrimitive camNode;
+
+    ofMesh cameraCollider, streetModel;
     ofLight point;
     ofCamera camera;
+    ofEasyCam debugCam;
     ofShader shader;
-
-    /*
-    int travelingDuration;
-    ofVec3f camPosStart;
-    ofVec3f camPosEnd;
-    ofVec4f camRotStart;
-    ofVec4f camRotEnd;
-*/
 };

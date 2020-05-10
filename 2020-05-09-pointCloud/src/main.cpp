@@ -3,13 +3,15 @@
 
 //========================================================================
 int main() {
-    /* --------- OPENGL RENDERING --------- */
+    /* --------- Specified opengl version --------- */
     ofGLFWWindowSettings settings;
     settings.setGLVersion(3, 2);
-    settings.setSize(1200, 768);
+    settings.setSize(1200, 750);
     ofCreateWindow(settings);
-    /* --------- DEFAULT RENDERING --------
+
+    /* --------- or use the defaukt one --------
 	ofSetupOpenGL(1024,768,OF_WINDOW);
 	*/
+
     ofRunApp(new ofApp());
 }
