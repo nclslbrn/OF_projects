@@ -1,6 +1,8 @@
 #pragma once
 
 #include "ofMain.h"
+/* https://github.com/AmnonOwed/ofxPointInMesh */
+#include "ofxPointInMesh.h"
 
 class ofApp : public ofBaseApp {
    public:
@@ -21,11 +23,17 @@ class ofApp : public ofBaseApp {
     void gotMessage(ofMessage msg);
     void debugAxis();
     void cameraMove();
+    void pointCloudErode();
+
     int animFrame;
+    ofBoxPrimitive camGroup;
+    int cameraColliderSize;
+    ofMesh cameraCollider;
     ofMesh streetModel;
     ofLight point;
-    ofCamera cam;
+    ofCamera camera;
     ofShader shader;
+
     /*
     int travelingDuration;
     ofVec3f camPosStart;
