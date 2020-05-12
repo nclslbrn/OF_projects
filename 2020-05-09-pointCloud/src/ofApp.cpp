@@ -21,7 +21,7 @@ void ofApp::initDatGui() {
 //--------------------------------------------------------------
 void ofApp::setup() {
     animFrame = 300;
-    cameraColliderSize = 10;
+    cameraColliderSize = 15;
     debug = false;
 
     ofSetFrameRate(30);
@@ -29,12 +29,12 @@ void ofApp::setup() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    streetModel.load("plys/flinder-street.ply");
-
+    originalModel.load("plys/ny-carlsberg-glyptotek-pointcloud.ply");
+    alteredModel = originalModel;
     point.setDiffuseColor(ofColor(255.0, 120.0, 120.0));
     point.setPointLight();
 
-    shader.load("shadersGL3/shader");
+    shader.load("shadersGL3/noise-shader");
 
     camCollider.setPosition(0, 0, 0);
     camCollider.set(
@@ -46,11 +46,14 @@ void ofApp::setup() {
     camCollider.setOrientation(travelingAngleStart);
     camera.setParent(camCollider);
     initDatGui();
+
+    debugCam.setVFlip(true);
 }
 //--------------------------------------------------------------
 void ofApp::cameraMove() {
     // Get new param when animation finished
     if (ofGetFrameNum() % animFrame == 0) {
+        alteredModel = originalModel;
         camStartPos = ofVec3f(0, cameraYStart, 0);
         camTargetPos = ofVec3f(0, cameraYEnd, 0);
     }
@@ -80,7 +83,7 @@ void ofApp::cameraMove() {
 //--------------------------------------------------------------
 void ofApp::update() {
     cameraMove();
-    pointCloudErode();
+    //pointCloudErode();
 }
 //--------------------------------------------------------------
 void ofApp::draw() {
@@ -101,7 +104,8 @@ void ofApp::draw() {
     camCollider.drawWireframe();
 
     shader.begin();
-    streetModel.drawVertices();
+    shader.setUniform1f("time", ofGetElapsedTimef());
+    alteredModel.drawVertices();
 
     shader.end();
     point.disable();
@@ -118,26 +122,27 @@ void ofApp::draw() {
 }
 //--------------------------------------------------------------
 void ofApp::pointCloudErode() {
-    /* for (auto& model : streetModel) {
-        for (auto& vertex : model.getVertices()) {
+    for (auto& vertex : alteredModel.getVertices()) {
+        bool isInside = ofxPointInMesh::isInside(vertex, camCollider.getMesh());
+        if (isInside) {
             vertex += ofVec3f(0, 0, 100 * (0.5 - ofRandomuf()));
         }
-    }  */
+    }
 }
 
 //--------------------------------------------------------------
 void ofApp::debugAxis() {
     ofSetHexColor(0xff0000);
     ofFill();
-    ofDrawLine(0, 0, 0, 100, 0, 0);
+    ofDrawLine(0, 0, 0, 1, 0, 0);
 
     ofSetHexColor(0x00ff00);
     ofFill();
-    ofDrawLine(0, 0, 0, 0, 100, 0);
+    ofDrawLine(0, 0, 0, 0, 1, 0);
 
     ofSetHexColor(0x0000ff);
     ofFill();
-    ofDrawLine(0, 0, 0, 0, 0, 100);
+    ofDrawLine(0, 0, 0, 0, 0, 1);
 }
 
 //--------------------------------------------------------------

@@ -40,7 +40,7 @@ class ofApp : public ofBaseApp {
     ofVec3f camStartPos, camTargetPos;
     ofBoxPrimitive camCollider;
 
-    ofMesh streetModel;
+    ofMesh alteredModel, originalModel;
     ofLight point;
     ofCamera camera;
     ofEasyCam debugCam;
