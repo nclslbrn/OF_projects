@@ -11,6 +11,7 @@ class ofApp : public ofBaseApp {
     void setup();
     void update();
     void draw();
+    ofxDatGui* gui;
 
     void keyPressed(int key);
     void keyReleased(int key);
@@ -29,16 +30,17 @@ class ofApp : public ofBaseApp {
     void cameraMove();
     void pointCloudErode();
     void onSliderEvent(ofxDatGuiSliderEvent e);
-
-    ofxDatGui* gui;
+    void onToggleEvent(ofxDatGuiToggleEvent e);
 
     int animFrame, cameraColliderSize;
+
     bool debug;
     ofParameter<float> cameraXAngle, cameraXPos;
+    ofParameter<int> cameraYStart, cameraYEnd;
     ofVec3f camStartPos, camTargetPos;
-    ofBoxPrimitive camNode;
+    ofBoxPrimitive camCollider;
 
-    ofMesh cameraCollider, streetModel;
+    ofMesh streetModel;
     ofLight point;
     ofCamera camera;
     ofEasyCam debugCam;

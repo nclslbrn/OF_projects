@@ -2,98 +2,58 @@
 
 //--------------------------------------------------------------
 void ofApp::initDatGui() {
+    gui = new ofxDatGui(ofxDatGuiAnchor::TOP_LEFT);
+
     cameraXAngle.set("Cam. X rot.", 90, 0, 360);
     cameraXPos.set("Cam. X pos.", 0, -5.0f, 5.0f);
-    gui = new ofxDatGui(ofxDatGuiAnchor::TOP_LEFT);
+    cameraYStart.set("Cam. start", -45, -50, 0);
+    cameraYEnd.set("Cam. end", 35, 0, 50);
+
     gui->addLabel("Camera settings");
+    gui->addToggle("Ext. camera", false);
     gui->addSlider(cameraXAngle);
     gui->addSlider(cameraXPos);
+    gui->addSlider(cameraYStart);
+    gui->addSlider(cameraYEnd);
     gui->onSliderEvent(this, &ofApp::onSliderEvent);
+    gui->onToggleEvent(this, &ofApp::onToggleEvent);
 }
 //--------------------------------------------------------------
 void ofApp::setup() {
     animFrame = 300;
-    cameraColliderSize = 5;
+    cameraColliderSize = 10;
     debug = false;
-    camStartPos = ofVec3f(0, -25, 0);
-    camTargetPos = ofVec3f(0, 35, 0);
 
     ofSetFrameRate(30);
     ofSetVerticalSync(true);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    streetModel.load("plys/GT_Madame1_2.ply");
+    streetModel.load("plys/flinder-street.ply");
 
     point.setDiffuseColor(ofColor(255.0, 120.0, 120.0));
     point.setPointLight();
 
     shader.load("shadersGL3/shader");
 
-    camNode.setPosition(0, 0, 0);
-    cameraCollider = ofMesh::box(
+    camCollider.setPosition(0, 0, 0);
+    camCollider.set(
         cameraColliderSize,
         cameraColliderSize,
         cameraColliderSize);
     ofQuaternion travelingAngleStart;
     travelingAngleStart.makeRotate(90, 1, 0, 0);
-    camNode.setOrientation(travelingAngleStart);
-    camera.setParent(camNode);
-    camNode.getMesh().append(cameraCollider);
-    camNode.setPosition(camStartPos);
-
+    camCollider.setOrientation(travelingAngleStart);
+    camera.setParent(camCollider);
     initDatGui();
-}
-
-//--------------------------------------------------------------
-void ofApp::update() {
-    cameraMove();
-    pointCloudErode();
-}
-//--------------------------------------------------------------
-void ofApp::draw() {
-    ofBackground(0, 0, 0);
-    ofEnableDepthTest();
-
-    if (debug) {
-        debugCam.begin();
-    } else {
-        camera.begin();
-    }
-
-    ofSetColor(200, 200, 200, 255);
-    point.setGlobalPosition(0, 0, (float)ofGetHeight() * 0.75);
-    point.enable();
-
-    debugAxis();
-    cameraCollider.drawWireframe();
-
-    shader.begin();
-    streetModel.drawVertices();
-
-    shader.end();
-    point.disable();
-
-    if (debug) {
-        debugCam.end();
-    } else {
-        camera.end();
-    }
-
-    // Fix black ofxDatGui
-    // https://github.com/braitsch/ofxDatGui/issues/111#issuecomment-264457723
-    ofDisableDepthTest();
-}
-//--------------------------------------------------------------
-void ofApp::pointCloudErode() {
-    /*     for (auto& model : streetModel) {
-        for (auto& vertex : model.getVertices()) {
-            vertex += ofVec3f(0, 0, 100 * (0.5 - ofRandomuf()));
-        }
-} */
 }
 //--------------------------------------------------------------
 void ofApp::cameraMove() {
+    // Get new param when animation finished
+    if (ofGetFrameNum() % animFrame == 0) {
+        camStartPos = ofVec3f(0, cameraYStart, 0);
+        camTargetPos = ofVec3f(0, cameraYEnd, 0);
+    }
     float tweenvalue = 1.f * (ofGetFrameNum() % animFrame) / animFrame;
     /* 
 
@@ -115,7 +75,54 @@ void ofApp::cameraMove() {
     lerpPos.x = ofLerp(camStartPos.x, camTargetPos.x, tweenvalue);
     lerpPos.y = ofLerp(camStartPos.y, camTargetPos.y, tweenvalue);
     lerpPos.z = ofLerp(camStartPos.z, camTargetPos.z, tweenvalue);
-    camNode.setPosition(lerpPos);
+    camCollider.setPosition(lerpPos);
+}
+//--------------------------------------------------------------
+void ofApp::update() {
+    cameraMove();
+    pointCloudErode();
+}
+//--------------------------------------------------------------
+void ofApp::draw() {
+    ofBackground(0, 0, 0);
+    ofEnableDepthTest();
+
+    if (debug) {
+        debugCam.begin();
+    } else {
+        camera.begin();
+    }
+
+    ofSetColor(200, 200, 200, 255);
+    point.setGlobalPosition(0, 0, (float)ofGetHeight() * 0.75);
+    point.enable();
+
+    debugAxis();
+    camCollider.drawWireframe();
+
+    shader.begin();
+    streetModel.drawVertices();
+
+    shader.end();
+    point.disable();
+
+    if (debug) {
+        debugCam.end();
+    } else {
+        camera.end();
+    }
+
+    // Fix black ofxDatGui
+    // https://github.com/braitsch/ofxDatGui/issues/111#issuecomment-264457723
+    ofDisableDepthTest();
+}
+//--------------------------------------------------------------
+void ofApp::pointCloudErode() {
+    /* for (auto& model : streetModel) {
+        for (auto& vertex : model.getVertices()) {
+            vertex += ofVec3f(0, 0, 100 * (0.5 - ofRandomuf()));
+        }
+    }  */
 }
 
 //--------------------------------------------------------------
@@ -137,24 +144,6 @@ void ofApp::debugAxis() {
 void ofApp::keyPressed(int key) {
     // if user press c key
     if (key == 99) {
-        ofVec3f camPos = camNode.getPosition();
-        float rotation[4];
-        rotation[0] = camera.getOrientationQuat().x;
-        rotation[1] = camera.getOrientationQuat().y;
-        rotation[2] = camera.getOrientationQuat().z;
-        rotation[3] = camera.getOrientationQuat().w;
-
-        std::cout
-            << "X:" << camPos.x
-            << " Y:" << camPos.y
-            << " Z:" << camPos.z << endl;
-
-        std::cout
-            << "rX:" << rotation[0]
-            << " rY:" << rotation[1]
-            << " rZ:" << rotation[2]
-            << " rW:" << rotation[3] << endl;
-
     } else {
         std::cout << "unaffected key (" << key << ")" << endl;
     }
@@ -168,14 +157,19 @@ void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
     if (param == "Cam. X rot.") {
         ofQuaternion travelingAngleStart;
         travelingAngleStart.makeRotate(cameraXAngle, 1, 0, 0);
-        camNode.setOrientation(travelingAngleStart);
+        camCollider.setOrientation(travelingAngleStart);
     }
     if (param == "Cam. X pos.") {
         camStartPos.x += cameraXPos;
         camTargetPos.x += cameraXPos;
     }
 }
-
+//--------------------------------------------------------------
+void ofApp::onToggleEvent(ofxDatGuiToggleEvent e) {
+    if (e.target->is("Ext. camera")) {
+        debug = !debug;
+    }
+}
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key) {
 }
