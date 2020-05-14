@@ -9,37 +9,26 @@ class ofApp : public ofBaseApp {
     void setup();
     void update();
     void draw();
-    ofxDatGui* gui;
 
-    void keyPressed(int key);
-    void keyReleased(int key);
-    void mouseMoved(int x, int y);
-    void mouseDragged(int x, int y, int button);
-    void mousePressed(int x, int y, int button);
-    void mouseReleased(int x, int y, int button);
-    void mouseEntered(int x, int y);
-    void mouseExited(int x, int y);
-    void windowResized(int w, int h);
-    void dragEvent(ofDragInfo dragInfo);
-    void gotMessage(ofMessage msg);
+    ofxDatGui* gui;
 
     void initDatGui();
     void debugAxis();
     void cameraMove();
+    void keyPressed(int key);
     void onSliderEvent(ofxDatGuiSliderEvent e);
     void onToggleEvent(ofxDatGuiToggleEvent e);
 
-    int animFrame, cameraColliderSize;
+    int animFrame;
 
     bool debug;
     ofParameter<float> cameraXAngle, cameraXPos;
     ofParameter<int> cameraYStart, cameraYEnd;
-    ofParameter<float> displaceRadius;
+    ofParameter<float> displaceRadius, noiseScale;
     ofVec3f camStartPos, camTargetPos;
-    ofBoxPrimitive camCollider;
+    ofSpherePrimitive camCollider;
 
-    ofMesh alteredModel, originalModel;
-    ofLight point;
+    ofMesh mesh;
     ofCamera camera;
     ofEasyCam debugCam;
     ofShader shader;

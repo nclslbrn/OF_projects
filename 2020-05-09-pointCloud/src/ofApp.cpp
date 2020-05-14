@@ -6,7 +6,8 @@ void ofApp::initDatGui() {
 
     cameraXAngle.set("Cam. X rot.", 90, 0, 360);
     cameraXPos.set("Cam. X pos.", 0, -5.0f, 5.0f);
-    displaceRadius.set("Displace.R", 10, 5.0f, 50.0f);
+    displaceRadius.set("Displace r.", 10, 5.0f, 50.0f);
+    noiseScale.set("Noise scale", 5, 1, 15);
     cameraYStart.set("Cam. start", -50, -100, 0);
     cameraYEnd.set("Cam. end", 50, 0, 100);
 
@@ -15,6 +16,7 @@ void ofApp::initDatGui() {
     gui->addSlider(cameraXAngle);
     gui->addSlider(cameraXPos);
     gui->addSlider(displaceRadius);
+    gui->addSlider(noiseScale);
     gui->addLabel("Traveling length");
     gui->addSlider(cameraYStart);
     gui->addSlider(cameraYEnd);
@@ -24,7 +26,6 @@ void ofApp::initDatGui() {
 //--------------------------------------------------------------
 void ofApp::setup() {
     animFrame = 300;
-    cameraColliderSize = 15;
     debug = false;
 
     ofSetFrameRate(30);
@@ -32,18 +33,11 @@ void ofApp::setup() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    originalModel.load("plys/ny-carlsberg-glyptotek-pointcloud.ply");
-    alteredModel = originalModel;
-    point.setDiffuseColor(ofColor(255.0, 120.0, 120.0));
-    point.setPointLight();
-
+    mesh.load("plys/flinder-street.ply");
     shader.load("shadersGL3/shader");
 
     camCollider.setPosition(0, 0, 0);
-    camCollider.set(
-        cameraColliderSize,
-        cameraColliderSize,
-        cameraColliderSize);
+    camCollider.setRadius(displaceRadius);
     ofQuaternion travelingAngleStart;
     travelingAngleStart.makeRotate(90, 1, 0, 0);
     camCollider.setOrientation(travelingAngleStart);
@@ -51,12 +45,12 @@ void ofApp::setup() {
     initDatGui();
 
     debugCam.setVFlip(true);
+    debugCam.setDistance(35);
 }
 //--------------------------------------------------------------
 void ofApp::cameraMove() {
     // Get new param when animation finished
     if (ofGetFrameNum() % animFrame == 0) {
-        alteredModel = originalModel;
         camStartPos = ofVec3f(0, cameraYStart, 0);
         camTargetPos = ofVec3f(0, cameraYEnd, 0);
     }
@@ -98,16 +92,12 @@ void ofApp::draw() {
         camera.begin();
     }
 
-    ofSetColor(200, 200, 200, 255);
-    point.setGlobalPosition(0, 0, (float)ofGetHeight() * 0.75);
-    point.enable();
     if (debug) {
-        //debugAxis();
+        ofSetColor(200, 200, 200, 50);
         camCollider.drawWireframe();
     }
 
     shader.begin();
-    shader.setUniform1f("time", ofGetElapsedTimef());
     shader.setUniform4f(
         "cameraPos",
         camCollider.getPosition().x,
@@ -115,10 +105,10 @@ void ofApp::draw() {
         camCollider.getPosition().z,
         0);
     shader.setUniform1f("displaceRadius", displaceRadius);
-    alteredModel.drawVertices();
+    shader.setUniform1f("noiseScale", noiseScale);
+    mesh.drawVertices();
 
     shader.end();
-    point.disable();
 
     if (debug) {
         debugCam.end();
@@ -158,6 +148,9 @@ void ofApp::keyPressed(int key) {
 //--------------------------------------------------------------
 
 void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
+    // prevent move of ofEasyCam
+    debugCam.disableMouseInput();
+
     string param = e.target->getName();
 
     if (param == "Cam. X rot.") {
@@ -169,49 +162,13 @@ void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
         camStartPos.x += cameraXPos;
         camTargetPos.x += cameraXPos;
     }
+    if (param == "Displace r.") {
+        camCollider.setRadius(displaceRadius);
+    }
 }
 //--------------------------------------------------------------
 void ofApp::onToggleEvent(ofxDatGuiToggleEvent e) {
     if (e.target->is("Ext. camera")) {
         debug = !debug;
     }
-}
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y) {
-}
-
-//--------------------------------------------------------------
-void ofApp::windowResized(int w, int h) {
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg) {
-}
-
-//--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo) {
 }
