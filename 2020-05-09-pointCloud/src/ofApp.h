@@ -1,8 +1,6 @@
 #pragma once
 
 #include "ofMain.h"
-/* https://github.com/AmnonOwed/ofxPointInMesh */
-#include "ofxPointInMesh.h"
 /* https://github.com/braitsch/ofxDatGui */
 #include "ofxDatGui.h"
 
@@ -28,7 +26,6 @@ class ofApp : public ofBaseApp {
     void initDatGui();
     void debugAxis();
     void cameraMove();
-    void pointCloudErode();
     void onSliderEvent(ofxDatGuiSliderEvent e);
     void onToggleEvent(ofxDatGuiToggleEvent e);
 
@@ -37,6 +34,7 @@ class ofApp : public ofBaseApp {
     bool debug;
     ofParameter<float> cameraXAngle, cameraXPos;
     ofParameter<int> cameraYStart, cameraYEnd;
+    ofParameter<float> displaceRadius;
     ofVec3f camStartPos, camTargetPos;
     ofBoxPrimitive camCollider;
 

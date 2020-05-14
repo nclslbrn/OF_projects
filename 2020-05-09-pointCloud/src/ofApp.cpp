@@ -6,13 +6,16 @@ void ofApp::initDatGui() {
 
     cameraXAngle.set("Cam. X rot.", 90, 0, 360);
     cameraXPos.set("Cam. X pos.", 0, -5.0f, 5.0f);
-    cameraYStart.set("Cam. start", -45, -50, 0);
-    cameraYEnd.set("Cam. end", 35, 0, 50);
+    displaceRadius.set("Displace.R", 10, 5.0f, 50.0f);
+    cameraYStart.set("Cam. start", -50, -100, 0);
+    cameraYEnd.set("Cam. end", 50, 0, 100);
 
     gui->addLabel("Camera settings");
     gui->addToggle("Ext. camera", false);
     gui->addSlider(cameraXAngle);
     gui->addSlider(cameraXPos);
+    gui->addSlider(displaceRadius);
+    gui->addLabel("Traveling length");
     gui->addSlider(cameraYStart);
     gui->addSlider(cameraYEnd);
     gui->onSliderEvent(this, &ofApp::onSliderEvent);
@@ -34,7 +37,7 @@ void ofApp::setup() {
     point.setDiffuseColor(ofColor(255.0, 120.0, 120.0));
     point.setPointLight();
 
-    shader.load("shadersGL3/noise-shader");
+    shader.load("shadersGL3/shader");
 
     camCollider.setPosition(0, 0, 0);
     camCollider.set(
@@ -59,7 +62,6 @@ void ofApp::cameraMove() {
     }
     float tweenvalue = 1.f * (ofGetFrameNum() % animFrame) / animFrame;
     /* 
-
     ofVec3f startPos;
     ofVec3f targetPos;
     ofQuaternion startQuat;
@@ -99,12 +101,20 @@ void ofApp::draw() {
     ofSetColor(200, 200, 200, 255);
     point.setGlobalPosition(0, 0, (float)ofGetHeight() * 0.75);
     point.enable();
-
-    debugAxis();
-    camCollider.drawWireframe();
+    if (debug) {
+        //debugAxis();
+        camCollider.drawWireframe();
+    }
 
     shader.begin();
     shader.setUniform1f("time", ofGetElapsedTimef());
+    shader.setUniform4f(
+        "cameraPos",
+        camCollider.getPosition().x,
+        camCollider.getPosition().y,
+        camCollider.getPosition().z,
+        0);
+    shader.setUniform1f("displaceRadius", displaceRadius);
     alteredModel.drawVertices();
 
     shader.end();
@@ -119,15 +129,6 @@ void ofApp::draw() {
     // Fix black ofxDatGui
     // https://github.com/braitsch/ofxDatGui/issues/111#issuecomment-264457723
     ofDisableDepthTest();
-}
-//--------------------------------------------------------------
-void ofApp::pointCloudErode() {
-    for (auto& vertex : alteredModel.getVertices()) {
-        bool isInside = ofxPointInMesh::isInside(vertex, camCollider.getMesh());
-        if (isInside) {
-            vertex += ofVec3f(0, 0, 100 * (0.5 - ofRandomuf()));
-        }
-    }
 }
 
 //--------------------------------------------------------------
