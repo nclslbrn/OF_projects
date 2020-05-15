@@ -10,6 +10,7 @@ void ofApp::initDatGui() {
     noiseScale.set("Noise scale", 5, 1, 15);
     cameraYStart.set("Cam. start", -50, -100, 0);
     cameraYEnd.set("Cam. end", 50, 0, 100);
+    bloomIntensity.set("Bloom strenght.", 100.0f, 10.0f, 300.0f);
 
     gui->addLabel("Camera settings");
     gui->addToggle("Ext. camera", false);
@@ -20,8 +21,30 @@ void ofApp::initDatGui() {
     gui->addLabel("Traveling length");
     gui->addSlider(cameraYStart);
     gui->addSlider(cameraYEnd);
+    gui->addLabel("Material");
+    gui->addSlider(bloomIntensity);
     gui->onSliderEvent(this, &ofApp::onSliderEvent);
     gui->onToggleEvent(this, &ofApp::onToggleEvent);
+}
+//--------------------------------------------------------------
+string ofApp::getPLYmodel(int modelId) {
+    string models[10] = {
+        "Almagro_Potree_Merged.ply",
+        "arafo.ply",
+        "auckland-offset.ply",
+        "etna_ao.ply",
+        "flinder-street.ply",
+        "fused-pruned-tightened-5m-pts.ply",
+        "GT_Madame1_2.ply",
+        "kozushima-001-fused-pruned-tightened-10m-pts.ply",
+        "ny-carlsberg-glyptotek-pointcloud.ply",
+        "rc-renningsasen-asfaltverk.ply"};
+
+    if (modelId >= 0 && modelId <= sizeof(models) - 1) {
+        return models[modelId];
+    } else {
+        return models[0];
+    }
 }
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -30,10 +53,16 @@ void ofApp::setup() {
 
     ofSetFrameRate(30);
     ofSetVerticalSync(true);
+
+    ofEnableDepthTest();
+    ofSetGlobalAmbientColor(ofColor(255, 255, 255));
+    ofSetSmoothLighting(true);
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+    glEnable(GL_POINT_SMOOTH);
+    //glPointSize(2);
 
-    mesh.load("plys/flinder-street.ply");
+    mesh.load("plys/" + getPLYmodel(9));
     shader.load("shadersGL3/shader");
 
     camCollider.setPosition(0, 0, 0);
@@ -42,6 +71,7 @@ void ofApp::setup() {
     travelingAngleStart.makeRotate(90, 1, 0, 0);
     camCollider.setOrientation(travelingAngleStart);
     camera.setParent(camCollider);
+    camera.setPosition(ofVec3f(0, 0, displaceRadius));
     initDatGui();
 
     debugCam.setVFlip(true);
@@ -83,7 +113,7 @@ void ofApp::update() {
 }
 //--------------------------------------------------------------
 void ofApp::draw() {
-    ofBackground(0, 0, 0);
+    ofBackground(20, 20, 20);
     ofEnableDepthTest();
 
     if (debug) {
@@ -91,11 +121,10 @@ void ofApp::draw() {
     } else {
         camera.begin();
     }
-
+    /* 
     if (debug) {
-        ofSetColor(200, 200, 200, 50);
         camCollider.drawWireframe();
-    }
+    } */
 
     shader.begin();
     shader.setUniform4f(
@@ -106,6 +135,11 @@ void ofApp::draw() {
         0);
     shader.setUniform1f("displaceRadius", displaceRadius);
     shader.setUniform1f("noiseScale", noiseScale);
+    shader.setUniform2f(
+        "resolution",
+        ofDefaultVec2(ofGetWidth(), ofGetHeight()));
+    shader.setUniform1f("bloomIntensity", bloomIntensity);
+    shader.setUniform1f("time", ofGetElapsedTimef());
     mesh.drawVertices();
 
     shader.end();
@@ -149,7 +183,7 @@ void ofApp::keyPressed(int key) {
 
 void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
     // prevent move of ofEasyCam
-    debugCam.disableMouseInput();
+    //debugCam.disableMouseInput();
 
     string param = e.target->getName();
 
@@ -164,7 +198,10 @@ void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
     }
     if (param == "Displace r.") {
         camCollider.setRadius(displaceRadius);
+        camera.setPosition(ofVec3f(0, 0, displaceRadius));
     }
+
+    //debugCam.enableMouseInput();
 }
 //--------------------------------------------------------------
 void ofApp::onToggleEvent(ofxDatGuiToggleEvent e) {

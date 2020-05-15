@@ -144,7 +144,8 @@ void main(){
         // add the direction vector to the vertex position.
         pos.x += dir.x * sin(phi) * cos(theta) * noiseScale;
         pos.y += dir.y * sin(phi) * sin(theta) * noiseScale;
-        pos.z += dir.z * cos(phi) * noiseScale;
+        //pos.z +- dir.z * cos(phi) * noiseScale;
+        pos.z -= dir.z * noise;
 
     }
 

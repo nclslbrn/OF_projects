@@ -18,16 +18,16 @@ class ofApp : public ofBaseApp {
     void keyPressed(int key);
     void onSliderEvent(ofxDatGuiSliderEvent e);
     void onToggleEvent(ofxDatGuiToggleEvent e);
+    string getPLYmodel(int modelId);
 
     int animFrame;
-
     bool debug;
+
     ofParameter<float> cameraXAngle, cameraXPos;
     ofParameter<int> cameraYStart, cameraYEnd;
-    ofParameter<float> displaceRadius, noiseScale;
+    ofParameter<float> displaceRadius, noiseScale, bloomIntensity;
     ofVec3f camStartPos, camTargetPos;
     ofSpherePrimitive camCollider;
-
     ofMesh mesh;
     ofCamera camera;
     ofEasyCam debugCam;
