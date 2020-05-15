@@ -2,20 +2,20 @@
 
 //--------------------------------------------------------------
 void ofApp::initDatGui() {
-    gui = new ofxDatGui(ofxDatGuiAnchor::TOP_LEFT);
-
     cameraXAngle.set("Cam. X rot.", 90, 0, 360);
-    cameraXPos.set("Cam. X pos.", 0, -5.0f, 5.0f);
     displaceRadius.set("Displace r.", 10, 5.0f, 50.0f);
-    noiseScale.set("Noise scale", 5, 1, 15);
+    noiseScale.set("Noise scale", 5, 0.1, 5);
     cameraYStart.set("Cam. start", -50, -100, 0);
     cameraYEnd.set("Cam. end", 50, 0, 100);
     bloomIntensity.set("Bloom strenght.", 100.0f, 10.0f, 300.0f);
 
+    gui = new ofxDatGui(ofxDatGuiAnchor::TOP_LEFT);
+    gui->setTheme(new ofxDatGuiThemeSmoke());
     gui->addLabel("Camera settings");
     gui->addToggle("Ext. camera", false);
     gui->addSlider(cameraXAngle);
-    gui->addSlider(cameraXPos);
+
+    ofxDatGui2dPad* pad = gui->add2dPad("Cam. pos.");
     gui->addSlider(displaceRadius);
     gui->addSlider(noiseScale);
     gui->addLabel("Traveling length");
@@ -23,8 +23,11 @@ void ofApp::initDatGui() {
     gui->addSlider(cameraYEnd);
     gui->addLabel("Material");
     gui->addSlider(bloomIntensity);
+    gui->addFooter();
+
     gui->onSliderEvent(this, &ofApp::onSliderEvent);
     gui->onToggleEvent(this, &ofApp::onToggleEvent);
+    gui->on2dPadEvent(this, &ofApp::on2dPadEvent);
 }
 //--------------------------------------------------------------
 string ofApp::getPLYmodel(int modelId) {
@@ -34,7 +37,7 @@ string ofApp::getPLYmodel(int modelId) {
         "auckland-offset.ply",
         "etna_ao.ply",
         "flinder-street.ply",
-        "fused-pruned-tightened-5m-pts.ply",
+        "fused-pruned-tightened-5m-pts.ply",  //<- need rescaling
         "GT_Madame1_2.ply",
         "kozushima-001-fused-pruned-tightened-10m-pts.ply",
         "ny-carlsberg-glyptotek-pointcloud.ply",
@@ -60,13 +63,14 @@ void ofApp::setup() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glEnable(GL_POINT_SMOOTH);
-    //glPointSize(2);
+    glPointSize(1);
 
-    mesh.load("plys/" + getPLYmodel(9));
+    mesh.load("plys/" + getPLYmodel(6));
     shader.load("shadersGL3/shader");
 
     camCollider.setPosition(0, 0, 0);
     camCollider.setRadius(displaceRadius);
+    cameraPos.set(0, 0);
     ofQuaternion travelingAngleStart;
     travelingAngleStart.makeRotate(90, 1, 0, 0);
     camCollider.setOrientation(travelingAngleStart);
@@ -81,8 +85,10 @@ void ofApp::setup() {
 void ofApp::cameraMove() {
     // Get new param when animation finished
     if (ofGetFrameNum() % animFrame == 0) {
-        camStartPos = ofVec3f(0, cameraYStart, 0);
-        camTargetPos = ofVec3f(0, cameraYEnd, 0);
+        std::cout << "x : " << cameraPos.x << " y: " << cameraPos.y << endl;
+
+        camStartPos = ofVec3f(cameraPos.x, cameraYStart, cameraPos.y);
+        camTargetPos = ofVec3f(cameraPos.x, cameraYEnd, cameraPos.y);
     }
     float tweenvalue = 1.f * (ofGetFrameNum() % animFrame) / animFrame;
     /* 
@@ -113,7 +119,7 @@ void ofApp::update() {
 }
 //--------------------------------------------------------------
 void ofApp::draw() {
-    ofBackground(20, 20, 20);
+    ofBackground(ofColor(10, 10, 10));
     ofEnableDepthTest();
 
     if (debug) {
@@ -192,10 +198,10 @@ void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
         travelingAngleStart.makeRotate(cameraXAngle, 1, 0, 0);
         camCollider.setOrientation(travelingAngleStart);
     }
-    if (param == "Cam. X pos.") {
+    /*   if (param == "Cam. X pos.") {
         camStartPos.x += cameraXPos;
         camTargetPos.x += cameraXPos;
-    }
+    } */
     if (param == "Displace r.") {
         camCollider.setRadius(displaceRadius);
         camera.setPosition(ofVec3f(0, 0, displaceRadius));
@@ -207,5 +213,12 @@ void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
 void ofApp::onToggleEvent(ofxDatGuiToggleEvent e) {
     if (e.target->is("Ext. camera")) {
         debug = !debug;
+    }
+}
+//--------------------------------------------------------------
+void ofApp::on2dPadEvent(ofxDatGui2dPadEvent e) {
+    if (e.target->is("Cam. pos.")) {
+        cameraPos.x = camStartPos.x = camTargetPos.x = ofMap(e.x, 0, ofGetWidth(), -5, 5);
+        cameraPos.y = camStartPos.z = camTargetPos.z = ofMap(e.y, 0, ofGetHeight(), 3, -3);
     }
 }
