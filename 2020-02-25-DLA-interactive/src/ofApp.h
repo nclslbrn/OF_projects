@@ -17,12 +17,12 @@ class ofApp : public ofBaseApp {
     void mouseScrolled(int x, int y, float scrollX, float scrollY);
     void onSliderEvent(ofxDatGuiSliderEvent e);
     void onButtonEvent(ofxDatGuiButtonEvent e);
-    void exportTree();
+    void exportTreeInCSVformat();
+    void exportTreeInPLYformat();
+    void getInfoString();
 
-    ofVec3f randomPos();
     ofVec3f onEmitter();
     ofColor indexColor(int index);
-    string getInfoString();
 
     deque<Walker> tree;
     deque<Walker> walkers;
@@ -45,5 +45,5 @@ class ofApp : public ofBaseApp {
 
     float walkerSize, xRot, zRot, emitterDistance;
     int zoom, mouseScrollSensivity;
-    bool isExporting;
+    bool isExporting, isExported;
 };

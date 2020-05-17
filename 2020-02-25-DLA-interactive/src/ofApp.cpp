@@ -1,9 +1,5 @@
 #include "ofApp.h"
-//--------------------------------------------------------------
-ofVec3f ofApp::randomPos() {
-    return ofVec3f(ofRandom(ofGetWidth()), ofRandom(ofGetHeight()),
-                   ofRandom(ofGetHeight()));
-}
+
 //--------------------------------------------------------------
 ofVec3f ofApp::onEmitter() {
     ofVec3f center = ofVec3f(0, 0, 0);
@@ -33,9 +29,8 @@ void ofApp::setup() {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 
-    isExporting = false;
-    increaseEmitterDistance = 1.05;
-    decreaseWalkerSize = 0.995;
+    increaseEmitterDistance = 1.001;
+    decreaseWalkerSize = 1;
 
     initDatGui();
     init();
@@ -70,7 +65,6 @@ void ofApp::setup() {
 
     treeMat.setShininess(0.1);
 }
-
 //--------------------------------------------------------------
 void ofApp::update() {
     if (tree.size() < treeSize && !isExporting) {
@@ -91,8 +85,10 @@ void ofApp::update() {
             walkers[i].pos = onEmitter();
         }
     }
+    if (!isExporting && !isExported) {
+        getInfoString();
+    }
 }
-
 //--------------------------------------------------------------
 void ofApp::draw() {
     ofBackgroundGradient(ofColor(50, 50, 50), ofColor::black);
@@ -128,36 +124,40 @@ void ofApp::draw() {
     ofDisableDepthTest();
 }
 //--------------------------------------------------------------
-
 void ofApp::initDatGui() {
-    walkerNum.set("Living w.", 200, 100, 500);
-    steps.set("W. step", 150, 15, 200);
-    initWalkerSize.set("W. size", 24, 12, 76);
-    decreaseParam.set("Shrink w. size", 50, 0, 100);
-    initEmitterDistance.set("Emitter distance", 100, 50, 300);
-    increaseParam.set("Grow emit. dist.", 50, 0, 100);
-    treeSize.set("Dead w.", 500, 500, 10000);
+    walkerNum.set("Living count", 200, 100, 500);
+    steps.set("Move step", 150, 15, 200);
+    initWalkerSize.set("Initial size", 24, 12, 76);
+    decreaseParam.set("Shrink size", 100, 0, 100);  // 1 % from 0.9 to 1
 
-    gui = new ofxDatGui(ofxDatGuiAnchor::TOP_LEFT);
+    initEmitterDistance.set("Emitter distance", 100, 50, 500);
+    increaseParam.set("Grow emit. dist.", 100, 0, 100);  //  1.01 % from 1 to 1.001
+    treeSize.set("Desired size", 500, 500, 10000);
+
+    gui = new ofxDatGui(ofxDatGuiAnchor::TOP_RIGHT);
     gui->setTheme(new ofxDatGuiThemeSmoke());
-    gui->addLabel("DLA parameters");
+    gui->addHeader("DLA parameters");
+    gui->addLabel("Walker options");
     gui->addSlider(walkerNum);
     gui->addSlider(steps);
     gui->addSlider(initWalkerSize);
     gui->addSlider(decreaseParam);
+    gui->addLabel("Tree options");
     gui->addSlider(initEmitterDistance);
     gui->addSlider(increaseParam);
     gui->addSlider(treeSize);
     gui->addButton("EXPORT DLA TO CSV");
+    gui->addButton("EXPORT DLA TO PLY");
+    gui->addFooter();
     gui->onSliderEvent(this, &ofApp::onSliderEvent);
     gui->onButtonEvent(this, &ofApp::onButtonEvent);
 }
 //--------------------------------------------------------------
 void ofApp::init() {
+    /* change app state */
+    isExporting = false;
+    isExported = false;
     /* erase previous computed element */
-
-    factorInfo = getInfoString();
-
     tree.clear();
     walkers.clear();
     walkerSize = initWalkerSize;
@@ -171,32 +171,32 @@ void ofApp::init() {
         Walker newWalker = Walker(newPos, walkerSize);
         walkers.push_front(newWalker);
     }
+
+    /* Get parameters value to print them */
+    factorInfo = " | Tree initialized";
 }
-
 //--------------------------------------------------------------
-
 void ofApp::onSliderEvent(ofxDatGuiSliderEvent e) {
     string param = e.target->getName();
     if (
-        param == "Living w." ||
-        param == "W. step" ||
-        param == "W. size" ||
+        param == "Living count" ||
+        param == "Move step" ||
+        param == "Initial size" ||
         param == "Shrink w. size" ||
         param == "Emitter distance" ||
         param == "Grow emit. dist.") {
         if (param == "Shrink w. size") {
             std::printf("Shrink %f\n", decreaseParam);
             decreaseWalkerSize = ofMap(decreaseParam, 0, 100, 0.9, 1);
-            factorInfo = getInfoString();
         }
         if (param == "Grow emit. dist.") {
             std::printf("Grow %f\n", increaseParam);
-            increaseEmitterDistance = ofMap(increaseParam, 0, 100, 1, 1.1);
-            factorInfo = getInfoString();
+            increaseEmitterDistance = ofMap(increaseParam, 0, 100, 1, 1.001);
         }
 
         init();
     }
+    getInfoString();
 }
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
@@ -209,19 +209,29 @@ void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY) {
 }
 //--------------------------------------------------------------
 void ofApp::onButtonEvent(ofxDatGuiButtonEvent e) {
-    exportTree();
+    if (e.target->getLabel() == "EXPORT DLA TO CSV") {
+        exportTreeInCSVformat();
+    }
+    if (e.target->getLabel() == "EXPORT DLA TO PLY") {
+        exportTreeInPLYformat();
+    }
 }
 //--------------------------------------------------------------
-string ofApp::getInfoString() {
-    string shrinkWalkerInfo = "Shrink walker size: " + ofToString(decreaseWalkerSize);
-    string growEmitterInfo = "Grow emitter distance: " + ofToString(increaseEmitterDistance);
+void ofApp::getInfoString() {
+    if (tree.size() < treeSize) {
+        string shrinkWalkerInfo = "Shrink walker size: " + ofToString(decreaseWalkerSize);
+        string growEmitterInfo = "Grow emitter distance: " + ofToString(increaseEmitterDistance);
 
-    return " | " + shrinkWalkerInfo + " | " + growEmitterInfo;
+        factorInfo = " | " + shrinkWalkerInfo + " | " + growEmitterInfo;
+    } else {
+        factorInfo = " | Tree computation completed, ready to export.";
+    }
 }
-
 //--------------------------------------------------------------
-void ofApp::exportTree() {
+void ofApp::exportTreeInCSVformat() {
     isExporting = true;
+    factorInfo = " | Exporting tree into CSV ...............................................";
+
     string path = "output/";
     string fileName = "DLA-tree-" + ofGetTimestampString() + ".csv";
     csv.createFile(path + fileName);
@@ -237,4 +247,43 @@ void ofApp::exportTree() {
     }
     csv.save(path + fileName);
     isExporting = false;
+    isExported = true;
+    factorInfo = " | Tree was exported in bin/data/output/" + fileName + ".";
+}
+//--------------------------------------------------------------
+void ofApp::exportTreeInPLYformat() {
+    isExporting = true;
+    factorInfo = " | Exporting tree into PLY ...............................................";
+    string path = "output/";
+    string fileName = "DLA-tree-" + ofGetTimestampString() + ".ply";
+    ofFile ply(path + fileName, ofFile::WriteOnly);
+    ply << "ply" << endl;
+    ply << "format ascii 1.0" << endl;
+    ply << "comment VCGLIB generated" << endl;
+    ply << "element vertex " + ofToString(tree.size()) << endl;
+    ply << "property float x" << endl;
+    ply << "property float y" << endl;
+    ply << "property float z" << endl;
+    ply << "property uchar red" << endl;
+    ply << "property uchar green" << endl;
+    ply << "property uchar blue" << endl;
+    ply << "property uchar alpha" << endl;
+    ply << "element face 0" << endl;
+    ply << "property list uchar int vertex_indices" << endl;
+    ply << "end_header" << endl;
+
+    for (int i = 0; i < tree.size(); i++) {
+        ofColor vCol = indexColor(i);
+        ply << ofToString(tree[i].pos.x) + " " +
+                   ofToString(tree[i].pos.y) + " " +
+                   ofToString(tree[i].pos.z) + " " +
+                   ofToString((int)vCol.r) + " " +
+                   ofToString((int)vCol.g) + " " +
+                   ofToString((int)vCol.b) + " 255"
+            << endl;
+    }
+    ply.close();
+    isExporting = false;
+    isExported = true;
+    factorInfo = " | Tree was exported in bin/data/output/" + fileName + ".";
 }
