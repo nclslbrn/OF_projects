@@ -286,4 +286,16 @@ void ofApp::exportTreeInPLYformat() {
     isExporting = false;
     isExported = true;
     factorInfo = " | Tree was exported in bin/data/output/" + fileName + ".";
+    launchBlender(fileName);
+}
+//--------------------------------------------------------------
+void ofApp::launchBlender(string fileName) {
+    string binDataPath = ofFilePath::getCurrentExeDir();
+
+    string blenderCommand =
+        "blender " + binDataPath + "data/blender-script/almost-empty.blend " +
+        "--python " + binDataPath + "data/blender-script/import-dla.py " +
+        "-- " + binDataPath + "/data/output/" + fileName + " " + ofToString(treeSize);
+
+    ofSystem(blenderCommand.c_str());
 }

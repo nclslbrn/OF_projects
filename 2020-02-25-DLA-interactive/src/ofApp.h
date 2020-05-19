@@ -20,6 +20,7 @@ class ofApp : public ofBaseApp {
     void exportTreeInCSVformat();
     void exportTreeInPLYformat();
     void getInfoString();
+    void launchBlender(string fileName);
 
     ofVec3f onEmitter();
     ofColor indexColor(int index);
