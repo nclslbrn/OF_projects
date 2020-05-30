@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<group>
+	<deferred>
+		<BgPass>
+			<active>1</active>
+			<fill_color>0, 0.125687, 0.35, 1</fill_color>
+		</BgPass>
+		<EdgePass>
+			<active>1</active>
+			<edge_color>0, 0, 0, 1</edge_color>
+			<bg_color>1, 1, 1, 1</bg_color>
+			<use_read_as_bg>0</use_read_as_bg>
+			<normalEdgeStrength>0.109746</normalEdgeStrength>
+			<depthEdgeStrength>0.109746</depthEdgeStrength>
+		</EdgePass>
+		<SsaoPass>
+			<active>1</active>
+			<occlusion_radius>4.44606</occlusion_radius>
+			<darkness>0.0628905</darkness>
+		</SsaoPass>
+		<ShadowLightPass>
+			<active>1</active>
+			<darkness>1</darkness>
+			<biasScalar>0.00969388</biasScalar>
+			<ambient_color>0, 0, 0, 1</ambient_color>
+			<diffuse_color>1, 1, 1, 1</diffuse_color>
+			<source_position>-252.91, 317.733, -1547.61</source_position>
+			<source_look>0, 0, 0</source_look>
+			<isShading>1</isShading>
+			<isVolume>1</isVolume>
+			<isDrawSun>1</isDrawSun>
+			<isFrontCulling>1</isFrontCulling>
+			<scattering>0.0524781</scattering>
+			<volumeStrength>0.140983</volumeStrength>
+		</ShadowLightPass>
+		<PointLightPass>
+			<active>1</active>
+			<lightBrightness>2.10329</lightBrightness>
+			<light_0>
+				<isActive>1</isActive>
+				<diffuse_color>1, 0.524687, 0.370774, 1</diffuse_color>
+				<specular_color>1, 0.704143, 0.59188, 1</specular_color>
+				<position>-1, -1, 2</position>
+				<radius>179.327</radius>
+				<intensity>0.134077</intensity>
+			</light_0>
+			<light_1>
+				<isActive>1</isActive>
+				<diffuse_color>0.457344, 0.691459, 1, 1</diffuse_color>
+				<specular_color>0.651872, 0.986156, 1, 1</specular_color>
+				<position>1, 1, 2</position>
+				<radius>294.056</radius>
+				<intensity>0.490008</intensity>
+			</light_1>
+			<light_2>
+				<isActive>1</isActive>
+				<diffuse_color>0.277959, 0.211411, 0.553976, 1</diffuse_color>
+				<specular_color>0.618008, 0.869901, 0.825573, 1</specular_color>
+				<position>404.756, -271.05, -374.253</position>
+				<radius>238.003</radius>
+				<intensity>0.534022</intensity>
+			</light_2>
+			<light_3>
+				<isActive>1</isActive>
+				<diffuse_color>0.441431, 0.21793, 0.314835, 1</diffuse_color>
+				<specular_color>0.408841, 0.593543, 0.879071, 1</specular_color>
+				<position>705.177, 507.625, 278.037</position>
+				<radius>210.392</radius>
+				<intensity>0.535494</intensity>
+			</light_3>
+			<light_4>
+				<isActive>1</isActive>
+				<diffuse_color>0.761228, 0.791003, 0.654681, 1</diffuse_color>
+				<specular_color>0.676423, 0.476137, 0.988367, 1</specular_color>
+				<position>521.82, -274.295, 503.727</position>
+				<radius>388.789</radius>
+				<intensity>0.108239</intensity>
+			</light_4>
+			<light_5>
+				<isActive>1</isActive>
+				<diffuse_color>0.384269, 0.515866, 0.790752, 1</diffuse_color>
+				<specular_color>0.87159, 0.685012, 0.65393, 1</specular_color>
+				<position>662.95, 128.386, 774.744</position>
+				<radius>314.702</radius>
+				<intensity>0.116793</intensity>
+			</light_5>
+		</PointLightPass>
+		<FxaaPass>
+			<active>1</active>
+			<lumaThreshold>0.448147</lumaThreshold>
+			<mulReduce>0</mulReduce>
+			<minReduce>0.0680966</minReduce>
+			<maxSpan>9.89588</maxSpan>
+			<texelStep>0, 0</texelStep>
+		</FxaaPass>
+		<FogPass>
+			<active>1</active>
+			<noiseFogStrength>0.177426</noiseFogStrength>
+			<depthFogStrength>0.854227</depthFogStrength>
+			<fogColor>0.573816, 0.641719, 1, 1</fogColor>
+			<fogAmp>0.963593</fogAmp>
+			<fogFreq>4, 4, 4</fogFreq>
+			<fogOffset>0.4, 0.4, 0.4</fogOffset>
+			<fogCenter>0.109746</fogCenter>
+			<fogPower>0.1</fogPower>
+			<fogRayStart>298.091</fogRayStart>
+		</FogPass>
+		<DofPass>
+			<active>1</active>
+			<endpoint_coc>0.059703, 0.059703</endpoint_coc>
+			<focul_range>0.548445, 1</focul_range>
+			<BlurPass>
+				<active>1</active>
+				<preShrink>8</preShrink>
+				<sampleStep>5.43133</sampleStep>
+				<blurRes>4</blurRes>
+			</BlurPass>
+			<bokeh>
+				<isActiveBokeh>1</isActiveBokeh>
+				<maxBokehCount>755</maxBokehCount>
+				<bokehCocThres>0.490008</bokehCocThres>
+				<bokehLumThres>5.11258</bokehLumThres>
+				<maxBokehRadius>62.1368</maxBokehRadius>
+				<bokehDepthCutoff>0.434228</bokehDepthCutoff>
+				<bokehShapeId>1</bokehShapeId>
+			</bokeh>
+		</DofPass>
+		<BloomPass>
+			<active>1</active>
+			<luma_threshold>0.641608</luma_threshold>
+			<strength>3.70054</strength>
+		</BloomPass>
+	</deferred>
+	<show_tile>0</show_tile>
+	<farClip>12.5</farClip>
+	<show_gbuffer>0</show_gbuffer>
+	<show_shadowMap>0</show_shadowMap>
+	<show_dofBuffers>0</show_dofBuffers>
+	<show_bloomBuffers>0</show_bloomBuffers>
+</group>
