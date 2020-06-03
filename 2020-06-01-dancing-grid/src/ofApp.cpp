@@ -108,12 +108,13 @@ void ofApp::onGifSaved(string &fileName) {
     cout << "GifSicle optimized version saved as opt-" << fileName << endl;
     ofSystem(command);
     isOptimizing = false;
+    isExported = true;
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
     if (key == 115) {
-        isOptimizing = false;
+        isExported = false;
         isRecording = true;
     } else if (key == 27) {
         exit();
