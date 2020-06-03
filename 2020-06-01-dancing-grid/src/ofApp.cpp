@@ -16,11 +16,14 @@ void ofApp::setup() {
         }
     }
     initPoints = points;
+
+    gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.25f, 2);  // colors = 8
+    ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    float t = ofMap(ofGetFrameNum() % animFrame, 0, animFrame, 0, 1);
+    float t = (currFrame % animFrame) / static_cast<float>(animFrame);
     for (int p = 0; p < points.size(); p++) {
         float noise = ofNoise(
             points[p].x / noiseScale,
@@ -38,7 +41,7 @@ void ofApp::draw() {
     int fromRight = ofGetWidth() - margin.x * 2;
     int fromBottom = ofGetHeight() - margin.y * 2;
 
-    ofBackground(0, 10);
+    ofBackground(0);
     //float t = ofMap(ofGetFrameNum() % animFrame, 0, animFrame, 0, 1);
     ofPushMatrix();
     ofTranslate(margin.x, margin.y);
@@ -67,13 +70,58 @@ void ofApp::draw() {
         }
     }
     ofPopMatrix();
-    /*   ofDrawCircle(points[p].x, points[p].y, 3);
-    ofDrawBitmapString(p + 1, points[p].x, points[p].y); */
+
+    if (isRecording && currFrame < animFrame) {
+        img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
+        gifEncoder.addFrame(img, 0.033f);
+    }
+    if (currFrame >= animFrame) {
+        if (isRecording) {
+            gifEncoder.save("Dancing-grid" + ofGetTimestampString() + ".gif");
+            isRecording = false;
+        }
+        currFrame = 0;
+    }
+
     ofDrawBitmapString("Radius : " + ofToString(radius), 16, ofGetHeight() - 32);
     ofDrawBitmapString("Scale: " + ofToString(noiseScale), 16, ofGetHeight() - 16);
+    if (isRecording) ofDrawBitmapString("Recording", 16, 16);
+    if (isSaved) ofDrawBitmapString("Exported", 16, 16);
+    if (isOptimizing) ofDrawBitmapString("Optimizing", 16, 16);
+    if (isExported) ofDrawBitmapString("Exported", 16, 16);
+
+    currFrame++;
 }
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
     radius = ofMap(x, 0, ofGetWidth(), 4, 126);
     noiseScale = ofMap(y, 0, ofGetHeight(), 32, 600);
+}
+//--------------------------------------------------------------
+void ofApp::onGifSaved(string &fileName) {
+    isSaved = true;
+    cout << "Gif saved as " << fileName << endl;
+    isSaved = false;
+    isOptimizing = true;
+    string path = ofFilePath::getCurrentExeDir() + "data/";
+    string command = "gifsicle -O3 < " + path + fileName + " > " + path + "opt-" + fileName;
+    cout << "GifSicle optimized version saved as opt-" << fileName << endl;
+    ofSystem(command);
+    isOptimizing = false;
+}
+
+//--------------------------------------------------------------
+void ofApp::keyPressed(int key) {
+    if (key == 115) {
+        isOptimizing = false;
+        isRecording = true;
+    } else if (key == 27) {
+        exit();
+    } else {
+        ofLogNotice() << "Unassigned key (" << key << ")";
+    }
+}
+//--------------------------------------------------------------
+void ofApp::exit() {
+    gifEncoder.exit();
 }
