@@ -1,3 +1,10 @@
+# Ignore all
+*
+
+# Unignore all with extensions 
+# (linux binaries doesn't have extension) 
+!*.*
+
 # Prerequisites
 *.d
 
@@ -31,8 +38,6 @@
 *.out
 *.app
 
-
-bin/
 obj/
 .vscode/
 Makefile
