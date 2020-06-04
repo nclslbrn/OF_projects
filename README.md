@@ -1,14 +1,21 @@
-# OF_sketch
+# Open Frmaeworks projects
 
 OpenFrameworks (personal) sketchbook
 
-# Prerequisite
+## Prerequisite
 
-- OpenFrameworks installed
-- ProjectGenerator installed
+- [OpenFrameworks](https://github.com/openframeworks/openFrameworks) installed
+- [ProjectGenerator](https://github.com/openframeworks/projectGenerator) installed
 
-# Build with VS code editor
+## Build some apps
 
-Clone this repo in oF/apps/.
-Run openFrameworks project generator to generate Make config and vscode tasks for every sketch you want to build.
-To open and edit a sketch you have to open the VS code workspace file.
+This repo doesn't contains binaries but everything to build them, currently theses apps are built from linux using g++, using VS code ([Codium build](https://vscodium.com/)).
+
+You have to clone this repo in oF/apps/.
+Foreach project you want to run, you have to create a configure the apps (Make config and vscode tasks and workspace files in my case) with openFrameworks project generator. Moreover project generator will link oF addons and alert you if there are missing on your oF installation.
+
+If you use Vscode to edit and build apps you have to open code \*.code-workspace file (do not open c++ files directly, build tasks will be not initialized).
+
+## Other dependencies
+
+Some projects require extra apps such as gisicle, blender.
