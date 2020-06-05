@@ -4,7 +4,7 @@ void ofApp::setup() {
     // SCENE
     cam.setDistance(10);
     cam.setFarClip(20.0f);
-    cam.setNearClip(0.01);
+    cam.setNearClip(0.001);
     light.move(2, -5, -1);
     light.lookAt(glm::vec3(0.0, 0.0, 0.0));
     light.setDirectional();
@@ -56,6 +56,7 @@ void ofApp::setupWPCBuild() {
     // Y Up
     // Z forward
     m_line.load("plys/line.ply");
+    m_alt_line.load("plys/alt_line.ply");
     m_end_l.load("plys/end_l.ply");
     m_end_r.load("plys/end_r.ply");
     m_turn.load("plys/turn.ply");
@@ -65,6 +66,7 @@ void ofApp::setupWPCBuild() {
 
     // set tile-name mapping
     tiles["line"] = &m_line;
+    tiles["alt_line"] = &m_alt_line;
     tiles["end_l"] = &m_end_l;
     tiles["end_r"] = &m_end_r;
     tiles["turn"] = &m_turn;
@@ -106,8 +108,8 @@ void ofApp::draw() {
     glCullFace(GL_BACK);
 
     deferred.begin(cam);
-    drawWPCBuild();
     glDisable(GL_CULL_FACE);
+    drawWPCBuild();
     deferred.end();
 
     if (isShowPanel) {
@@ -155,7 +157,7 @@ void ofApp::keyPressed(int key) {
     if (key == 115) {
         isShowPanel = !isShowPanel;
     } else if (key == 32) {
-        int x = 15, y = 5, z = 15;
+        int x = 8, y = 5, z = 8;
 
         // config_name, subset, x, y, z, periodic=false, ground="", surround=false
         wfc.SetUp("data.xml", "default", x, y, z, false, "", "empty");
@@ -166,7 +168,6 @@ void ofApp::keyPressed(int key) {
          *    for (int iz = 1; iz < z-1; iz++)
          *        wfc.SetTile("empty", ix,y-1,iz);
          */
-
         int limit = 8, seed = (int)ofRandom(1000);
         for (int k = 0; k < limit; k++) {
             bool result = wfc.Run(seed++);
