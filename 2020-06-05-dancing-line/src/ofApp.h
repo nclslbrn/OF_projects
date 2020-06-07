@@ -8,17 +8,20 @@ class ofApp : public ofBaseApp {
     void setup();
     void update();
     void draw();
+
     void keyPressed(int key);
     void mouseMoved(int x, int y);
     void onGifSaved(string& fileName);
     void exit();
 
-    int cols = 256, rows = 256;
-    int noiseScale = 130, animFrame = 60, currFrame = 0;
-    double cellWidth, cellHeight;
-    vector<double> noise;
-
+    // must be even number
+    int cols{3}, rows{3};
+    int midWidthGrid, midHeightGrid;
+    int noiseScale = 2, animFrame = 240, liveFrame = 30, currFrame = 0;
+    double cellWidth, cellHeight, cellDiag;
+    float noiseRadius = 2;
+    vector<vector<ofVec2f>> linePoints;
     ofImage img;
     ofxGifEncoder gifEncoder;
-    bool isRecording, isSaved, isOptimizing, isExported = false;
+    bool willRecord, isRecording, isSaved, isOptimizing, isExported = false;
 };
