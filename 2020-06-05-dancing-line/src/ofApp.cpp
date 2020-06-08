@@ -2,20 +2,28 @@
 
 //--------------------------------------------------------------
 void ofApp::setup() {
-    // remove line below before export GIF
-    ofSetFrameRate(25);
+    ofSetLineWidth(8);
+    ofNoFill();
+
     cellWidth = ofGetWidth() / static_cast<float>(cols);
     cellHeight = ofGetHeight() / static_cast<float>(rows);
     cellDiag = sqrt(pow(cellWidth, 2) + pow(cellHeight, 2));
-    midWidthGrid = floor(cols / 2);
-    midHeightGrid = floor(rows / 2);
-    gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.50f, 128);  // colors = 8
+    //midWidthGrid = floor(cols / 2);
+    //midHeightGrid = floor(rows / 2);
+    gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.50f, 156);  // colors = 8
     ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
 
     linePoints.clear();
+    lineColor.clear();
     linePoints.resize(cols * rows);
+    lineColor.resize(cols * rows);
+
     for (int n = 0; n < cols * rows; n++) {
-        linePoints[n].resize(liveFrame);
+        linePoints[n].resize(animFrame);
+
+        int pointHue = static_cast<int>(
+            255 * (n / static_cast<float>(cols * cols)));
+        lineColor[n] = ofColor::fromHsb(pointHue, 120, 240);
     }
 }
 
@@ -25,9 +33,12 @@ void ofApp::update() {
         for (int y = 0; y < rows; y++) {
             int i = (y * cols) + x;
 
-            for (int f = 0; f < liveFrame; f++) {
-                float t = ((currFrame + f) % animFrame) / static_cast<float>(liveFrame);
-                /* Cast x and y to make noise symmetrical 
+            for (int f = 0; f < animFrame; f++) {
+                double t = (currFrame + f) % animFrame / static_cast<double>(animFrame);
+                int d = (f / static_cast<float>(animFrame)) * cellDiag;
+
+                /* Cast x and y to make 
+                noise symmetrical 
                 int nx = x <= midWidthGrid - 1 ? x : cols - x - 1;
                 int ny = y <= midHeightGrid - 1 ? y : rows - y - 1;
                 int n = (ny * midWidthGrid) + nx; 
@@ -36,12 +47,12 @@ void ofApp::update() {
                 float noise = ofNoise(
                     x * cellWidth / noiseScale,
                     y * cellHeight / noiseScale,
-                    glm::cos(t * glm::two_pi<float>()),
-                    glm::sin(t * glm::two_pi<float>()));
+                    glm::cos(t * glm::pi<float>()),
+                    glm::sin(t * glm::pi<float>()));
 
                 linePoints[i][f] = ofVec2f(
-                    x * cellWidth + (glm::cos(noise) * noiseRadius),
-                    y * cellHeight + (glm::sin(noise) * noiseRadius));
+                    (x * cellWidth + (glm::cos(noise) * noiseRadius)) + d,
+                    (y * cellHeight + (glm::sin(noise) * noiseRadius)) + d);
             }
         }
     }
@@ -50,23 +61,20 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::draw() {
     ofBackground(0);
-    //ofNoFill();
     ofPushMatrix();
-    ofScale(0.8);
+    ofScale(0.7);
     ofTranslate(-cellWidth / 2, -cellHeight / 2, 0);
-    ofPushStyle();
-    for (int p = 0; p < cols * rows; p++) {
-        ofSetColor(ofColor::fromHsb(255 * (p / static_cast<float>(cols * cols)), 255, 255, 255));
-        ofBeginShape();
-        for (int f = 0; f < liveFrame; f++) {
-            int d = (f / static_cast<float>(liveFrame)) * cellDiag;
-            ofVertex(linePoints[p][f].x + d, linePoints[p][f].y + d);
-        }
-        ofEndShape();
-    }
-    ofPopStyle();
-    ofPopMatrix();
 
+    for (int p = 0; p < cols * rows; p++) {
+        ofPushStyle();
+        ofSetColor(lineColor[p]);
+        ofBeginShape();
+        for (int f = 0; f < animFrame; f++) {
+            ofVertex(linePoints[p][f].x, linePoints[p][f].y);
+        }
+        ofEndShape(false);
+        ofPopStyle();
+    }
     if (currFrame < animFrame - 1) {
         currFrame++;
 
@@ -74,19 +82,21 @@ void ofApp::draw() {
             img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
             gifEncoder.addFrame(img, 0.033f);
         }
-
     } else {
         currFrame = 0;
-        if (willRecord) {
-            isRecording = true;
-            willRecord = false;
-        }
+
         if (isRecording) {
             gifEncoder.save("Dancing-line" + ofGetTimestampString() + ".gif");
             isRecording = false;
         }
+        if (willRecord) {
+            isRecording = true;
+            willRecord = false;
+        }
     }
+    ofPopMatrix();
     ofDrawBitmapString("Frame: " + ofToString(currFrame) + "/" + ofToString(animFrame), 16, ofGetHeight() - 48);
+
     ofDrawBitmapString("Radius: " + ofToString(noiseRadius), 16, ofGetHeight() - 32);
     ofDrawBitmapString("Scale: " + ofToString(noiseScale), 16, ofGetHeight() - 16);
 
@@ -100,7 +110,7 @@ void ofApp::draw() {
     ofPopStyle();
 }
 //--------------------------------------------------------------
-void ofApp::onGifSaved(string &fileName) {
+void ofApp::onGifSaved(string& fileName) {
     isSaved = true;
     cout << "Gif saved as " << fileName << endl;
     isSaved = false;
@@ -115,8 +125,10 @@ void ofApp::onGifSaved(string &fileName) {
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
     if (key == 115) {
-        willRecord = false;
-        isRecording = true;
+        isExported = false;
+        willRecord = true;
+    } else {
+        ofLogNotice() << "Unassigned key: " << key;
     }
 }
 //--------------------------------------------------------------
@@ -126,6 +138,6 @@ void ofApp::exit() {
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
-    noiseRadius = x;
-    noiseScale = y + 1;
+    noiseRadius = x / 2;
+    noiseScale = (y + 1);
 }

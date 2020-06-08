@@ -14,13 +14,13 @@ class ofApp : public ofBaseApp {
     void onGifSaved(string& fileName);
     void exit();
 
-    // must be even number
     int cols{3}, rows{3};
     int midWidthGrid, midHeightGrid;
-    int noiseScale = 2, animFrame = 240, liveFrame = 30, currFrame = 0;
+    int noiseScale = 2, animFrame = 60, currFrame = 0;
     double cellWidth, cellHeight, cellDiag;
     float noiseRadius = 2;
     vector<vector<ofVec2f>> linePoints;
+    vector<ofColor> lineColor;
     ofImage img;
     ofxGifEncoder gifEncoder;
     bool willRecord, isRecording, isSaved, isOptimizing, isExported = false;
