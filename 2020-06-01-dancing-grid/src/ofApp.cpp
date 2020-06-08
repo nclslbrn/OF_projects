@@ -80,11 +80,16 @@ void ofApp::draw() {
             gifEncoder.save("Dancing-grid" + ofGetTimestampString() + ".gif");
             isRecording = false;
         }
+        if (willRecord) {
+            isRecording = true;
+            willRecord = false;
+        }
         currFrame = 0;
     }
 
     ofDrawBitmapString("Radius : " + ofToString(radius), 16, ofGetHeight() - 32);
     ofDrawBitmapString("Scale: " + ofToString(noiseScale), 16, ofGetHeight() - 16);
+    if (willRecord) ofDrawBitmapString("Record will start", 16, 16);
     if (isRecording) ofDrawBitmapString("Recording", 16, 16);
     if (isSaved) ofDrawBitmapString("Exported", 16, 16);
     if (isOptimizing) ofDrawBitmapString("Optimizing", 16, 16);
@@ -115,7 +120,7 @@ void ofApp::onGifSaved(string &fileName) {
 void ofApp::keyPressed(int key) {
     if (key == 115) {
         isExported = false;
-        isRecording = true;
+        willRecord = true;
     } else if (key == 27) {
         exit();
     } else {
