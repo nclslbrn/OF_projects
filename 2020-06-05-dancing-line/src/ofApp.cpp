@@ -1,6 +1,16 @@
 #include "ofApp.h"
 
 //--------------------------------------------------------------
+float ofApp::ease(float p) { return 3 * p * p - 2 * p * p * p; }
+//--------------------------------------------------------------
+float ofApp::ease(float p, float g) {
+    if (p < 0.5) {
+        return 0.5 * pow(2 * p, g);
+    } else {
+        return 1 - 0.5 * pow(2 * (1 - p), g);
+    }
+}
+//--------------------------------------------------------------
 void ofApp::setup() {
     ofSetLineWidth(8);
     ofNoFill();
@@ -8,8 +18,6 @@ void ofApp::setup() {
     cellWidth = ofGetWidth() / static_cast<float>(cols);
     cellHeight = ofGetHeight() / static_cast<float>(rows);
     cellDiag = sqrt(pow(cellWidth, 2) + pow(cellHeight, 2));
-    //midWidthGrid = floor(cols / 2);
-    //midHeightGrid = floor(rows / 2);
     gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.50f, 156);  // colors = 8
     ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
 
@@ -33,22 +41,15 @@ void ofApp::update() {
         for (int y = 0; y < rows; y++) {
             int i = (y * cols) + x;
 
-            for (int f = 0; f < animFrame; f++) {
-                double t = (currFrame + f) % animFrame / static_cast<double>(animFrame);
+            for (int f = 0; f <= animFrame; f++) {
+                float t = ((currFrame + f) % animFrame) / static_cast<float>(animFrame);
+
                 int d = (f / static_cast<float>(animFrame)) * cellDiag;
-
-                /* Cast x and y to make 
-                noise symmetrical 
-                int nx = x <= midWidthGrid - 1 ? x : cols - x - 1;
-                int ny = y <= midHeightGrid - 1 ? y : rows - y - 1;
-                int n = (ny * midWidthGrid) + nx; 
-                */
-
                 float noise = ofNoise(
-                    x * cellWidth / noiseScale,
-                    y * cellHeight / noiseScale,
-                    glm::cos(t * glm::pi<float>()),
-                    glm::sin(t * glm::pi<float>()));
+                    (x * cellWidth) - d / noiseScale,
+                    (y * cellHeight) - d / noiseScale,
+                    glm::cos(t * glm::two_pi<float>()),
+                    glm::sin(t * glm::two_pi<float>()));
 
                 linePoints[i][f] = ofVec2f(
                     (x * cellWidth + (glm::cos(noise) * noiseRadius)) + d,
@@ -62,20 +63,24 @@ void ofApp::update() {
 void ofApp::draw() {
     ofBackground(0);
     ofPushMatrix();
-    ofScale(0.7);
-    ofTranslate(-cellWidth / 2, -cellHeight / 2, 0);
-
+    ofScale(0.65);
+    ofTranslate(-noiseRadius / 2, -noiseRadius / 2);
+    ofVec2f lastPoint;
     for (int p = 0; p < cols * rows; p++) {
         ofPushStyle();
         ofSetColor(lineColor[p]);
         ofBeginShape();
-        for (int f = 0; f < animFrame; f++) {
+        for (int f = 0; f <= animFrame; f++) {
             ofVertex(linePoints[p][f].x, linePoints[p][f].y);
         }
         ofEndShape(false);
         ofPopStyle();
+        if (lastPoint.x != 0) {
+            ofDrawLine(lastPoint.x, lastPoint.y, linePoints[p][animFrame].x, linePoints[p][animFrame].y);
+        }
+        lastPoint = linePoints[p][animFrame];
     }
-    if (currFrame < animFrame - 1) {
+    if (currFrame < animFrame) {
         currFrame++;
 
         if (isRecording) {
@@ -138,6 +143,6 @@ void ofApp::exit() {
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
-    noiseRadius = x / 2;
-    noiseScale = (y + 1);
+    noiseRadius = (x / 2) + 1;
+    noiseScale = y + 1;
 }
