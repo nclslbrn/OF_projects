@@ -1,4 +1,4 @@
-# Open Frmaeworks projects
+# Open Frameworks projects
 
 OpenFrameworks (personal) sketchbook
 
