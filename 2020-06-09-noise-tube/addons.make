@@ -1,0 +1,2 @@
+ofxGifEncoder
+ofxCameraSaveLoad

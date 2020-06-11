@@ -1,26 +1,43 @@
 #include "ofApp.h"
-
+//--------------------------------------------------------------
+float ofApp::ease(float p) { return 3 * p * p - 2 * p * p * p; }
 //--------------------------------------------------------------
 void ofApp::setup() {
-    ofSetGlobalAmbientColor(ofColor(150, 150, 150));
+    //ofSetGlobalAmbientColor(ofColor(150, 150, 150));
     ofDisableArbTex();
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.50f, 156);  // colors = 8
     ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
 
-    arcRadius = ofGetWidth() / 2.0f;
+    extRadius = ofGetWidth() / 2.0f;
+    extRes = res / 4;
     radius = 100.0f;
-    outerSteps = floor(glm::half_pi<double>() / res);
+    extRes = glm::half_pi<double>() / numFrame;
+    outerSteps = floor(glm::half_pi<double>() / extRes);
     innerSteps = floor(glm::two_pi<double>() / res);
     cubeSize = (glm::pi<float>() * 2 * radius) / innerSteps;
-
+    noiseRadius = 20.0f;
+    noiseScale = 400.0f;
     cam.setAutoDistance(false);
-    ofxLoadCamera(cam, camPresetFile);
-    light.setPointLight();
-    light.setPosition(ofGetWidth(), ofGetHeight(), ofGetHeight());
-    light.enable();
 
+    bool isPresetLoaded = ofxLoadCamera(cam, camPresetFile);
+    if (isPresetLoaded == false || 0) {
+        std::cout << "Camera missing preset fallback" << endl;
+        cam.setPosition(0, 0, ofGetHeight());
+        cam.lookAt(ofVec3f(0, 0, 0));
+    }
+    arcs.clear();
+    for (int i = 0; i <= outerSteps; i++) {
+        Arc a = Arc();
+        arcs.push_front(a);
+    }
+    arcsSize = arcs.size();
+    light.setPointLight();
+    light.setPosition(ofGetWidth() * 3, ofGetHeight() * 3, ofGetHeight() * 3);
+    light.enable();
+    ofNoFill();
+    std::cout << "total ellipses: " << outerSteps << endl;
     std::cout << "tube diameter: " << glm::pi<float>() * 2 * radius << endl;
     std::cout << "cubeSize: " << cubeSize << endl;
 }
@@ -31,31 +48,43 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    ofBackgroundGradient(ofColor(50, 50, 50), ofColor::black);
-    ofEnableDepthTest();
-    cam.begin();
     float currRadius = radius;
-    float currCubeSize = cubeSize;
+    //float currCubeSize = cubeSize;
+    float t = currFrame % numFrame / static_cast<float>(numFrame);
+
+    //ofBackgroundGradient(ofColor(50, 50, 50), ofColor::black);
+    //ofEnableDepthTest();
+    ofBackground(ofColor::black);
+    cam.begin();
 
     for (int i = 0; i >= -outerSteps; i--) {
-        double theta = res * i;
-        ofVec3f v1 = ofVec3f(arcRadius * glm::cos(theta), ofGetHeight() + arcRadius * glm::sin(theta), 0);
-        for (int j = 0; j <= innerSteps; j++) {
-            double phi = res * j;
-            ofVec3f v2 = ofVec3f(
-                v1.x + (currRadius * glm::sin(phi) * glm::cos(theta)),
-                v1.y + (currRadius * glm::sin(phi) * glm::sin(theta)),
-                v1.z + (currRadius * glm::cos(phi)));
-            ofBoxPrimitive b = box;
-            b.set(currCubeSize, currCubeSize, currCubeSize);
-            b.setPosition(
-                v2.x + ((currCubeSize / 2) * glm::sin(phi) * glm::cos(theta)),
-                v2.y + ((currCubeSize / 2) * glm::sin(phi) * glm::cos(theta)),
-                v2.z + ((currCubeSize / 2) * glm::cos(phi)));
-            b.lookAt(v1);
-            b.draw();
+        float theta0 = extRes * (i + t);
+        ofVec3f v1 = ofVec3f(
+            extRadius * glm::cos(theta0),
+            ofGetHeight() + extRadius * glm::sin(theta0),
+            0);
+        Arc a = arcs[(abs(i) + currFrame) % arcsSize];
+        deque<float> angles = a.getArcAngles();
+        float theta1 = a.getInitialArcAngle();
+
+        for (int k = 0; k < angles.size() - 1; k += 2) {
+            ofVec3f l1 = ofVec3f(
+                v1.x + (currRadius * glm::sin(theta1 + angles[k]) * glm::cos(theta0)),
+                v1.y + (currRadius * glm::sin(theta1 + angles[k]) * glm::sin(theta0)),
+                v1.z + (currRadius * glm::cos(theta1 + angles[k])));
+            ofVec3f l2 = ofVec3f(
+                v1.x + (currRadius * glm::sin(theta1 + angles[k + 1]) * glm::cos(theta0)),
+                v1.y + (currRadius * glm::sin(theta1 + angles[k + 1]) * glm::sin(theta0)),
+                v1.z + (currRadius * glm::cos(theta1 + angles[k + 1])));
+
+            ofBeginShape();
+            ofVertex(l1.x, l1.y, l1.z);
+            ofVertex(l2.x, l2.y, l2.z);
+            ofEndShape(false);
+
+            theta1 += angles[k + 1];
         }
-        currRadius *= 1.05;
+
         //currCubeSize *= 1.05;
     }
     cam.end();
@@ -79,6 +108,9 @@ void ofApp::draw() {
             willRecord = false;
         }
     }
+    ofDrawBitmapString("Radius: " + ofToString(noiseRadius), 16, ofGetHeight() - 32);
+    ofDrawBitmapString("Scale: " + ofToString(noiseScale), 16, ofGetHeight() - 16);
+
     ofPushStyle();
     ofSetColor(255, 0, 0);
     if (willRecord) ofDrawBitmapString("Record will start", 16, 16);
@@ -91,12 +123,15 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
-    /* 
-    ofVec3f pos = cam.getGlobalPosition();
-    ofVec3f lookAt = cam.getLookAtDir();
-    std::cout << "cam.x: " << pos.x << " cam.y: " << pos.y << " cam.z: " << pos.z << endl;
-    std::cout << "lookAt.x: " << lookAt.x << " lookAt.y: " << lookAt.y << " lookAt.z: " << lookAt.z << endl;
-    */
+    noiseScale = x + 1;
+    noiseRadius = (y / 12) + 1;
+}
+//--------------------------------------------------------------
+void ofApp::mouseDragged(int x, int y, int button) {
+    isDisplaced = false;
+}
+void ofApp::mouseReleased(int x, int y, int button) {
+    isDisplaced = true;
 }
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
@@ -115,7 +150,7 @@ void ofApp::onGifSaved(string& fileName) {
     cout << "Gif saved as " << fileName << endl;
     isSaved = false;
     isOptimizing = true;
-    string path = ofFilePath::getCurrentExeDir() + "data/GIFs";
+    string path = ofFilePath::getCurrentExeDir() + "data/";
     string command = "gifsicle -O3 < " + path + fileName + " > " + path + "opt-" + fileName;
     cout << "GifSicle optimized version saved as opt-" << fileName << endl;
     ofSystem(command);
