@@ -11,8 +11,6 @@ void ofApp::setup() {
     ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
 
     extRadius = ofGetWidth() / 2.0f;
-    extRes = res / 4;
-    radius = 100.0f;
     extRes = glm::half_pi<double>() / numFrame;
     outerSteps = floor(glm::half_pi<double>() / extRes);
     innerSteps = floor(glm::two_pi<double>() / res);
@@ -28,11 +26,23 @@ void ofApp::setup() {
         cam.lookAt(ofVec3f(0, 0, 0));
     }
     arcs.clear();
+    particles.clear();
     for (int i = 0; i <= outerSteps; i++) {
         Arc a = Arc();
         arcs.push_front(a);
+        int partsNum = ofRandom(16);
+        float theta0 = extRes * i;
+        float xRot = glm::cos(theta0);
+        float yRot = glm::sin(theta0);
+        deque<Particle> stepParticles;
+
+        for (int j = 0; j <= partsNum; j++) {
+            ofVec3f v = ofVec3f(extRadius * xRot, ofGetHeight() + extRadius * yRot, 0);
+            Particle p = Particle(v, ofRandomuf() * particleSize.x, ofRandomuf() * particleSize.y, radius);
+            stepParticles.push_back(p);
+        }
+        particles.push_back(stepParticles);
     }
-    arcsSize = arcs.size();
     light.setPointLight();
     light.setPosition(ofGetWidth() * 3, ofGetHeight() * 3, ofGetHeight() * 3);
     light.enable();
@@ -49,43 +59,27 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::draw() {
     float currRadius = radius;
-    //float currCubeSize = cubeSize;
     float t = currFrame % numFrame / static_cast<float>(numFrame);
-
-    //ofBackgroundGradient(ofColor(50, 50, 50), ofColor::black);
-    //ofEnableDepthTest();
+    ofEnableDepthTest();
     ofBackground(ofColor::black);
     cam.begin();
 
     for (int i = 0; i >= -outerSteps; i--) {
         float theta0 = extRes * (i + t);
+        float xRot = glm::cos(theta0);
+        float yRot = glm::sin(theta0);
+
         ofVec3f v1 = ofVec3f(
-            extRadius * glm::cos(theta0),
-            ofGetHeight() + extRadius * glm::sin(theta0),
+            extRadius * xRot,
+            ofGetHeight() + extRadius * yRot,
             0);
-        Arc a = arcs[(abs(i) + currFrame) % arcsSize];
-        deque<float> angles = a.getArcAngles();
-        float theta1 = a.getInitialArcAngle();
-
-        for (int k = 0; k < angles.size() - 1; k += 2) {
-            ofVec3f l1 = ofVec3f(
-                v1.x + (currRadius * glm::sin(theta1 + angles[k]) * glm::cos(theta0)),
-                v1.y + (currRadius * glm::sin(theta1 + angles[k]) * glm::sin(theta0)),
-                v1.z + (currRadius * glm::cos(theta1 + angles[k])));
-            ofVec3f l2 = ofVec3f(
-                v1.x + (currRadius * glm::sin(theta1 + angles[k + 1]) * glm::cos(theta0)),
-                v1.y + (currRadius * glm::sin(theta1 + angles[k + 1]) * glm::sin(theta0)),
-                v1.z + (currRadius * glm::cos(theta1 + angles[k + 1])));
-
-            ofBeginShape();
-            ofVertex(l1.x, l1.y, l1.z);
-            ofVertex(l2.x, l2.y, l2.z);
-            ofEndShape(false);
-
-            theta1 += angles[k + 1];
-        }
-
-        //currCubeSize *= 1.05;
+        int stuffIndex = (abs(i) + currFrame) % outerSteps;
+        arcs[stuffIndex].drawFromXandYRot(v1, xRot, yRot, currRadius);
+        /* deque<Particle> parts = particles[stuffIndex];
+        for (int j = 0; j <= parts.size(); j++) {
+            parts[j].draw();
+        } */
+        //currRadius *= 0.01;
     }
     cam.end();
 
