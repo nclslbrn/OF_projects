@@ -3,7 +3,8 @@
 float ofApp::ease(float p) { return 3 * p * p - 2 * p * p * p; }
 //--------------------------------------------------------------
 void ofApp::setup() {
-    //ofSetGlobalAmbientColor(ofColor(150, 150, 150));
+    ofSetGlobalAmbientColor(ofColor(150, 150, 150));
+    ofSetFrameRate(24);
     ofDisableArbTex();
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -11,14 +12,14 @@ void ofApp::setup() {
     ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
 
     extRadius = ofGetWidth() / 2.0f;
-    extRes = glm::half_pi<double>() / numFrame;
+    extRes = glm::half_pi<double>() / (numFrame + 1);
     outerSteps = floor(glm::half_pi<double>() / extRes);
     innerSteps = floor(glm::two_pi<double>() / res);
-    cubeSize = (glm::pi<float>() * 2 * radius) / innerSteps;
     noiseRadius = 20.0f;
     noiseScale = 400.0f;
-    cam.setAutoDistance(false);
 
+    // Setup camera
+    cam.setAutoDistance(false);
     bool isPresetLoaded = ofxLoadCamera(cam, camPresetFile);
     if (isPresetLoaded == false || 0) {
         std::cout << "Camera missing preset fallback" << endl;
@@ -26,34 +27,38 @@ void ofApp::setup() {
         cam.lookAt(ofVec3f(0, 0, 0));
     }
     arcs.clear();
-    particles.clear();
     for (int i = 0; i <= outerSteps; i++) {
+        // create arcs
         Arc a = Arc();
+        a.setNoiseRadius(noiseRadius);
+        a.setNoiseScale(noiseScale);
         arcs.push_front(a);
-        int partsNum = ofRandom(16);
-        float theta0 = extRes * i;
-        float xRot = glm::cos(theta0);
-        float yRot = glm::sin(theta0);
-        deque<Particle> stepParticles;
 
+        // create particles
+        int partsNum = (int)ofRandom(4);
+        vector<Particle> arcParticles;
         for (int j = 0; j <= partsNum; j++) {
-            ofVec3f v = ofVec3f(extRadius * xRot, ofGetHeight() + extRadius * yRot, 0);
-            Particle p = Particle(v, ofRandomuf() * particleSize.x, ofRandomuf() * particleSize.y, radius);
-            stepParticles.push_back(p);
+            float width = ofRandom(particleSize.x, particleSize.y);
+            float height = ofRandom(particleSize.x, particleSize.y);
+
+            Particle p = Particle(ofVec3f(0, -radius / 2, 0), width, height, radius);
+            arcParticles.push_back(p);
         }
-        particles.push_back(stepParticles);
+        particles.push_back(arcParticles);
     }
     light.setPointLight();
     light.setPosition(ofGetWidth() * 3, ofGetHeight() * 3, ofGetHeight() * 3);
     light.enable();
     ofNoFill();
-    std::cout << "total ellipses: " << outerSteps << endl;
-    std::cout << "tube diameter: " << glm::pi<float>() * 2 * radius << endl;
-    std::cout << "cubeSize: " << cubeSize << endl;
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
+    for (int i = 0; i < particles.size(); i++) {
+        for (int j = 0; j < particles[i].size(); j++) {
+            particles[i][j].updateParticle();
+        }
+    }
 }
 
 //--------------------------------------------------------------
@@ -67,20 +72,22 @@ void ofApp::draw() {
     for (int i = 0; i >= -outerSteps; i--) {
         float theta0 = extRes * (i + t);
         float xRot = glm::cos(theta0);
+
         float yRot = glm::sin(theta0);
 
         ofVec3f v1 = ofVec3f(
             extRadius * xRot,
             ofGetHeight() + extRadius * yRot,
             0);
-        int stuffIndex = (abs(i) + currFrame) % outerSteps;
-        arcs[stuffIndex].drawFromXandYRot(v1, xRot, yRot, currRadius);
-        /* deque<Particle> parts = particles[stuffIndex];
-        for (int j = 0; j <= parts.size(); j++) {
-            parts[j].draw();
-        } */
-        //currRadius *= 0.01;
+        int arcId = (abs(i) + currFrame) % outerSteps;
+        arcs[arcId].drawFromXandYRot(v1, xRot, yRot, currRadius, t);
+        for (int j = 0; j < particles[arcId].size(); j++) {
+            particles[arcId][j].drawFromXandYRot(v1, xRot, yRot, currRadius / 4, t);
+        }
+
+        //currRadius += 12;
     }
+    //ofDrawAxis(extRadius);
     cam.end();
 
     if (currFrame < numFrame) {
@@ -118,7 +125,11 @@ void ofApp::draw() {
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
     noiseScale = x + 1;
-    noiseRadius = (y / 12) + 1;
+    noiseRadius = (y / 24) + 1;
+    for (Arc& arc : arcs) {
+        arc.setNoiseScale(noiseScale);
+        arc.setNoiseRadius(noiseRadius);
+    }
 }
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button) {

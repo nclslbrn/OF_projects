@@ -19,26 +19,24 @@ class ofApp : public ofBaseApp {
     void exit();
     float ease(float t);
 
-    float res = 0.1f;
+    float res = 0.08f;
     float radius = 100.0f;
-    int numFrame{80};
+    int numFrame{120};
     int currFrame = 0;
-    ofVec2f particleSize = ofVec2f(2.0f, 15.0f);
-
+    ofVec2f particleSize = ofVec2f(0.25f, 7.0f);
     float extRadius, extRes;
     deque<Arc> arcs;
-    deque<deque<Particle>> particles;
-    int arcsSize;
-    float cubeSize;
+    vector<vector<Particle>> particles;
     int outerSteps, innerSteps;
     float noiseScale;
     float noiseRadius;
-    ofBoxPrimitive box;
+
+    bool isDisplaced = true;
+
     ofLight light;
     ofImage img;
     ofEasyCam cam;
     ofxGifEncoder gifEncoder;
     string camPresetFile = "camera.preset";
-    bool isDisplaced = true;
     bool willRecord, isRecording, isSaved, isOptimizing, isExported = false;
 };
