@@ -14,12 +14,9 @@ Particle::Particle(
         glm::two_pi<float>() * ofRandom(1.0));
 
     this->endRot = ofVec3f(
-        glm::two_pi<float>() * ofRandom(1.0),
-        glm::two_pi<float>() * ofRandom(1.0),
-        glm::two_pi<float>() * ofRandom(1.0));
-
-    initPos.x += ofRandom(-radius, radius);
-    initPos.y += ofRandom(-radius, radius);
+        glm::two_pi<float>() * ofRandom(6.0),
+        glm::two_pi<float>() * ofRandom(6.0),
+        glm::two_pi<float>() * ofRandom(6.0));
 
     float a = glm::two_pi<float>() * ofRandom(1);
 
@@ -28,7 +25,7 @@ Particle::Particle(
         initPos.y + (glm::cos(a) * radius),
         initPos.z + (glm::sin(a) * radius));
 
-    this->plane.set(width, height);
+    this->plane.set(width, height, 2, 2);
     this->init();
 }
 //--------------------------------------------------------------
@@ -45,20 +42,32 @@ void Particle::drawParticle() {
     this->plane.draw();
 }
 //--------------------------------------------------------------
-void Particle::drawFromXandYRot(ofVec3f point, float xRot, float yRot, float radius, float t) {
-    ofVec3f currPos = point - this->initPos;
+void Particle::drawFromXandYRot(
+    ofVec3f point, float xRot, float yRot, float radius,
+    float t, float noiseScale, float noiseRadius) {
     ofVec3f currRot = this->initRot.getInterpolated(this->endRot, t);
-    /*  
-    this->plane.rotateRad(currRot.x, glm::vec3(1, 0, 0));
-    this->plane.rotateRad(currRot.y, glm::vec3(0, 1, 0));
-    this->plane.rotateRad(currRot.z, glm::vec3(0, 0, 1)); */
+
+    float theta1 = glm::two_pi<float>() * t;
+
+    float noise = ofNoise(
+        point.y * this->plane.getWidth() / noiseScale,
+        point.z * this->plane.getHeight() / noiseScale,
+        glm::cos(t * glm::two_pi<float>()),
+        glm::sin(t * glm::two_pi<float>()));
+
+    ofVec3f currPos = ofVec3f(
+        point.x - this->initPos.x,
+        (point.y - this->initPos.y) + glm::sin(noise) * this->plane.getWidth(),
+        (point.z - this->initPos.z) + glm::sin(noise) * this->plane.getHeight());
     this->plane.setGlobalOrientation(glm::vec3(currRot));
+
     this->plane.setGlobalPosition(
         ofVec3f(
             currPos.x + (radius * xRot),
             currPos.y + (radius * yRot),
             currPos.z));
-    this->plane.draw();
+
+    this->plane.drawWireframe();
 }
 //--------------------------------------------------------------
 // GETTERS -----------------------------------------------------

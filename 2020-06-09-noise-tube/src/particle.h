@@ -16,7 +16,9 @@ class Particle {
         float xRot,
         float yRot,
         float radius,
-        float t);
+        float t,
+        float noiseScale,
+        float noiseRadius);
     void updateParticle();
     void init();
 

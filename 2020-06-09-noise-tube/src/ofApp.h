@@ -20,7 +20,7 @@ class ofApp : public ofBaseApp {
     float ease(float t);
 
     float res = 0.08f;
-    float radius = 100.0f;
+    float radius = 140.0f;
     int numFrame{120};
     int currFrame = 0;
     ofVec2f particleSize = ofVec2f(0.25f, 7.0f);

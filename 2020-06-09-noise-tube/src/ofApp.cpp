@@ -13,7 +13,9 @@ void ofApp::setup() {
 
     extRadius = ofGetWidth() / 2.0f;
     extRes = glm::half_pi<double>() / (numFrame + 1);
+    //extRes = glm::pi<double>() / (numFrame + 1);
     outerSteps = floor(glm::half_pi<double>() / extRes);
+    //outerSteps = floor(glm::pi<double>() / extRes);
     innerSteps = floor(glm::two_pi<double>() / res);
     noiseRadius = 20.0f;
     noiseScale = 400.0f;
@@ -35,7 +37,7 @@ void ofApp::setup() {
         arcs.push_front(a);
 
         // create particles
-        int partsNum = (int)ofRandom(4);
+        int partsNum = (int)ofRandom(18);
         vector<Particle> arcParticles;
         for (int j = 0; j <= partsNum; j++) {
             float width = ofRandom(particleSize.x, particleSize.y);
@@ -49,6 +51,7 @@ void ofApp::setup() {
     light.setPointLight();
     light.setPosition(ofGetWidth() * 3, ofGetHeight() * 3, ofGetHeight() * 3);
     light.enable();
+    ofSetLineWidth(2);
     ofNoFill();
 }
 
@@ -82,7 +85,7 @@ void ofApp::draw() {
         int arcId = (abs(i) + currFrame) % outerSteps;
         arcs[arcId].drawFromXandYRot(v1, xRot, yRot, currRadius, t);
         for (int j = 0; j < particles[arcId].size(); j++) {
-            particles[arcId][j].drawFromXandYRot(v1, xRot, yRot, currRadius / 4, t);
+            particles[arcId][j].drawFromXandYRot(v1, xRot, yRot, currRadius * 0.75, t, noiseScale, noiseRadius);
         }
 
         //currRadius += 12;
@@ -124,7 +127,7 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
-    noiseScale = x + 1;
+    noiseScale = x * 2;
     noiseRadius = (y / 24) + 1;
     for (Arc& arc : arcs) {
         arc.setNoiseScale(noiseScale);
