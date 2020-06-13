@@ -12,11 +12,13 @@ void ofApp::setup() {
     ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
 
     extRadius = ofGetWidth() / 2.0f;
-    extRes = glm::half_pi<double>() / (numFrame + 1);
-    //extRes = glm::pi<double>() / (numFrame + 1);
-    outerSteps = floor(glm::half_pi<double>() / extRes);
-    //outerSteps = floor(glm::pi<double>() / extRes);
+    //extRes = glm::half_pi<double>() / (numFrame + 1);
+    //outerSteps = floor(glm::half_pi<double>() / extRes);
+
+    extRes = glm::pi<double>() / (numFrame + 1);
+    outerSteps = floor(glm::pi<double>() / extRes);
     innerSteps = floor(glm::two_pi<double>() / res);
+    innerStepDistance = (extRadius * 2 * glm::two_pi<float>()) / (outerSteps * 4);
     noiseRadius = 20.0f;
     noiseScale = 400.0f;
 
@@ -31,37 +33,25 @@ void ofApp::setup() {
     arcs.clear();
     for (int i = 0; i <= outerSteps; i++) {
         // create arcs
-        Arc a = Arc();
+        Arc a = Arc(innerStepDistance);
         a.setNoiseRadius(noiseRadius);
         a.setNoiseScale(noiseScale);
         arcs.push_front(a);
-
-        // create particles
-        int partsNum = (int)ofRandom(18);
-        vector<Particle> arcParticles;
-        for (int j = 0; j <= partsNum; j++) {
-            float width = ofRandom(particleSize.x, particleSize.y);
-            float height = ofRandom(particleSize.x, particleSize.y);
-
-            Particle p = Particle(ofVec3f(0, -radius / 2, 0), width, height, radius);
-            arcParticles.push_back(p);
-        }
-        particles.push_back(arcParticles);
     }
     light.setPointLight();
     light.setPosition(ofGetWidth() * 3, ofGetHeight() * 3, ofGetHeight() * 3);
     light.enable();
     ofSetLineWidth(2);
     ofNoFill();
+
+    std::cout << "Outer radius: " << extRadius << endl;
+    std::cout << "Circles: " << outerSteps << endl;
+    std::cout << "Points along circles: " << innerSteps << endl;
+    std::cout << "Circle margin: " << innerStepDistance << endl;
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    for (int i = 0; i < particles.size(); i++) {
-        for (int j = 0; j < particles[i].size(); j++) {
-            particles[i][j].updateParticle();
-        }
-    }
 }
 
 //--------------------------------------------------------------
@@ -75,22 +65,20 @@ void ofApp::draw() {
     for (int i = 0; i >= -outerSteps; i--) {
         float theta0 = extRes * (i + t);
         float xRot = glm::cos(theta0);
-
         float yRot = glm::sin(theta0);
-
-        ofVec3f v1 = ofVec3f(
-            extRadius * xRot,
-            ofGetHeight() + extRadius * yRot,
+        ofVec3f circCenter = ofVec3f(extRadius * xRot, extRadius * yRot, 0);
+        ofVec3f nextCircCenter = ofVec3f(
+            extRadius * glm::cos(extRes * (i + 1 + t)),
+            extRadius * glm::sin(extRes * (i + 1 + t)),
             0);
+        //ofSetColor(50);
+        ofBeginShape();
         int arcId = (abs(i) + currFrame) % outerSteps;
-        arcs[arcId].drawFromXandYRot(v1, xRot, yRot, currRadius, t);
-        for (int j = 0; j < particles[arcId].size(); j++) {
-            particles[arcId][j].drawFromXandYRot(v1, xRot, yRot, currRadius * 0.75, t, noiseScale, noiseRadius);
-        }
-
-        //currRadius += 12;
+        ofSetColor(200);
+        arcs[arcId].drawFromXandYRot(circCenter, xRot, yRot, currRadius, t, nextCircCenter);
+        currRadius *= 1.025;
     }
-    //ofDrawAxis(extRadius);
+    ofDrawAxis(extRadius);
     cam.end();
 
     if (currFrame < numFrame) {
@@ -104,7 +92,7 @@ void ofApp::draw() {
         currFrame = 0;
 
         if (isRecording) {
-            gifEncoder.save("GIFs/Noise-Tube" + ofGetTimestampString() + ".gif");
+            gifEncoder.save("Noise-Tube" + ofGetTimestampString() + ".gif");
             isRecording = false;
         }
         if (willRecord) {
@@ -127,7 +115,7 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
-    noiseScale = x * 2;
+    noiseScale = x * 4;
     noiseRadius = (y / 24) + 1;
     for (Arc& arc : arcs) {
         arc.setNoiseScale(noiseScale);
@@ -159,9 +147,9 @@ void ofApp::onGifSaved(string& fileName) {
     isSaved = false;
     isOptimizing = true;
     string path = ofFilePath::getCurrentExeDir() + "data/";
-    string command = "gifsicle -O3 < " + path + fileName + " > " + path + "opt-" + fileName;
-    cout << "GifSicle optimized version saved as opt-" << fileName << endl;
+    string command = "gifsicle -O3 < " + path + fileName + " > " + path + "/opt-" + fileName;
     ofSystem(command);
+    cout << "GifSicle optimized version saved as opt-" << fileName << endl;
     isOptimizing = false;
     isExported = true;
 }

@@ -3,7 +3,6 @@
 #include "ofMain.h"
 #include "ofxCameraSaveLoad.h"
 #include "ofxGifEncoder.h"
-#include "particle.h"
 
 class ofApp : public ofBaseApp {
    public:
@@ -19,14 +18,12 @@ class ofApp : public ofBaseApp {
     void exit();
     float ease(float t);
 
-    float res = 0.08f;
-    float radius = 140.0f;
-    int numFrame{120};
-    int currFrame = 0;
-    ofVec2f particleSize = ofVec2f(0.25f, 7.0f);
-    float extRadius, extRes;
     deque<Arc> arcs;
-    vector<vector<Particle>> particles;
+    float res = 0.02f;
+    float radius = 140.0f;
+    int numFrame{60};
+    int currFrame = 0;
+    float extRadius, extRes, innerStepDistance;
     int outerSteps, innerSteps;
     float noiseScale;
     float noiseRadius;
