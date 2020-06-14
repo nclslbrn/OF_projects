@@ -19,12 +19,15 @@ Arc::Arc(float depth) {
 void Arc::drawFromXandYRot(
     ofVec3f point, float xRot, float yRot,
     float radius, float t, ofVec3f nextpoint) {
-    float theta1 = glm::two_pi<float>() * t;
+    //float theta1 = glm::two_pi<float>() * t;
+    float theta1 = 0;
     float res = glm::two_pi<float>() / 64.0f;
 
     ofPushStyle();
     ofSetLineWidth(1);
-    ofSetColor(200);
+    ofSetColor(30);
+    ofFill();
+    //ofSetColor(200);
     for (float theta2 = 0; theta2 < glm::two_pi<float>(); theta2 += res) {
         ofVec3f pt1 = ofVec3f(
             point.x + (radius * glm::sin(theta1 + theta2) * xRot),
@@ -38,13 +41,26 @@ void Arc::drawFromXandYRot(
             nextpoint.x + (radius * glm::sin(theta1 + theta2) * xRot),
             nextpoint.y + (radius * glm::sin(theta1 + theta2) * yRot),
             nextpoint.z + (radius * glm::cos(theta1 + theta2)));
+        ofVec3f pt4 = ofVec3f(
+            nextpoint.x + (radius * glm::sin(theta1 + theta2 + res) * xRot),
+            nextpoint.y + (radius * glm::sin(theta1 + theta2 + res) * yRot),
+            nextpoint.z + (radius * glm::cos(theta1 + theta2 + res)));
 
         pt1 = getNoisedVector(pt1, t);
         pt2 = getNoisedVector(pt2, t);
         pt3 = getNoisedVector(pt3, t);
+        pt4 = getNoisedVector(pt4, t);
 
+        ofBeginShape();
+        ofVertex(pt1);
+        ofVertex(pt2);
+        ofVertex(pt4);
+        ofVertex(pt3);
+        ofEndShape(true);
+        /* 
         ofDrawLine(pt1.x, pt1.y, pt1.z, pt2.x, pt2.y, pt2.z);
-        ofDrawLine(pt1.x, pt1.y, pt1.z, pt3.x, pt3.y, pt3.z);
+        ofDrawLine(pt1.x, pt1.y, pt1.z, pt3.x, pt3.y, pt3.z); 
+        */
     }
     ofPopStyle();
 
@@ -70,11 +86,9 @@ void Arc::drawFromXandYRot(
 }
 //--------------------------------------------------------------
 ofVec3f Arc::getNoisedVector(ofVec3f orig, float t) {
-    float sample = 24.0;
-
     float noise = ofNoise(
-        orig.y * sample / this->noiseScale,
-        orig.z * sample / this->noiseScale,
+        (orig.y * 24) / this->noiseScale,
+        (orig.z * 24) / this->noiseScale,
         glm::cos(t * glm::two_pi<float>()),
         glm::sin(t * glm::two_pi<float>()));
 
@@ -93,7 +107,10 @@ void Arc::setNoiseRadius(float noiseRadius) {
 void Arc::setNoiseScale(float noiseScale) {
     this->noiseScale = noiseScale;
 }
-
+//--------------------------------------------------------------
+void Arc::setArcDepth(float depth) {
+    this->depth = depth;
+}
 //--------------------------------------------------------------
 // GETTERS -----------------------------------------------------
 //--------------------------------------------------------------
@@ -104,4 +121,8 @@ deque<float> Arc::getArcAngles() {
 //--------------------------------------------------------------
 float Arc::getInitialArcAngle() {
     return this->initialAngle;
+}
+//--------------------------------------------------------------
+float Arc::getArcDepth() {
+    return this->depth;
 }

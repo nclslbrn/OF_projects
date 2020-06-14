@@ -4,7 +4,7 @@ float ofApp::ease(float p) { return 3 * p * p - 2 * p * p * p; }
 //--------------------------------------------------------------
 void ofApp::setup() {
     ofSetGlobalAmbientColor(ofColor(150, 150, 150));
-    ofSetFrameRate(24);
+    //ofSetFrameRate(24);
     ofDisableArbTex();
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -12,11 +12,12 @@ void ofApp::setup() {
     ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
 
     extRadius = ofGetWidth() / 2.0f;
-    //extRes = glm::half_pi<double>() / (numFrame + 1);
-    //outerSteps = floor(glm::half_pi<double>() / extRes);
-
     extRes = glm::pi<double>() / (numFrame + 1);
     outerSteps = floor(glm::pi<double>() / extRes);
+    /* 
+    extRes = glm::half_pi<double>() / (numFrame + 1);
+    outerSteps = floor(glm::half_pi<double>() / extRes);
+    */
     innerSteps = floor(glm::two_pi<double>() / res);
     innerStepDistance = (extRadius * 2 * glm::two_pi<float>()) / (outerSteps * 4);
     noiseRadius = 20.0f;
@@ -68,15 +69,12 @@ void ofApp::draw() {
         float yRot = glm::sin(theta0);
         ofVec3f circCenter = ofVec3f(extRadius * xRot, extRadius * yRot, 0);
         ofVec3f nextCircCenter = ofVec3f(
-            extRadius * glm::cos(extRes * (i + 1 + t)),
-            extRadius * glm::sin(extRes * (i + 1 + t)),
+            extRadius * glm::cos(extRes * (i - 1 + t)),
+            extRadius * glm::sin(extRes * (i - 1 + t)),
             0);
-        //ofSetColor(50);
         ofBeginShape();
         int arcId = (abs(i) + currFrame) % outerSteps;
-        ofSetColor(200);
         arcs[arcId].drawFromXandYRot(circCenter, xRot, yRot, currRadius, t, nextCircCenter);
-        currRadius *= 1.025;
     }
     ofDrawAxis(extRadius);
     cam.end();

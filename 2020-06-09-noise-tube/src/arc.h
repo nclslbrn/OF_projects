@@ -6,6 +6,7 @@ class Arc {
     Arc(float depth);
     void setNoiseRadius(float noiseRadius);
     void setNoiseScale(float noiseScale);
+    void setArcDepth(float depth);
 
     void drawFromXandYRot(
         ofVec3f point,
@@ -17,6 +18,7 @@ class Arc {
 
     deque<float> getArcAngles();
     float getInitialArcAngle();
+    float getArcDepth();
     ofVec3f getNoisedVector(ofVec3f orig, float t);
 
     float initialAngle;
