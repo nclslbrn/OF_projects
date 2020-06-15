@@ -12,11 +12,13 @@ class ofApp : public ofBaseApp {
     float ease(float p);
     void keyPressed(int key);
     void onGifSaved(string& fileName);
+    void animation(float t);
     void exit();
 
     vector<ofVec2f> positions;
     vector<float> distances;
     vector<float> thetas;
+
     float angle;
     float initRadius;
     int numArcs = 1280;
@@ -24,6 +26,9 @@ class ofApp : public ofBaseApp {
     float margin = 64;
     bool isDebugActive = false;
 
+    // Motion blur
+    int samplesPerFrame = 30;
+    float shutterAngle = 2.0f;
     // Gif animation / export setup
     ofxGifEncoder gifEncoder;
     int numFrames{30};
