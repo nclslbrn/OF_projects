@@ -4,8 +4,10 @@
 float ofApp::ease(float p) { return 3 * p * p - 2 * p * p * p; }
 //--------------------------------------------------------------
 void ofApp::setup() {
-    gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.50f, 16);  // colors = 8
+    gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.25f, 8);  // colors = 8
     ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
+    cache.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
+
     ofNoFill();
     initRadius = ofGetWidth() / 1.5;
     positions.resize(numArcs);
@@ -26,24 +28,19 @@ void ofApp::setup() {
 }
 //--------------------------------------------------------------
 void ofApp::update() {
-}
-
-//--------------------------------------------------------------
-void ofApp::draw() {
-    ofEnableAlphaBlending();
+    cache.begin();
+    ofClear(0);
     ofBackground(0);
-
     for (int n = 0; n < samplesPerFrame; n++) {
-        float alpha = (float)n / (float)samplesPerFrame;
-        float t = ofMap(currFrame + n * shutterAngle / (float)samplesPerFrame, 0, numFrames, 0, 1);
-        //float t = ((currFrame - n) % numFrames) / static_cast<float>(numFrames);
-        ofSetColor(255.0f * alpha);
+        float alpha = 1.0 - (float)n / (float)samplesPerFrame;
+        float t = ofMap((currFrame + n * shutterAngle / (float)samplesPerFrame), 0, numFrames, 0, 1);
+        //float t = ((currFrame + n) % numFrames) / static_cast<float>(numFrames);
+        ofSetColor(255, 255, 255, (int)(150.0 * alpha));
         animation(t);
-        ofDrawBitmapString(ofToString(alpha), 8, ofGetHeight() - 16);
+        //ofDrawBitmapString(ofToString(alpha), 8, ofGetHeight() - 16);
         //std::cout << alpha << endl;
     }
-    ofDisableAlphaBlending();
-
+    cache.end();
     if (isDebugActive) {
         for (int a = 0; a < positions.size() - 1; a++) {
             ofDrawLine(
@@ -57,7 +54,10 @@ void ofApp::draw() {
         currFrame++;
 
         if (isRecording) {
-            img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
+            ofPixels pixels;
+            cache.readToPixels(pixels);
+            img.setFromPixels(pixels);
+            //img.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
             gifEncoder.addFrame(img, 0.033f);
         }
 
@@ -73,6 +73,11 @@ void ofApp::draw() {
             willRecord = false;
         }
     }
+}
+
+//--------------------------------------------------------------
+void ofApp::draw() {
+    cache.draw(0, 0);
 
     ofPushStyle();
     ofSetColor(255, 0, 0);

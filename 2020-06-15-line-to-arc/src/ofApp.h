@@ -27,8 +27,9 @@ class ofApp : public ofBaseApp {
     bool isDebugActive = false;
 
     // Motion blur
+    ofFbo cache;
     int samplesPerFrame = 30;
-    float shutterAngle = 2.0f;
+    float shutterAngle = 4.0f;
     // Gif animation / export setup
     ofxGifEncoder gifEncoder;
     int numFrames{30};
