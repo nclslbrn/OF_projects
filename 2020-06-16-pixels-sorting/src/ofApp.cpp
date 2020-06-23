@@ -4,7 +4,7 @@
 //--------------------------------------------------------------
 int ofApp::nextBrightY(int x, int y) {
     while (y >= 0) {
-        ofColor c = picture.getColor(x, y);
+        ofColor c = source.getColor(x, y);
         if (c.getBrightness() > brightThreshold) {
             return y;
         }
@@ -17,7 +17,7 @@ int ofApp::nextBrightY(int x, int y) {
 //--------------------------------------------------------------
 int ofApp::nextDarkY(int x, int y) {
     while (y <= height) {
-        ofColor c = picture.getColor(x, y);
+        ofColor c = source.getColor(x, y);
         if (c.getBrightness() < darkThreshold) {
             return y;
         }
@@ -27,9 +27,10 @@ int ofApp::nextDarkY(int x, int y) {
 }
 //--------------------------------------------------------------
 void ofApp::setup() {
-    picture.load("800x800/" + sourceImage);
-    width = picture.getWidth();
-    height = picture.getHeight();
+    source.load(sourceSize + "/" + sourceName);
+    width = source.getWidth();
+    height = source.getHeight();
+    modified = source;
     currY = 0;
 }
 
@@ -39,8 +40,8 @@ void ofApp::update() {
         int y = currY;
         bool isLooking = true;
         while (isLooking && y <= height) {
-            for (int x = 0; x < width; x++) {
-                ofColor c = picture.getColor(x, y);
+            for (int x = 0; x < width; x += pixStep) {
+                ofColor c = source.getColor(x, y);
                 float brightness = c.getBrightness();
                 if (brightness < darkThreshold) {
                     // dark to  bright
@@ -63,29 +64,30 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::addLine(int x, int y, ofColor pixColor, int brightness, bool searchBrightPix) {
     int toY = searchBrightPix ? nextBrightY(x, y) : nextDarkY(x, y);
-    if (toY == -1) {
-        toY = searchBrightPix ? y + ofRandom(lineLenght) : y - ofRandom(lineLenght);
-    }
-    int range = abs(toY - y);
-    int step = floor(brightnessVariation / static_cast<float>(range));
-    for (int d = 0; d < range; d++) {
-        // bright go down, dark go up
-        int y_ = toY - y < 0 ? y + d : y - d;
-        if (y_ >= 0 && y_ <= height) {
-            if (searchBrightPix) {
-                pixColor.setBrightness(brightness + (step * d));
-            } else {
-                pixColor.setBrightness(brightness - (step * d));
+    if (toY != -1) {
+        int range = abs(toY - y);
+        int step = floor(brightnessVariation / static_cast<float>(range));
+        for (int d = 0; d < range; d++) {
+            // bright go down, dark go up
+            int y_ = toY - y < 0 ? y + d : y - d;
+            if (y_ >= 0 && y_ < height) {
+                if (searchBrightPix) {
+                    pixColor.setBrightness(brightness + (step * d));
+                } else {
+                    pixColor.setBrightness(brightness - (step * d));
+                }
+                for (int x_ = x; x_ <= x + pixStep && x_ < width; x_++) {
+                    modified.setColor(x_, y_, pixColor);
+                }
             }
-            picture.setColor(x, y_, pixColor);
         }
+        modified.update();
     }
-    picture.update();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    picture.draw(0, 0);
+    modified.draw(0, 0);
 
     ofPushStyle();
     ofSetColor(255, 0, 0);
@@ -97,13 +99,13 @@ void ofApp::draw() {
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
     if (key == 115) {  // s
-        picture.save("output/" + sourceImage);
+        modified.save("output/" + sourceName);
     } else {
         ofLogNotice() << "Unassigned key: " << key;
     }
 }
 void ofApp::exit() {
-    picture.save("output/" + ofToString(width) + "-" + sourceImage);
+    modified.save("output/" + ofToString(width) + "-" + sourceName);
     isSaved = true;
     ofExit();
 }

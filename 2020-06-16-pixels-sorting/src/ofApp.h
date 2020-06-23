@@ -12,13 +12,16 @@ class ofApp : public ofBaseApp {
     void exit();
     int nextBrightY(int x, int y);
     int nextDarkY(int x, int y);
-    ofImage picture;
+    ofImage source;
+    ofImage modified;
+
     int currY;
-    int lineLenght = 64;
     int width, height;
-    int brightThreshold = 175;
-    int darkThreshold = 175;
-    int brightnessVariation = 50;
+    int pixStep = 1;
+    int brightThreshold = 127;
+    int darkThreshold = 127;
+    int brightnessVariation = 150;
     bool isSaved = false;
-    string sourceImage = "nicolas-lebrun-Melbourne-1.jpg";
+    string sourceName = "usgs-R_W86FHa-Sk-unsplash.jpg";
+    string sourceSize = "1280x1280";  // "1080x1080" "800x800"  "400x400"
 };
