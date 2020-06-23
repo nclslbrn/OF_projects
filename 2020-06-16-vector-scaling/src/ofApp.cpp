@@ -3,37 +3,72 @@
 //--------------------------------------------------------------
 float ofApp::ease(float p) { return 3 * p * p - 2 * p * p * p; }
 //--------------------------------------------------------------
+ofVec2f ofApp::circle(float n) {
+    return ofVec2f(glm::cos(n), glm::sin(n));
+}
+//--------------------------------------------------------------
+ofVec2f ofApp::astroid(float n) {
+    return ofVec2f(
+        pow(glm::sin(n), 3),
+        pow(glm::cos(n), 3));
+}
+//--------------------------------------------------------------
+ofVec2f ofApp::quadrifolium(float n) {
+    return ofVec2f(
+        glm::sin(n * 2) * glm::cos(n),
+        glm::cos(n) * glm::sin(n * 2));
+}
+//--------------------------------------------------------------
+ofVec2f ofApp::rect_hyperbola(float n) {
+    float sec = 1 / glm::sin(n);
+
+    float xt = 1 / glm::sin(n);
+    float yt = glm::tan(n);
+
+    return ofVec2f(xt, yt);
+}
+//--------------------------------------------------------------
+ofVec2f ofApp::trifolium(float n) {
+    return ofVec2f(
+        -1.0f * glm::cos(n) * glm::cos(3.0 * n),
+        glm::sin(n) - glm::cos(3.0f * n));
+}
+//--------------------------------------------------------------
+
 void ofApp::setup() {
-    // slowly
-    ofSetFrameRate(12);
+    //  debug slowly
+    // ofSetFrameRate(12);
     gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.25f, 8);  // colors = 8
     ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
     cache.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
-    font.load("fonts/OperatorMono-Medium.otf", 16);
-    pos.resize(size);
-    strings.resize(size);
-    for (int a = 0; a < size; a++) {
-        char id[2];
-        id[0] = ofMap(ofRandom(1), 0, 1, 'A', 'Z');
-        id[1] = ofMap(ofRandom(1), 0, 1, '1', '9');
-        pos[a] = ofVec2f(ofRandom(1), ofRandom(1));
-        strings[a] = id;
+    font.load("fonts/OperatorMono-Medium.otf", 18);
+    for (float x = -3; x <= 3; x += density) {
+        for (float y = -3; y <= 3; y += density) {
+            pos.push_back(ofVec2f(
+                x + ofRandom(1) * 0.03,
+                y + ofRandom(1) * 0.03));
+            colors.push_back(floor(palette.size() * ofRandom(1)));
+        }
     }
+    cache.begin();
+    ofClear(0);
+    cache.end();
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
+    ofEnableAlphaBlending();
     cache.begin();
-    ofClear(0);
     ofBackground(0);
+    ofClear(0);
     for (int n = 0; n < samplesPerFrame; n++) {
         float alpha = 1.0 - (float)n / (float)samplesPerFrame;
         float t = ofMap((currFrame + n * shutterAngle / (float)samplesPerFrame), 0, numFrames, 0, 1);
         //float t = ((currFrame + n) % numFrames) / static_cast<float>(numFrames);
-        ofSetColor(255, 255, 255, (int)(150.0 * alpha));
-        animation(t);
+        animation(t, alpha);
     }
     cache.end();
+    ofDisableAlphaBlending();
 
     if (currFrame < numFrames) {
         currFrame++;
@@ -74,32 +109,64 @@ void ofApp::draw() {
     ofPopStyle();
 }
 //--------------------------------------------------------------
-void ofApp::animation(float t) {
+void ofApp::animation(float t, float alpha) {
+    /* Reinit pos */
+    /* if (t == 0) {
+        int p = 0;
+        for (float x = -3.0f; x <= 3.0f; x += density) {
+            for (float y = -3.0f; y <= 3.0f; y += density) {
+                pos[p] = ofVec2f(x + (ofRandom(1) * 0.03f), y + (ofRandom(1) * 0.03f));
+                p++;
+            }
+        }
+    } 
     float te = ease(t + t);
-    float et = ease(2.0 - (t + t));
-    split = ofVec2f(t < 0.5 ? te : et, t < 0.5 ? te : et);
+    float et = ease(2.0 - (t + t));    
+    */
+    int index = 0;
+    for (ofVec2f& p : pos) {
+        float xx = ofMap(p.x, -6.5, 6.5, (width / 2.0) - width, (width / 2.0) + width);
+        float yy = ofMap(p.y, -6.5, 6.5, (height / 2.0) - height, (height / 2.0) + height);
 
-    for (int a = 0; a < size; a++) {
-        ofVec2f remap;
-        if (pos[a].x <= split.x) {
-            remap.x = ofMap(pos[a].x, 0, 0.5, 0, ofGetWidth() * split.x);
-        } else {
-            remap.x = ofMap(pos[a].x, 0.5, 1, ofGetWidth() * split.x, ofGetWidth());
-        }
-        if (pos[a].y <= split.y) {
-            remap.y = ofMap(pos[a].y, 0, 0.5, 0, ofGetHeight() * split.y);
-        } else {
-            remap.y = ofMap(pos[a].y, 0.5, 1, ofGetHeight() * split.y, ofGetHeight());
-        }
-        //ofScale(t + t);
-        font.drawString(strings[a], remap.x, remap.y);
-        //ofDrawBitmapString();
+        ofSetColor(
+            palette[colors[index]].r,
+            palette[colors[index]].g,
+            palette[colors[index]].b,
+            180 * alpha);
+        ofFill();
+        ofDrawCircle(xx, yy, 1);
+
+        float scale = 0.01;
+        float rx = 15 * glm::cos(glm::pi<float>() * t);
+        float ry = 15 * glm::sin(glm::pi<float>() * t);
+
+        // third noise arg: t * glm::two_pi<float>()
+        float n1a = 15 * ofMap(ofNoise(p.x / 30, p.y / 30, rx, ry), 0, 1, -1, 1);
+        float n1b = 15 * ofMap(ofNoise(p.y / 30, p.x / 30, rx, ry), 0, 1, -1, 1);
+
+        ofVec2f v1 = rect_hyperbola(n1a);
+        ofVec2f v2 = astroid(n1b);
+        ofVec3f v3 = quadrifolium(n1a);
+        ofVec3f v4 = trifolium(n1b);
+        //  float n2a = 12 * ofMap(ofNoise(v1.x, v1.y, rx, ry), 0, 1, -1, 1);
+        //  float n2b = 12 * ofMap(ofNoise(v2.x, v2.y, rx, ry), 0, 1, -1, 1);
+
+        ofVec2f diff1 = v2 - v1;
+        ofVec2f diff2 = v3 - v4;
+        diff1 *= 0.3;
+        diff2 *= 0.3;
+
+        ofVec2f v = diff1.interpolate(diff2, t);
+        //  float n3 = 3 * ofMap(ofNoise(v3.x, v3.y, t), 0, 1, -1, 1);  // , t * glm::two_pi<float>()
+        //  float n3a = 3 * ofMap(ofNoise(v2.x, v2.y, t * glm::two_pi<float>()), 0, 1, -1, 1);
+        //  ofVec2f v = ofVec2f(n2a, n2b);
+        //  ofVec2f v = circle(n2b);
+        //  ofVec2f v = ofVec2f(cos(n2), sin(n3b));
+        //ofVec2f v = circle(n3);
+        p.x += scale * v.x;
+        p.y += scale * v.y;
+        index++;
     }
-    ofDrawLine(split.x * ofGetWidth(), 0, split.x * ofGetWidth(), ofGetHeight());
-    ofDrawLine(0, split.y * ofGetHeight(), ofGetWidth(), split.y * ofGetHeight());
-
-    ofDrawRectangle(split.x * ofGetWidth() - 1, split.y * ofGetHeight() - 5, 2, 10);
-    ofDrawRectangle(split.x * ofGetWidth() - 5, split.y * ofGetHeight() - 1, 10, 2);
 }
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
