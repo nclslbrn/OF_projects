@@ -8,16 +8,16 @@ void ofApp::setup() {
     ofDisableArbTex();
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.50f, 156);  // colors = 8
+    gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.50f, 3);  // colors = 8
     ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
 
     extRadius = ofGetWidth() / 2.0f;
-    extRes = glm::pi<double>() / (numFrame + 1);
-    outerSteps = floor(glm::pi<double>() / extRes);
-    /* 
+    //extRes = glm::pi<double>() / (numFrame + 1);
+    //outerSteps = floor(glm::pi<double>() / extRes);
+
     extRes = glm::half_pi<double>() / (numFrame + 1);
     outerSteps = floor(glm::half_pi<double>() / extRes);
-    */
+
     innerSteps = floor(glm::two_pi<double>() / res);
     innerStepDistance = (extRadius * 2 * glm::two_pi<float>()) / (outerSteps * 4);
     noiseRadius = 20.0f;
@@ -76,7 +76,7 @@ void ofApp::draw() {
         int arcId = (abs(i) + currFrame) % outerSteps;
         arcs[arcId].drawFromXandYRot(circCenter, xRot, yRot, currRadius, t, nextCircCenter);
     }
-    ofDrawAxis(extRadius);
+    //ofDrawAxis(extRadius);
     cam.end();
 
     if (currFrame < numFrame) {
@@ -114,7 +114,7 @@ void ofApp::draw() {
 //--------------------------------------------------------------
 void ofApp::mouseMoved(int x, int y) {
     noiseScale = x * 4;
-    noiseRadius = (y / 24) + 1;
+    noiseRadius = (y / 12) + 1;
     for (Arc& arc : arcs) {
         arc.setNoiseScale(noiseScale);
         arc.setNoiseRadius(noiseRadius);

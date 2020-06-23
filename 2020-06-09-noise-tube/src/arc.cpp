@@ -25,8 +25,7 @@ void Arc::drawFromXandYRot(
 
     ofPushStyle();
     ofSetLineWidth(1);
-    ofSetColor(30);
-    ofFill();
+
     //ofSetColor(200);
     for (float theta2 = 0; theta2 < glm::two_pi<float>(); theta2 += res) {
         ofVec3f pt1 = ofVec3f(
@@ -51,16 +50,23 @@ void Arc::drawFromXandYRot(
         pt3 = getNoisedVector(pt3, t);
         pt4 = getNoisedVector(pt4, t);
 
+        ofSetColor(0);
+        ofFill();
         ofBeginShape();
         ofVertex(pt1);
         ofVertex(pt2);
         ofVertex(pt4);
         ofVertex(pt3);
         ofEndShape(true);
-        /* 
-        ofDrawLine(pt1.x, pt1.y, pt1.z, pt2.x, pt2.y, pt2.z);
-        ofDrawLine(pt1.x, pt1.y, pt1.z, pt3.x, pt3.y, pt3.z); 
-        */
+
+        ofNoFill();
+        ofSetColor(100);
+        ofBeginShape();
+        ofVertex(pt1);
+        ofVertex(pt2);
+        ofVertex(pt4);
+        ofVertex(pt3);
+        ofEndShape(true);
     }
     ofPopStyle();
 
@@ -87,8 +93,8 @@ void Arc::drawFromXandYRot(
 //--------------------------------------------------------------
 ofVec3f Arc::getNoisedVector(ofVec3f orig, float t) {
     float noise = ofNoise(
-        (orig.y * 24) / this->noiseScale,
-        (orig.z * 24) / this->noiseScale,
+        (orig.y * 48) / this->noiseScale,
+        (orig.z * 48) / this->noiseScale,
         glm::cos(t * glm::two_pi<float>()),
         glm::sin(t * glm::two_pi<float>()));
 

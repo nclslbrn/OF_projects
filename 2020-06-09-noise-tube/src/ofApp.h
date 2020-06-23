@@ -21,7 +21,7 @@ class ofApp : public ofBaseApp {
     deque<Arc> arcs;
     float res = 0.02f;
     float radius = 140.0f;
-    int numFrame{60};
+    int numFrame{30};
     int currFrame = 0;
     float extRadius, extRes, innerStepDistance;
     int outerSteps, innerSteps;
