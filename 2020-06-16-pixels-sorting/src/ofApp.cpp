@@ -2,10 +2,10 @@
 //--------------------------------------------------------------
 // Search and return bright pixel above y
 //--------------------------------------------------------------
-int ofApp::nextBrightY(int x, int y) {
+int ofApp::nextBrightY(int x, int y, int brightness) {
     while (y >= 0) {
         ofColor c = source.getColor(x, y);
-        if (c.getBrightness() > brightThreshold) {
+        if (c.getBrightness() >= brightness + queryLigthThreshold) {
             return y;
         }
         y--;
@@ -15,10 +15,10 @@ int ofApp::nextBrightY(int x, int y) {
 //--------------------------------------------------------------
 // Search and return dark pixel below y
 //--------------------------------------------------------------
-int ofApp::nextDarkY(int x, int y) {
+int ofApp::nextDarkY(int x, int y, int brightness) {
     while (y <= height) {
         ofColor c = source.getColor(x, y);
-        if (c.getBrightness() < darkThreshold) {
+        if (c.getBrightness() <= brightness - queryLigthThreshold) {
             return y;
         }
         y++;
@@ -28,15 +28,18 @@ int ofApp::nextDarkY(int x, int y) {
 //--------------------------------------------------------------
 void ofApp::setup() {
     source.load(sourceSize + "/" + sourceName);
+    source.setImageType(OF_IMAGE_COLOR);
     width = source.getWidth();
     height = source.getHeight();
     modified = source;
+    //modified.allocate(width, height, OF_IMAGE_COLOR);
+    //modified.setColor(ofColor::gray);
     currY = 0;
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    if (currY <= height) {
+    if (currY < height) {
         int y = currY;
         bool isLooking = true;
         while (isLooking && y <= height) {
@@ -63,7 +66,7 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::addLine(int x, int y, ofColor pixColor, int brightness, bool searchBrightPix) {
-    int toY = searchBrightPix ? nextBrightY(x, y) : nextDarkY(x, y);
+    int toY = searchBrightPix ? nextBrightY(x, y, brightness) : nextDarkY(x, y, brightness);
     if (toY != -1) {
         int range = abs(toY - y);
         int step = floor(brightnessVariation / static_cast<float>(range));
@@ -76,8 +79,12 @@ void ofApp::addLine(int x, int y, ofColor pixColor, int brightness, bool searchB
                 } else {
                     pixColor.setBrightness(brightness - (step * d));
                 }
-                for (int x_ = x; x_ <= x + pixStep && x_ < width; x_++) {
-                    modified.setColor(x_, y_, pixColor);
+                if (pixStep > 1) {
+                    for (int x_ = x; x_ <= x + pixStep && x_ < width; x_++) {
+                        modified.setColor(x_, y_, pixColor);
+                    }
+                } else if (x < width) {
+                    modified.setColor(x, y_, pixColor);
                 }
             }
         }
@@ -107,5 +114,6 @@ void ofApp::keyPressed(int key) {
 void ofApp::exit() {
     modified.save("output/" + ofToString(width) + "-" + sourceName);
     isSaved = true;
-    ofExit();
+    std::cout << "image saved" << endl;
+    //ofExit();
 }
