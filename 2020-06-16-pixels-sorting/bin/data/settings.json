@@ -1,0 +1,112 @@
+[
+	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "3403682456_83a87d74fa_k.jpg",
+		"photographer": "darius norvilas on flickr.com",
+		"subject": "University Hall, UIC"
+	},
+	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "3408680761_d37da74524_k.jpg",
+		"photographer": "Graeme Maclean on flickr.com",
+		"subject": "London barbican centre"
+	},
+	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "3409485258_7b735fcedb_k.jpg",
+		"photographer": "Graeme Maclean on flickr.com",
+		"subject": "London barbican centre"
+	},
+	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "3409485258_7b735fcedb_k.jpg",
+		"photographer": "Graeme Maclean on flickr.com",
+		"subject": "London barbican centre"
+	},
+	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "5585015751_70a49cc5fc_k.jpg",
+		"photographer": "Notting Hill Wanderer on flickr.com",
+		"subject": "Erno Goldfinger's Balfron Tower"
+	},
+	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "30827206512_02f610d970_k.jpg",
+		"photographer": "Michael R Coates on flickr.com",
+		"subject": "Former UMIST campus 3"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "alexander-tsang-1k4J9WeZmZs-unsplash.jpg",
+		"photographer": "Alexander Tsang on unsplash.com",
+		"subject": "unknown"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "ivan-vranic-w4NMS5h1xV4-unsplash.jpg",
+		"photographer": "Ivan Vranić on unsplash.com",
+		"subject": "Raketa Zagreb, Croatia"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "mark-west-sHdEknVXX58-unsplash.jpg",
+		"photographer": "Mark West on unsplash.com",
+		"subject": "Plymouth, united kingdom"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 100,
+		"brightnessVariation": 100,
+		"sourceName": "nenad-radojcic--43ba-XmA1Y-unsplash.jpg",
+		"photographer": "Nenad Radojčić on unsplash.com",
+		"subject": "unknown"
+	},
+	{
+		"pixStep": 2,
+		"brightThreshold": 140,
+		"darkThreshold": 130,
+		"queryLigthThreshold": 75,
+		"brightnessVariation": 100,
+		"sourceName": "shermin-ng-1PH2uwpYt1w-unsplash.jpg",
+		"photographer": "Shermin Ng on unsplash.com",
+		"subject": "unknown"
+	},
+	{
+		"sourceName": "davey-heuser-fpmEWJOYQ0U-unsplash.jpg",
+		"photographer": "Davey Heuser on unsplash.com",
+		"subject": "Trinity College, Dublin, Ireland"
+	},
+	{
+		"sourceName": "sasha-pleshco_-tT66gwvB6FY-unsplash.jpg",
+		"photographer": "Sasha Pleshco_ on unsplash.com",
+		"subject": "Cosmos Chisinau, Moldova"
+	}
+]
