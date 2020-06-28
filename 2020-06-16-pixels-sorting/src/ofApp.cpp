@@ -5,7 +5,7 @@
 int ofApp::nextBrightY(int x, int y, int brightness) {
     while (y >= 0) {
         ofColor c = source.getColor(x, y);
-        if (c.getBrightness() >= brightness + queryLigthThreshold) {
+        if (c.getBrightness() >= brightness + currSetting.getQueryLigthThreshold()) {
             return y;
         }
         y--;
@@ -18,7 +18,7 @@ int ofApp::nextBrightY(int x, int y, int brightness) {
 int ofApp::nextDarkY(int x, int y, int brightness) {
     while (y <= height) {
         ofColor c = source.getColor(x, y);
-        if (c.getBrightness() <= brightness - queryLigthThreshold) {
+        if (c.getBrightness() <= brightness - currSetting.getQueryLigthThreshold()) {
             return y;
         }
         y++;
@@ -26,15 +26,37 @@ int ofApp::nextDarkY(int x, int y, int brightness) {
     return -1;
 }
 //--------------------------------------------------------------
+// Setup new setting to compute new image
+//--------------------------------------------------------------
+void ofApp::initSettings(int frameId) {
+    if (frameId < settings.size()) {
+        source.load(sourceSize + "/" + settings[frameId].getSourceName());
+        source.setImageType(OF_IMAGE_COLOR);
+        modified = source;
+        width = source.getWidth();
+        height = source.getHeight();
+        currY = 0;
+        isSaved = false;
+        currSetting = settings[frameId];
+
+    } else {
+        std::cout << "No more frame to compute." << endl;
+        ofExit();
+    }
+}
+//--------------------------------------------------------------
 void ofApp::setup() {
-    source.load(sourceSize + "/" + sourceName);
-    source.setImageType(OF_IMAGE_COLOR);
-    width = source.getWidth();
-    height = source.getHeight();
-    modified = source;
-    //modified.allocate(width, height, OF_IMAGE_COLOR);
-    //modified.setColor(ofColor::gray);
-    currY = 0;
+    ofFile file("settings.json");
+    if (file.exists()) {
+        file >> jsonSettings;
+        for (auto& setting : jsonSettings) {
+            if (!setting.empty()) {
+                Setting n = Setting(setting);
+                settings.push_back(n);
+            }
+        }
+    }
+    initSettings(frameId);
 }
 
 //--------------------------------------------------------------
@@ -46,11 +68,11 @@ void ofApp::update() {
             for (int x = 0; x < width; x += pixStep) {
                 ofColor c = source.getColor(x, y);
                 float brightness = c.getBrightness();
-                if (brightness < darkThreshold) {
+                if (brightness < currSetting.getDarkThreshold()) {
                     // dark to  bright
                     addLine(x, y, c, brightness, true);
                     isLooking = false;
-                } else if (brightness > brightThreshold) {
+                } else if (brightness > currSetting.getBrightThreshold()) {
                     // bright to dark
                     addLine(x, y, c, brightness, false);
                     isLooking = false;
@@ -60,7 +82,9 @@ void ofApp::update() {
         }
         currY = y;
     } else if (!isSaved) {
-        exit();
+        saveFrame();
+        frameId++;
+        initSettings(frameId);
     }
 }
 
@@ -69,7 +93,7 @@ void ofApp::addLine(int x, int y, ofColor pixColor, int brightness, bool searchB
     int toY = searchBrightPix ? nextBrightY(x, y, brightness) : nextDarkY(x, y, brightness);
     if (toY != -1) {
         int range = abs(toY - y);
-        int step = floor(brightnessVariation / static_cast<float>(range));
+        int step = floor(currSetting.getBrightnessVariation() / static_cast<float>(range));
         for (int d = 0; d < range; d++) {
             // bright go down, dark go up
             int y_ = toY - y < 0 ? y + d : y - d;
@@ -105,15 +129,16 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
+    /*
     if (key == 115) {  // s
-        modified.save("output/" + sourceName);
+        modified.save("output/" + currSetting.getSourceName());
     } else {
         ofLogNotice() << "Unassigned key: " << key;
     }
+    */
 }
-void ofApp::exit() {
-    modified.save("output/" + ofToString(width) + "-" + sourceName);
+void ofApp::saveFrame() {
+    modified.save("output/" + sourceSize + "/" + currSetting.getSourceName());
     isSaved = true;
-    std::cout << "image saved" << endl;
-    //ofExit();
+    std::cout << currSetting.getSourceName() << " saved" << endl;
 }

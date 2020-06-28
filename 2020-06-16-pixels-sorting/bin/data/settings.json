@@ -100,11 +100,19 @@
 		"subject": "unknown"
 	},
 	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 30,
+		"brightnessVariation": 100,
 		"sourceName": "davey-heuser-fpmEWJOYQ0U-unsplash.jpg",
 		"photographer": "Davey Heuser on unsplash.com",
 		"subject": "Trinity College, Dublin, Ireland"
 	},
 	{
+		"brightThreshold": 190,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 20,
+		"brightnessVariation": 100,
 		"sourceName": "sasha-pleshco_-tT66gwvB6FY-unsplash.jpg",
 		"photographer": "Sasha Pleshco_ on unsplash.com",
 		"subject": "Cosmos Chisinau, Moldova"
