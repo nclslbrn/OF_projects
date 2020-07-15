@@ -19,7 +19,7 @@ class ofApp : public ofBaseApp {
     ofVec2f quadrifolium(float n);
     ofVec2f rect_hyperbola(float n);
     ofVec2f trifolium(float n);
-
+    ofVec2f cardioid(float n);
     vector<ofVec2f> pos;
     vector<int> colors;
     int width = ofGetWidth();
