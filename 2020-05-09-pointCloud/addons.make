@@ -1,2 +1,3 @@
+ofxSpatialHash
 ofxPointInMesh
 ofxDatGui
