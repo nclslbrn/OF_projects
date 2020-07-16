@@ -20,12 +20,15 @@ class ofApp : public ofBaseApp {
     ofVec2f rect_hyperbola(float n);
     ofVec2f trifolium(float n);
     ofVec2f cardioid(float n);
+    ofVec2f deltoid(float n);
+
     vector<ofVec2f> pos;
     vector<int> colors;
     int width = ofGetWidth();
     int height = ofGetHeight();
     float vectorScale = 0.01f;
     float density = 0.07;
+    int numFrame = 320;
 
     vector<ofColor> palette = {
         ofColor(0, 91, 197),
