@@ -27,8 +27,9 @@ class ofApp : public ofBaseApp {
     int width = ofGetWidth();
     int height = ofGetHeight();
     float vectorScale = 0.01f;
+    float canvasScale = 0.25;
     float density = 0.07;
-    int numFrame = 320;
+    int numFrame = 60;
 
     vector<ofColor> palette = {
         ofColor(0, 91, 197),

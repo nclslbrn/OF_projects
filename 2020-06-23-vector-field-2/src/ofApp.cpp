@@ -69,24 +69,19 @@ void ofApp::update() {
     int index = 0;
     float t = ofGetFrameNum() % numFrame / numFrame;
     for (ofVec2f& p : pos) {
-        float xx = ofMap(p.x, -6.5, 6.5, -width / 3, width * 1.33);
-        float yy = ofMap(p.y, -6.5, 6.5, -height / 3, height * 1.33);
+        float xx = ofMap(p.x, -6.5, 6.5, -width * canvasScale, width * (1 + canvasScale));
+        float yy = ofMap(p.y, -6.5, 6.5, -height * canvasScale, height * (1 + canvasScale));
 
-        //float n1 = 20 * ofMap(ofNoise(p.x / 5.0f, p.y / 5.0f), 0, 1, -1, 1);
-        float n1a = 5 * ofMap(ofNoise(p.x / 5.0f, p.y / 5.0f), 0, 1, -1, 1);
-        float n1b = 20 * ofMap(ofNoise(p.y / 5.0f, p.x / 5.0f), 0, 1, -1, 1);
+        //float n1 = 50 * ofMap(ofNoise(1 + p.x / 10.0f, 1 + p.y / 5.0f), 0, 1, -1, 1);
 
-        ofVec2f v1 = rect_hyperbola(n1a);
-        //ofVec2f v2 = astroid(n1a);
-        ofVec3f v3 = deltoid(n1b);
-        //  ofVec3f v4 = deltoid(p.y);
-        //float n2a = 30 * ofMap(ofNoise(v2.x, v2.y), 0, 1, -1, 1);
-        float n2b = 5.0f * ofMap(ofNoise(v3.x, v3.y, t * 5), 0, 1, -1, 1);
-        float n3b = 5.0f * ofMap(ofNoise(v1.x, v1.y, t * 5), 0, 1, -1, 1);
-
-        ofVec2f v4 = astroid(n2b);
-        ofVec2f v5 = cardioid(n3b);
-        ofVec2f v = ofVec2f(v4.x, v5.y);
+        ofVec2f v1 = deltoid(p.x);
+        ofVec2f v2 = quadrifolium(p.y);
+        float n2a = 5 * ofNoise(v1.x, v1.y);
+        float n2b = 5 * ofNoise(v2.x, v2.y);
+        float n3 = 10 * ofMap(ofNoise(n2a, n2b / 3.0f), 0, 1, -1, 1);
+        //  ofVec2f v4 = trifolium(n2b);
+        //  ofVec2f v5 = circle(n3b);
+        ofVec2f v = circle(n3);
         //ofVec2f v = v5 + v4;
         p.x += vectorScale * v.x;
         p.y += vectorScale * v.y;
@@ -114,9 +109,11 @@ void ofApp::keyPressed(int key) {
     if (key == 115) {
         ofPixels pixels;
         ofImage output;
+        string filename = "output-" + ofToString(ofGetFrameNum()) + ".jpg";
         cache.readToPixels(pixels);
         output.setFromPixels(pixels);
-        output.save("output-" + ofToString(ofGetFrameNum()) + ".jpg");
+        output.save(filename);
+        std::cout << "Image saved (" << filename << ")" << endl;
     }
 }
 //--------------------------------------------------------------
