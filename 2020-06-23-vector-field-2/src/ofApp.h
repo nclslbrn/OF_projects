@@ -1,6 +1,12 @@
 #pragma once
 
+#include "Palette.h"
 #include "ofMain.h"
+
+/**
+ * Planar function study
+ * based on https://generateme.wordpress.com/2016/04/24/drawing-vector-field/ by Tsulej
+ */
 
 class ofApp : public ofBaseApp {
    public:
@@ -11,6 +17,8 @@ class ofApp : public ofBaseApp {
     void keyPressed(int key);
     void mouseMoved(int x, int y);
     void mousePressed(int x, int y, int button);
+    // judson, misc, rohlfs, system
+    Palette palette = Palette("palette/json/judson.json");
 
    private:
     float ease(float p);
@@ -30,13 +38,5 @@ class ofApp : public ofBaseApp {
     float canvasScale = 0.25;
     float density = 0.07;
     int numFrame = 60;
-
-    vector<ofColor> palette = {
-        ofColor(0, 91, 197),
-        ofColor(0, 180, 252),
-        ofColor(23, 249, 255),
-        ofColor(223, 147, 0),
-        ofColor(248, 190, 0)};
-
     ofFbo cache;
 };

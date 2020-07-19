@@ -1,9 +1,11 @@
 #include "ofApp.h"
-
+//--------------------------------------------------------------
+// Dave Whyte (aka Bees and Bomb) ease function (original coded with Processing)
 //--------------------------------------------------------------
 float ofApp::ease(float p) { return 3 * p * p - 2 * p * p * p; }
 
 //--------------------------------------------------------------
+// Plane curves function
 // https://www.wolframalpha.com/widgets/view.jsp?id=4e37f43fcbe8be03c20f977f32e20d15
 //--------------------------------------------------------------
 
@@ -54,13 +56,15 @@ void ofApp::setup() {
             pos.push_back(ofVec2f(
                 x + ofRandom(1) * 0.03,
                 y + ofRandom(1) * 0.03));
-            colors.push_back(floor(palette.size() * ofRandom(1)));
+            colors.push_back(palette.getRandomColorId());
         }
     }
     cache.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
     cache.begin();
-    ofClear(0);
+    ofClear(palette.getStroke());
     cache.end();
+
+    std::cout << "Current palette is " << palette.getName() << "." << endl;
 }
 
 //--------------------------------------------------------------
@@ -87,9 +91,9 @@ void ofApp::update() {
         p.y += vectorScale * v.y;
 
         ofSetColor(
-            palette[colors[index]].r,
-            palette[colors[index]].g,
-            palette[colors[index]].b,
+            palette.getColor(colors[index]).r,
+            palette.getColor(colors[index]).g,
+            palette.getColor(colors[index]).b,
             10);
         ofDrawCircle(xx, yy, 0.5);
 
@@ -105,15 +109,16 @@ void ofApp::draw() {
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
-    std::cout << "key pressed = " << key << endl;
     if (key == 115) {
         ofPixels pixels;
         ofImage output;
         string filename = "output-" + ofToString(ofGetFrameNum()) + ".jpg";
         cache.readToPixels(pixels);
         output.setFromPixels(pixels);
-        output.save(filename);
+        output.save("output/" + filename);
         std::cout << "Image saved (" << filename << ")" << endl;
+    } else {
+        std::cout << "key pressed = " << key << endl;
     }
 }
 //--------------------------------------------------------------
