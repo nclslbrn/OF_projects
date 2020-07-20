@@ -29,6 +29,8 @@ class ofApp : public ofBaseApp {
     ofVec2f trifolium(float n);
     ofVec2f cardioid(float n);
     ofVec2f deltoid(float n);
+    ofVec2f ranunculoid(float n);
+    ofVec2f cycloid(float n);
 
     vector<ofVec2f> pos;
     vector<int> colors;

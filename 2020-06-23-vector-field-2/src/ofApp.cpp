@@ -49,6 +49,18 @@ ofVec2f ofApp::deltoid(float n) {
         (2 * sin(n) / 3.0f) - (1 / 3.0f * sin(2 * n)));
 }
 //--------------------------------------------------------------
+ofVec2f ofApp::ranunculoid(float n) {
+    return ofVec2f(
+        6.0f * glm::cos(n) - glm::cos(6.0f * n),
+        6.0f * glm::sin(n) - glm::sin(6.0f * n));
+}
+//--------------------------------------------------------------
+ofVec2f ofApp::cycloid(float n) {
+    return ofVec2f(
+        n - glm::sin(n),
+        1.0f - glm::cos(n));
+}
+//--------------------------------------------------------------
 
 void ofApp::setup() {
     for (float x = -3; x <= 3; x += density) {
@@ -79,13 +91,13 @@ void ofApp::update() {
         //float n1 = 50 * ofMap(ofNoise(1 + p.x / 10.0f, 1 + p.y / 5.0f), 0, 1, -1, 1);
 
         ofVec2f v1 = deltoid(p.x);
-        ofVec2f v2 = quadrifolium(p.y);
+        ofVec2f v2 = ranunculoid(p.y);
         float n2a = 5 * ofNoise(v1.x, v1.y);
         float n2b = 5 * ofNoise(v2.x, v2.y);
         float n3 = 10 * ofMap(ofNoise(n2a, n2b / 3.0f), 0, 1, -1, 1);
         //  ofVec2f v4 = trifolium(n2b);
         //  ofVec2f v5 = circle(n3b);
-        ofVec2f v = circle(n3);
+        ofVec2f v = rect_hyperbola(n3);
         //ofVec2f v = v5 + v4;
         p.x += vectorScale * v.x;
         p.y += vectorScale * v.y;
