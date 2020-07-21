@@ -20,12 +20,15 @@ Palette::Palette(string jsonFilename, int paletteId) {
         for (auto& palette : paletteData) {
             if (currentPaletteId == paletteId) {
                 if (!palette.empty()) {
-                    this->name = palette["name"];
-                    for (auto& color : palette["colors"]) {
-                        this->colors.push_back(colFromWebHex(color));
+                    this->name = palette["name"] != NULL ? palette["name"] : "untilted";
+                    if (palette["colors"] != NULL) {
+                        for (auto& color : palette["colors"]) {
+                            this->colors.push_back(colFromWebHex(color));
+                        }
                     }
-                    this->stroke = colFromWebHex(palette["stroke"]);
-                    this->background = colFromWebHex(palette["background"]);
+                    this->stroke = palette["stroke"] != NULL ? colFromWebHex(palette["stroke"]) : ofColor(50, 50, 50);
+                    this->background = palette["background"] != NULL ? colFromWebHex(palette["background"]) : ofColor(50, 50, 50);
+
                 } else {
                     ofLog(
                         OF_LOG_ERROR,
