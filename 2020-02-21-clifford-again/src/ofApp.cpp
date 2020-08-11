@@ -1,34 +1,46 @@
 #include "ofApp.h"
-
 //--------------------------------------------------------------
-void ofApp::reset() {
+void ofApp::nextConstant() {
+    Constant constant = Constant(jsonFilename, constantsNum);
+    if (constant.getA() && constant.getB() && constant.getC() && constant.getD()) {
+        A = constant.getA();
+        B = constant.getB();
+        C = constant.getC();
+        D = constant.getD();
+        i = 0;
+        std::cout << ofToString(A) << " " << ofToString(B) << " " << ofToString(C) << " " << ofToString(D) << endl;
+        constantsNum++;
+        imgName = "Constant-num-" + ofToString(constantsNum) + ".jpg";
+
+        fbo.begin();
+        ofClear(0);
+        fbo.end();
+    } else {
+        ofLog(OF_LOG_ERROR, "There is a problem with the json file or every constants was used.");
+        ofExit();
+    }
+}
+//--------------------------------------------------------------
+void ofApp::searchNewConstant() {
     A = ofRandom(4) - 2;
     B = ofRandom(4) - 2;
     C = ofRandom(4) - 2;
     D = ofRandom(4) - 2;
     i = 0;
 
-    imgName = "A_"+ofToString(A)+
-              "_B_"+ofToString(B)+
-              "_C_"+ ofToString(C)+
-              "_D_"+ofToString(A)+
+    imgName = "A_" + ofToString(A) +
+              "_B_" + ofToString(B) +
+              "_C_" + ofToString(C) +
+              "_D_" + ofToString(A) +
               ".jpg";
 
-    points.clear();
     std::cout << "A: " << A << " B:" << B << " C:" << C << " D:" << D << endl;
-    fbo.clear();
-    ofClear(ofColor::black);
+
+    fbo.begin();
+    ofClear(0);
+    fbo.end();
 }
 //--------------------------------------------------------------
-
-//--------------------------------------------------------------
-ofColor ofApp::createHue(int n) {
-    float hue = ofMap(n, 0, iterations, 0, 255);
-    int brightness = 230;
-    int saturation = 200;
-
-    return ofColor::fromHsb(hue, saturation, brightness);
-}
 
 //--------------------------------------------------------------
 void ofApp::setup() {
@@ -36,11 +48,8 @@ void ofApp::setup() {
     iterations = 500000;
     width = 3840;
     height = 3840;
-    steps = 1000;
-    maxSize = 12;
-    minSize = 0.25;
-    // Generate new constants for attracors
-    reset();
+    steps = 500;
+
     // Set start position
     position.set(0, 0);
     // Set scale for polar coordinate
@@ -48,11 +57,23 @@ void ofApp::setup() {
     minY = minX * height / width;
     maxX = 4.0;
     maxY = maxX * height / width;
+
+    fbo.allocate(width, height, GL_RGB);
+
+    ofSetColor(ofColor::white);
+    ofFill();
+    // Generate new constants for attracors
+    if (findNewConstants) {
+        searchNewConstant();
+    } else {
+        nextConstant();
+    }
 }
 //--------------------------------------------------------------
 void ofApp::update() {
-    if( i < iterations ) {
-        for( int j = 0; j < steps; j++ ) {
+    if (i < iterations) {
+        fbo.begin();
+        for (int j = 0; j < steps; j++) {
             float xn = glm::sin(A * position.y) + C * glm::cos(A * position.x);
             float yn = glm::sin(B * position.x) + D * glm::cos(B * position.y);
 
@@ -61,66 +82,58 @@ void ofApp::update() {
 
             // skip the first ten points
             if (i > 10) {
-                points.push_front(
-                    Point(
-                        ofVec2f(xi, yi), 
-                        createHue(i),
-                        1
-                    )
-                );
+                ofDrawCircle(xi, yi, 2);
             }
+
             // save for the next iteration
             position.x = xn;
             position.y = yn;
         }
-        i+=steps;
-
-        fbo.allocate(width, height, GL_RGBA32F);
-        fbo.begin();
-        ofBackground(ofColor::black);
-        for( auto point : points) {
-            point.draw();
-        }
+        i += steps;
         fbo.end();
-    
-    } 
+    }
 
     if (i == iterations) {
-        //if( f == frames ) {
-            saveLargeImage(imgName);
-            std::cout << "Image generated" << endl;
-            reset();
-        //} else {
-        //    f++;
-        //}
+        saveLargeImage(imgName);
+        std::cout << "Image generated" << endl;
+        if (findNewConstants) {
+            searchNewConstant();
+        } else {
+            nextConstant();
+        }
     }
-   
-
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
+    //ofBackground(0);
     fbo.draw(0, 0, ofGetWidth(), ofGetHeight());
+    ofDrawBitmapString(ofToString(i) + "/" + ofToString(iterations), 16, ofGetHeight() - 16);
 }
 
 //--------------------------------------------------------------
 void ofApp::saveLargeImage(string imgName) {
-	unsigned char* pixels = new unsigned char[3840*3840*3];  ;  
-	ofImage saveImage;  
-	saveImage.allocate(3840,3840,OF_IMAGE_COLOR);  
-	saveImage.setUseTexture(false);  
+    unsigned char* pixels = new unsigned char[3840 * 3840 * 3];
 
-	fbo.begin();
-	glPixelStorei(GL_PACK_ALIGNMENT, 1);
-	glReadPixels(0, 0, fbo.getWidth(), fbo.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, pixels);    
-	saveImage.setFromPixels(pixels, fbo.getWidth(), fbo.getHeight(), OF_IMAGE_COLOR);    
-	saveImage.saveImage(imgName, OF_IMAGE_QUALITY_MEDIUM);  
-	fbo.end();  
+    ofImage saveImage;
+    saveImage.allocate(3840, 3840, OF_IMAGE_COLOR);
+    saveImage.setUseTexture(false);
+
+    fbo.begin();
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, fbo.getWidth(), fbo.getHeight(), GL_RGB, GL_UNSIGNED_BYTE, pixels);
+    saveImage.setFromPixels(pixels, fbo.getWidth(), fbo.getHeight(), OF_IMAGE_COLOR);
+    saveImage.saveImage(imgName, OF_IMAGE_QUALITY_HIGH);
+    fbo.end();
 }
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
-    if(key == 32) {
-        reset();
+    if (key == 32) {
+        if (findNewConstants) {
+            searchNewConstant();
+        } else {
+            nextConstant();
+        }
     }
 }
 
