@@ -116,5 +116,251 @@
 		"sourceName": "sasha-pleshco_-tT66gwvB6FY-unsplash.jpg",
 		"photographer": "Sasha Pleshco_ on unsplash.com",
 		"subject": "Cosmos Chisinau, Moldova"
+	},[
+	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 30,
+		"brightnessVariation": 120,
+		"sourceName": "3403682456_83a87d74fa_k.jpg",
+		"photographer": "darius norvilas on flickr.com",
+		"subject": "University Hall, UIC"
+	},
+	{
+		"brightThreshold": 190,
+		"darkThreshold": 80,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 110,
+		"sourceName": "3408680761_d37da74524_k.jpg",
+		"photographer": "Graeme Maclean on flickr.com",
+		"subject": "London barbican centre"
+	},
+	{
+		"brightThreshold": 200,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "3409485258_7b735fcedb_k.jpg",
+		"photographer": "Graeme Maclean on flickr.com",
+		"subject": "London barbican centre"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 120,
+		"sourceName": "3409485258_7b735fcedb_k.jpg",
+		"photographer": "Graeme Maclean on flickr.com",
+		"subject": "London barbican centre"
+	},
+	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 70,
+		"brightnessVariation": 100,
+		"sourceName": "5585015751_70a49cc5fc_k.jpg",
+		"photographer": "Notting Hill Wanderer on flickr.com",
+		"subject": "Erno Goldfinger's Balfron Tower"
+	},
+	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 30,
+		"brightnessVariation": 100,
+		"sourceName": "30827206512_02f610d970_k.jpg",
+		"photographer": "Michael R Coates on flickr.com",
+		"subject": "Former UMIST campus 3"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 60,
+		"brightnessVariation": 100,
+		"sourceName": "alexander-tsang-1k4J9WeZmZs-unsplash.jpg",
+		"photographer": "Alexander Tsang on unsplash.com",
+		"subject": "unknown"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 60,
+		"brightnessVariation": 100,
+		"sourceName": "ivan-vranic-w4NMS5h1xV4-unsplash.jpg",
+		"photographer": "Ivan Vranić on unsplash.com",
+		"subject": "Raketa Zagreb, Croatia"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 30,
+		"brightnessVariation": 100,
+		"sourceName": "mark-west-sHdEknVXX58-unsplash.jpg",
+		"photographer": "Mark West on unsplash.com",
+		"subject": "Plymouth, united kingdom"
+	},
+	{
+		"brightThreshold": 137,
+		"darkThreshold": 117,
+		"queryLigthThreshold": 110,
+		"brightnessVariation": 100,
+		"sourceName": "nenad-radojcic--43ba-XmA1Y-unsplash.jpg",
+		"photographer": "Nenad Radojčić on unsplash.com",
+		"subject": "unknown"
+	},
+	{
+		"pixStep": 2,
+		"brightThreshold": 140,
+		"darkThreshold": 130,
+		"queryLigthThreshold": 100,
+		"brightnessVariation": 100,
+		"sourceName": "shermin-ng-1PH2uwpYt1w-unsplash.jpg",
+		"photographer": "Shermin Ng on unsplash.com",
+		"subject": "unknown"
+	},
+	{
+		"brightThreshold": 180,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "davey-heuser-fpmEWJOYQ0U-unsplash.jpg",
+		"photographer": "Davey Heuser on unsplash.com",
+		"subject": "Trinity College, Dublin, Ireland"
+	},
+	{
+		"brightThreshold": 190,
+		"darkThreshold": 70,
+		"queryLigthThreshold": 30,
+		"brightnessVariation": 100,
+		"sourceName": "sasha-pleshco_-tT66gwvB6FY-unsplash.jpg",
+		"photographer": "Sasha Pleshco_ on unsplash.com",
+		"subject": "Cosmos Chisinau, Moldova"
+	},
+	[
+	{
+		"brightThreshold": 147,
+		"darkThreshold": 107,
+		"queryLigthThreshold": 70,
+		"brightnessVariation": 120,
+		"sourceName": "25531591245_3970d8dd92_o.jpg",
+		"photographer": "Artur Salisz on flickr.com",
+		"subject": "Hotel Forum (Architekt Janusz Ingarden), Kraków, Poland"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "47397574432_fc73d4dfe7_k.jpg",
+		"photographer": "Urban Subutex on flickr.com",
+		"subject": "unknown"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "39193800171_ad168455d1_k.jpg",
+		"photographer": "Simon Aughton on flickr.com",
+		"subject": "unknown"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "47397581182_19ceb310b7_k.jpg",
+		"photographer": "Urban Subutex on flickr.com",
+		"subject": "unknown"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "14366351766_6a08736d3f_k.jpg",
+		"photographer": "Nicolas Nova on flickr.com",
+		"subject": "La Grande Motte"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "33840938034_a95052be46_k.jpg",
+		"photographer": "Dave Sutherland on flickr.com",
+		"subject": "Barbican Estate, London, UK"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "26251210512_3269a17a5f_5k.jpg",
+		"photographer": "Herr Olsen on flickr.com",
+		"subject": "unknown"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "8234415189_a802f15fc7_k.jpg",
+		"photographer": "Can Pac Swire on flickr.com",
+		"subject": "Sutton Place, Toronto, United States of America"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "4930227965_15f8526be7_k.jpg",
+		"photographer": "siobhanmc on flickr.com",
+		"subject": "unknown"
+	},
+	{
+		"brightThreshold": 147,
+		"darkThreshold": 107,
+		"queryLigthThreshold": 70,
+		"brightnessVariation": 120,
+		"sourceName": "25543650044_4cfa31a5d0_k.jpg",
+		"photographer": "Dmitri Popov on flickr.com",
+		"subject": "Herlev Hospital, Copenhagen, Denmark"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "9628808827_ed4163ce5b_k.jpg",
+		"photographer": "G Travels on flickr.com",
+		"subject": "Palace of Sports, Vilnius, Lithuania"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "6043379238_3c8efc64ac_o.jpg",
+		"photographer": "andy a on flickr.com",
+		"subject": "Hermiston Court, Edinburgh, Scotland"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "6113408115_1b3d119033_o.jpg",
+		"photographer": "andy a on flickr.com",
+		"subject": "George Square Theatre Edinburgh, Scotland"
+	},
+	{
+		"brightThreshold": 127,
+		"darkThreshold": 127,
+		"queryLigthThreshold": 50,
+		"brightnessVariation": 100,
+		"sourceName": "27844791205_f88a1ec88b_k.jpg",
+		"photographer": "James Guppy on flickr.com",
+		"subject": "Norwich, England"
 	}
+
 ]
