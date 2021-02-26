@@ -4,7 +4,7 @@
 class MeshFrame {
    public:
     MeshFrame();
-    MeshFrame(ofPixels framePixels) {
+    MeshFrame(ofPixels framePixels, int threshold) {
     }
     void update();
     void draw();
