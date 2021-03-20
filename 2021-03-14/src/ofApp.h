@@ -26,7 +26,7 @@ class ofApp : public ofBaseApp {
     ofVec2f center = ofVec2f(ofGetWidth() / 2.0, ofGetHeight() / 2.0);
     vector<ofVec2f> repulsor;
 
-    int numFrame = 2000;
+    int numFrame = 600;
     float meshScale = 12;
     MouseHeatMap heatMap;
     FrameMesh frame;

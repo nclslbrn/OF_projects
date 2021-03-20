@@ -17,18 +17,23 @@ MouseHeatMap::MouseHeatMap(int width, int height, float initRadius) {
     radius = initRadius;
 }
 void MouseHeatMap::draw(int x = 0, int y = 0, int width = ofGetWidth(), int height = ofGetHeight()) {
-    map.getTexture().disableAlphaMask();
+    //map.getTexture().disableAlphaMask();
     map.draw(x, y, width, height);
 }
 
 void MouseHeatMap::capture(int x = -1, int y = -1) {
     if (map.isAllocated()) {
+        ofVec2f pos = ofVec2f(
+            (x / float(ofGetWidth())) * map.getWidth(),
+            (y / float(ofGetHeight())) * map.getHeight());
+
         map.begin();
-        ofSetColor(0, 0, 0, 25);
+        ofSetColor(0, 0, 0, 15);
         ofDrawRectangle(0, 0, map.getWidth(), map.getHeight());
-        ofSetColor(255, 255, 255, 100);
+
+        ofSetColor(255, 255, 255, 150);
         for (int i = 0; i < 10; i++) {
-            ofDrawCircle(x, y, radius * (i / 8.0f));
+            ofDrawCircle(pos.x, pos.y, radius * (i / 8.0f));
         }
         map.end();
     }

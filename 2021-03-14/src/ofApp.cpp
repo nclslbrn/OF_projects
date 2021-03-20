@@ -9,19 +9,21 @@ ofVec2f ofApp::getRandomPos(ofVec2f c, float scale) {
 }
 //--------------------------------------------------------------
 void ofApp::setup() {
-    ofDisableArbTex();
     ofSetBackgroundColor(0);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-    heatMap = MouseHeatMap(ofGetWidth(), ofGetHeight(), 50.0);
+
     frame = FrameMesh("nick_offerman-320x180px.jpg", 60, meshScale);
+    heatMap = MouseHeatMap(frame.getWidth(), frame.getHeight(), 8.0);
+
     shader.load("shader");
+    //ofDisableArbTex();
+
     shader.begin();
-    shader.setUniformTexture("tex", frame.getTexture(), 0);
+    shader.setUniformTexture("u_frameTex", frame.getTexture(), 0);
     shader.setUniform2f("u_frameRes", frame.getWidth(), frame.getHeight());
-    shader.setUniform2f("u_touchRes", ofGetWidth(), ofGetHeight());
     shader.end();
-    camera.setDistance(ofGetWidth() * 12);
-    camera.setFarClip(ofGetWidth() * 12);
+    camera.setDistance(ofGetWidth() * meshScale);
+    camera.setFarClip(ofGetWidth() * meshScale);
 
     repulsor.resize(2);
     repulsor[0] = getRandomPos(center, meshScale);
@@ -41,24 +43,27 @@ void ofApp::update() {
 void ofApp::draw() {
     float t = (ofGetFrameNum() % numFrame) / static_cast<float>(numFrame);
     ofVec2f repulsT = repulsor[0].getInterpolated(repulsor[1], t);
-    heatMap.bind();
     heatMap.draw(0, 0, ofGetWidth(), ofGetHeight());
     camera.begin();
     shader.begin();
+
     shader.bindDefaults();
     shader.setUniform1f("u_time", t);
     shader.setUniform2f("u_mouse", ofGetMouseX() - center.x, ofGetMouseY() - center.y);
     shader.setUniform3f("u_camera", camera.getGlobalPosition());
     shader.setUniform2f("u_repulsor", repulsT);
-    shader.setUniformTexture("heatmap", heatMap.getMaptexture(), 1);
+    // shader.setUniformTexture("tex", heatMap.getMaptexture(), 1);
+
     ofPushMatrix();
-    ofTranslate(center.x, center.y, 100);
+    ofTranslate(center.x, center.y, 0);
     ofRotateX(180);
-    frame.draw();
+    heatMap.bind();
+    frame.drawWireframe();
+    heatMap.unbind();
     ofPopMatrix();
+
     shader.end();
     camera.end();
-    heatMap.unbind();
 
     ofDrawBitmapString(
         ofToString(ofGetFrameRate()) + " fps",

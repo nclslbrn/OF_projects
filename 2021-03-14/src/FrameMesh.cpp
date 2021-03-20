@@ -30,7 +30,9 @@ FrameMesh::FrameMesh(string imgPath, int threshold, float scale) {
     // we are going to use instanced drawing so we
     // only need one geometry
     mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
-    mesh.setUsage(GL_STATIC_DRAW);
+    // mesh.setUsage(GL_STATIC_DRAW);
+    mesh.setUsage(GL_DYNAMIC_DRAW);
+    mesh.setMode(OF_PRIMITIVE_POINTS);
     // we want each box to have a different color so let's add
     // as many colors as boxes
     mesh.getColors().resize(matrices.size());
@@ -65,8 +67,14 @@ FrameMesh::FrameMesh(string imgPath, int threshold, float scale) {
     buffer.updateData(0, matrices);
 }
 
-void FrameMesh::draw() {
+void FrameMesh::drawPoints() {
     mesh.drawInstanced(OF_MESH_POINTS, matrices.size());
+}
+void FrameMesh::drawWireframe() {
+    mesh.drawInstanced(OF_MESH_WIREFRAME, matrices.size());
+}
+void FrameMesh::drawFaces() {
+    mesh.drawInstanced(OF_MESH_FILL, matrices.size());
 }
 
 ofTexture FrameMesh::getTexture() {
