@@ -32,4 +32,5 @@ class ofApp : public ofBaseApp {
     FrameMesh frame;
     ofxShader shader;
     ofEasyCam camera;
+    ofImage sparkTexture;
 };

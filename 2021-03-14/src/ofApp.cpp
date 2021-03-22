@@ -12,16 +12,22 @@ void ofApp::setup() {
     ofSetBackgroundColor(0);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 
-    frame = FrameMesh("nick_offerman-320x180px.jpg", 60, meshScale);
+    frame = FrameMesh("nick_offerman-320x180px.jpg", 100, meshScale);
     heatMap = MouseHeatMap(frame.getWidth(), frame.getHeight(), 8.0);
-
-    shader.load("shader");
-    //ofDisableArbTex();
+    sparkTexture.load("spark.png");
+    shader.load("particle");
+    ofDisableArbTex();
+    ofEnableAlphaBlending();
 
     shader.begin();
     shader.setUniformTexture("u_frameTex", frame.getTexture(), 0);
+    shader.setUniformTexture("u_sparkTex", sparkTexture.getTexture(), 1);
+
     shader.setUniform2f("u_frameRes", frame.getWidth(), frame.getHeight());
+    shader.setUniform2f("u_screenRes", ofGetWidth(), ofGetHeight());
+    shader.setUniform1f("u_scale", meshScale);
     shader.end();
+
     camera.setDistance(ofGetWidth() * meshScale);
     camera.setFarClip(ofGetWidth() * meshScale);
 
@@ -43,23 +49,21 @@ void ofApp::update() {
 void ofApp::draw() {
     float t = (ofGetFrameNum() % numFrame) / static_cast<float>(numFrame);
     ofVec2f repulsT = repulsor[0].getInterpolated(repulsor[1], t);
-    heatMap.draw(0, 0, ofGetWidth(), ofGetHeight());
+    //heatMap.draw(0, 0, ofGetWidth(), ofGetHeight());
     camera.begin();
     shader.begin();
 
     shader.bindDefaults();
     shader.setUniform1f("u_time", t);
-    shader.setUniform2f("u_mouse", ofGetMouseX() - center.x, ofGetMouseY() - center.y);
+    shader.setUniform2f("u_mouse", (ofGetMouseX() - center.x)*meshScale, (ofGetMouseY() - center.y) * meshScale);
     shader.setUniform3f("u_camera", camera.getGlobalPosition());
     shader.setUniform2f("u_repulsor", repulsT);
-    // shader.setUniformTexture("tex", heatMap.getMaptexture(), 1);
+    shader.setUniformTexture("u_heatmapTex", heatMap.getMaptexture(), 2);
 
     ofPushMatrix();
     ofTranslate(center.x, center.y, 0);
     ofRotateX(180);
-    heatMap.bind();
-    frame.drawWireframe();
-    heatMap.unbind();
+    frame.drawFaces();
     ofPopMatrix();
 
     shader.end();

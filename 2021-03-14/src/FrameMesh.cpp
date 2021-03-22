@@ -32,7 +32,7 @@ FrameMesh::FrameMesh(string imgPath, int threshold, float scale) {
     mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
     // mesh.setUsage(GL_STATIC_DRAW);
     mesh.setUsage(GL_DYNAMIC_DRAW);
-    mesh.setMode(OF_PRIMITIVE_POINTS);
+    //mesh.setMode(OF_PRIMITIVE_POINTS);
     // we want each box to have a different color so let's add
     // as many colors as boxes
     mesh.getColors().resize(matrices.size());
