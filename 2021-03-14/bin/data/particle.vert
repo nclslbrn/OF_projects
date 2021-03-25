@@ -1,5 +1,7 @@
 //#version 150
 #define PI 3.1415926538
+//#extension GL_EXT_gpu_shader4:enable
+//#extension GL_ARB_texture_rectangle:enable
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
@@ -18,8 +20,7 @@ uniform vec2 u_frameRes;
 uniform vec2 u_screenRes;
 uniform float u_scale;
 uniform samplerBuffer u_frameTex;
-uniform sampler2DRect u_heatmapTex;
-uniform sampler2DRect u_sparkTex;
+uniform sampler2D spark;
 uniform vec2 u_repulsor;
 
 out vec4 color;
@@ -72,9 +73,9 @@ void main(){
     vec4 pos=transformMatrix*position;
     
     /* random pos from u_repulsor */
-    float dist=distance(pos.xy,u_repulsor);
+    float dist=distance(pos.xy,u_mouse);
     if(dist>0&&dist<radius){
-        vec2 dir=((pos.xy)-u_repulsor);
+        vec2 dir=((pos.xy)-u_mouse);
         float displaceNoise=noise((pos.xy+u_time)/noiseFrequency)*noiseScaling;
         float distNorm=dist/radius;
         
@@ -82,8 +83,8 @@ void main(){
         dir*=distNorm;
         
         vec2 displacement=vec2(
-            cos(displaceNoise*PI*2.)*400*distNorm,
-            sin(displaceNoise*PI*2.)*400*distNorm
+            cos(displaceNoise*PI*2.)*100*distNorm,
+            sin(displaceNoise*PI*2.)*100*distNorm
         );
         pos.xy+=displacement.xy;
     }
@@ -92,8 +93,11 @@ void main(){
     float distB=sqrt(eyeCoord.x*eyeCoord.x+eyeCoord.y*eyeCoord.y+eyeCoord.z*eyeCoord.z);
     float att=50./distB;
     */
-    
-    color=instanceColor;
+    vec4 particleColor=instanceColor;
+    vec4 particleAlpha=texture2D(spark,texcoord);
+    particleColor.a=particleAlpha.a;
+    color=particleColor;
+    // color=vec4(texcoord,0.,1.);
     
     //gl_PointSize=normal.x*att;
     gl_Position=modelViewProjectionMatrix*pos;

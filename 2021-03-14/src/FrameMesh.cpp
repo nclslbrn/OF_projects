@@ -1,7 +1,7 @@
 #include "FrameMesh.h"
 
 FrameMesh::FrameMesh() {}
-FrameMesh::FrameMesh(string imgPath, int threshold, float scale) {
+FrameMesh::FrameMesh(string imgPath, int threshold, float scale, ofVec2f texcoord) {
     img.load(imgPath);
     ofPixels pixels = img.getPixels();
     int numChannels = img.getPixels().getNumChannels();
@@ -16,9 +16,10 @@ FrameMesh::FrameMesh(string imgPath, int threshold, float scale) {
                 green > threshold &&
                 blue > threshold) {
                 int z = round(((red + blue + green) / 765.0f) * img.getHeight() * -0.15);
-                particles.push_back({{x, y, z, 1},
-                                     {ofRandomf(), ofRandomf(), ofRandomf(), ofRandomf()},
-                                     {red, green, blue}});
+                particles.push_back(
+                    {{x, y, z, 1},
+                     {ofRandomf(), ofRandomf(), ofRandomf(), ofRandomf()},
+                     {red, green, blue}});
             }
         }
     }
@@ -27,14 +28,17 @@ FrameMesh::FrameMesh(string imgPath, int threshold, float scale) {
     buffer.bind(GL_TEXTURE_BUFFER);
     buffer.setData(matrices, GL_STREAM_DRAW);
     tex.allocateAsBufferTexture(buffer, GL_RGBA32F);
-    // we are going to use instanced drawing so we
-    // only need one geometry
-    mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
-    // mesh.setUsage(GL_STATIC_DRAW);
-    mesh.setUsage(GL_DYNAMIC_DRAW);
-    //mesh.setMode(OF_PRIMITIVE_POINTS);
-    // we want each box to have a different color so let's add
-    // as many colors as boxes
+    //mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
+    mesh = ofMesh::plane(75, 75, 2, 2);
+    //mesh.disableNormals();
+    mesh.enableTextures();
+    //mesh = ofMesh::plane(100, 100, 2, 2);
+    /*  mesh.addTexCoord(ofVec2f(0, 0));
+    mesh.addTexCoord(ofVec2f(texcoord.x, 0));
+    mesh.addTexCoord(ofVec2f(texcoord.y, texcoord.y));
+    mesh.addTexCoord(ofVec2f(0, texcoord.y));
+    mesh.addTexCoord(ofVec2f(0, 0)); */
+    mesh.setUsage(GL_STATIC_DRAW);
     mesh.getColors().resize(matrices.size());
     for (size_t i = 0; i < mesh.getColors().size(); i++) {
         mesh.getColors()[i] = ofColor(
@@ -42,14 +46,10 @@ FrameMesh::FrameMesh(string imgPath, int threshold, float scale) {
             particles[i].color[1],
             particles[i].color[2]);
     }
-    // then we tell the vbo that colors should be used per instance by using
-    // ofVbo::setAttributeDivisor
+
     mesh.getVbo().setAttributeDivisor(ofShader::COLOR_ATTRIBUTE, 1);
-    // put box position from our image
     for (size_t i = 0; i < matrices.size(); i++) {
         ofNode node;
-
-        //float t = (now + i * spacing) * movementSpeed;
         glm::vec3 pos(
             (particles[i].pos[0] / img.getWidth()) - 0.5,
             (particles[i].pos[1] / img.getHeight()) - 0.5,
@@ -63,7 +63,6 @@ FrameMesh::FrameMesh(string imgPath, int threshold, float scale) {
         node.setOrientation(pos);
         matrices[i] = node.getLocalTransformMatrix();
     }
-    // and upload them to the texture buffer
     buffer.updateData(0, matrices);
 }
 
