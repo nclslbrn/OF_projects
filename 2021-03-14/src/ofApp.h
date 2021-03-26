@@ -1,6 +1,5 @@
 #pragma once
 #include "FrameMesh.h"
-#include "MouseHeatMap.h"
 #include "ofMain.h"
 #include "ofxShaderFilter.h"
 
@@ -26,11 +25,17 @@ class ofApp : public ofBaseApp {
     ofVec2f center = ofVec2f(ofGetWidth() / 2.0, ofGetHeight() / 2.0);
     vector<ofVec2f> repulsor;
 
-    int numFrame = 600;
-    float meshScale = 12;
-    MouseHeatMap heatMap;
-    FrameMesh frame;
+    int lastFrameIn,
+        totalNumFrame,
+        framesInLoop = 16,
+        minPixelsBrightness = 75,
+        numFrame = 600;
+
+    float meshScale = 12.0;
+    ofVideoPlayer video;
+    vector<FrameMesh> frames;
     ofxShader shader;
     ofEasyCam camera;
     ofImage sparkTexture;
+    ofVec2f sparkTexCoord;
 };

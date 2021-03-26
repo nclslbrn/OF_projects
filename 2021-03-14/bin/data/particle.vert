@@ -73,7 +73,7 @@ void main(){
     vec4 pos=transformMatrix*position;
     
     /* random pos from u_repulsor */
-    float dist=distance(pos.xy,u_mouse);
+    float dist=distance(pos.xy,u_repulsor);
     if(dist>0&&dist<radius){
         vec2 dir=((pos.xy)-u_mouse);
         float displaceNoise=noise((pos.xy+u_time)/noiseFrequency)*noiseScaling;

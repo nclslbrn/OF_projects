@@ -1,13 +1,12 @@
 #include "FrameMesh.h"
 
 FrameMesh::FrameMesh() {}
-FrameMesh::FrameMesh(string imgPath, int threshold, float scale, ofVec2f texcoord) {
-    img.load(imgPath);
-    ofPixels pixels = img.getPixels();
-    int numChannels = img.getPixels().getNumChannels();
-    for (int x = 0; x < img.getWidth(); x++) {
-        for (int y = 0; y < img.getHeight(); y++) {
-            int pixId = y * img.getWidth() + x;
+FrameMesh::FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f texcoord) {
+    pixels = framePixels;
+    int numChannels = pixels.getNumChannels();
+    for (int x = 0; x < pixels.getWidth(); x++) {
+        for (int y = 0; y < pixels.getHeight(); y++) {
+            int pixId = y * pixels.getWidth() + x;
             int red = pixels[pixId * numChannels + 0];
             int green = pixels[pixId * numChannels + 1];
             int blue = pixels[pixId * numChannels + 2];
@@ -15,10 +14,10 @@ FrameMesh::FrameMesh(string imgPath, int threshold, float scale, ofVec2f texcoor
                 red > threshold &&
                 green > threshold &&
                 blue > threshold) {
-                int z = round(((red + blue + green) / 765.0f) * img.getHeight() * -0.15);
+                int z = round(((red + blue + green) / 765.0f) * pixels.getHeight() * -0.15);
                 particles.push_back(
                     {{x, y, z, 1},
-                     {ofRandomf(), ofRandomf(), ofRandomf(), ofRandomf()},
+                     {0.0, 0.0, 0.0, 0.0},
                      {red, green, blue}});
             }
         }
@@ -28,16 +27,16 @@ FrameMesh::FrameMesh(string imgPath, int threshold, float scale, ofVec2f texcoor
     buffer.bind(GL_TEXTURE_BUFFER);
     buffer.setData(matrices, GL_STREAM_DRAW);
     tex.allocateAsBufferTexture(buffer, GL_RGBA32F);
-    //mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
-    mesh = ofMesh::plane(75, 75, 2, 2);
-    //mesh.disableNormals();
-    mesh.enableTextures();
-    //mesh = ofMesh::plane(100, 100, 2, 2);
-    /*  mesh.addTexCoord(ofVec2f(0, 0));
-    mesh.addTexCoord(ofVec2f(texcoord.x, 0));
-    mesh.addTexCoord(ofVec2f(texcoord.y, texcoord.y));
-    mesh.addTexCoord(ofVec2f(0, texcoord.y));
-    mesh.addTexCoord(ofVec2f(0, 0)); */
+    mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
+    // mesh = ofMesh::plane(75, 75, 2, 2);
+    // mesh.disableNormals();
+    // mesh.enableTextures();
+    // mesh = ofMesh::plane(100, 100, 2, 2);
+    mesh.addTexCoord(ofVec2f(0, 0));
+    mesh.addTexCoord(ofVec2f(1.0, 0));
+    mesh.addTexCoord(ofVec2f(1.0, 1.0));
+    mesh.addTexCoord(ofVec2f(0, 1.0));
+    mesh.addTexCoord(ofVec2f(0, 0));
     mesh.setUsage(GL_STATIC_DRAW);
     mesh.getColors().resize(matrices.size());
     for (size_t i = 0; i < mesh.getColors().size(); i++) {
@@ -51,9 +50,9 @@ FrameMesh::FrameMesh(string imgPath, int threshold, float scale, ofVec2f texcoor
     for (size_t i = 0; i < matrices.size(); i++) {
         ofNode node;
         glm::vec3 pos(
-            (particles[i].pos[0] / img.getWidth()) - 0.5,
-            (particles[i].pos[1] / img.getHeight()) - 0.5,
-            (particles[i].pos[2] / img.getHeight()) - 0.5);
+            (particles[i].pos[0] / pixels.getWidth()) - 0.5,
+            (particles[i].pos[1] / pixels.getHeight()) - 0.5,
+            (particles[i].pos[2] / pixels.getHeight()) - 0.5);
 
         pos[0] *= ofGetWidth() * scale;
         pos[1] *= ofGetHeight() * scale;
@@ -76,6 +75,10 @@ void FrameMesh::drawFaces() {
     mesh.drawInstanced(OF_MESH_FILL, matrices.size());
 }
 
+bool FrameMesh::isTexAllocated() {
+    return tex.isAllocated();
+}
+
 ofTexture FrameMesh::getTexture() {
     return tex;
 }
@@ -84,8 +87,8 @@ int FrameMesh::getParticleNum() {
     return particles.size();
 }
 int FrameMesh::getWidth() {
-    return img.getWidth();
+    return pixels.getWidth();
 }
 int FrameMesh::getHeight() {
-    return img.getHeight();
+    return pixels.getHeight();
 }

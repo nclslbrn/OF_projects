@@ -5,7 +5,7 @@
 class FrameMesh {
    public:
     FrameMesh();
-    FrameMesh(string imgPath, int threshold, float scale, ofVec2f texcoord);
+    FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f texcoord);
     void update();
     void drawPoints();
     void drawWireframe();
@@ -15,8 +15,8 @@ class FrameMesh {
     int getParticleNum();
     int getWidth();
     int getHeight();
-
-    ofImage img;
+    bool isTexAllocated();
+    ofPixels pixels;
 
     struct Particle {
         glm::vec4 pos;
