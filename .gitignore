@@ -1,6 +1,3 @@
-# Ignore all
-*
-
 # Unignore all with extensions 
 # (linux binaries doesn't have extension) 
 !*.*
@@ -45,3 +42,11 @@ config.make
 icon.rc
 *.code-workspace
 *.qbs
+
+# Assets
+*/bin/
+*/files/*
+
+# Generate file
+*/output/
+*/old-output/
