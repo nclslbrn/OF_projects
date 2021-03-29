@@ -1,8 +1,16 @@
 #include "FrameMesh.h"
 
 FrameMesh::FrameMesh() {}
+//--------------------------------------------------------------
+
 FrameMesh::FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f texcoord) {
     pixels = framePixels;
+    brightThreshold = threshold;
+    meshScale = scale;
+    coord = texcoord;
+}
+//--------------------------------------------------------------
+void FrameMesh::compute() {
     int numChannels = pixels.getNumChannels();
     for (int x = 0; x < pixels.getWidth(); x++) {
         for (int y = 0; y < pixels.getHeight(); y++) {
@@ -11,9 +19,9 @@ FrameMesh::FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f t
             int green = pixels[pixId * numChannels + 1];
             int blue = pixels[pixId * numChannels + 2];
             if (
-                red > threshold &&
-                green > threshold &&
-                blue > threshold) {
+                red > brightThreshold &&
+                green > brightThreshold &&
+                blue > brightThreshold) {
                 int z = round(((red + blue + green) / 765.0f) * pixels.getHeight() * -0.15);
                 particles.push_back(
                     {{x, y, z, 1},
@@ -33,9 +41,9 @@ FrameMesh::FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f t
     // mesh.enableTextures();
     // mesh = ofMesh::plane(100, 100, 2, 2);
     mesh.addTexCoord(ofVec2f(0, 0));
-    mesh.addTexCoord(ofVec2f(1.0, 0));
-    mesh.addTexCoord(ofVec2f(1.0, 1.0));
-    mesh.addTexCoord(ofVec2f(0, 1.0));
+    mesh.addTexCoord(ofVec2f(coord.x, 0));
+    mesh.addTexCoord(ofVec2f(coord.x, coord.y));
+    mesh.addTexCoord(ofVec2f(0, coord.y));
     mesh.addTexCoord(ofVec2f(0, 0));
     mesh.setUsage(GL_STATIC_DRAW);
     mesh.getColors().resize(matrices.size());
@@ -54,9 +62,9 @@ FrameMesh::FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f t
             (particles[i].pos[1] / pixels.getHeight()) - 0.5,
             (particles[i].pos[2] / pixels.getHeight()) - 0.5);
 
-        pos[0] *= ofGetWidth() * scale;
-        pos[1] *= ofGetHeight() * scale;
-        pos[2] *= ofGetHeight() * scale;
+        pos[0] *= ofGetWidth() * meshScale;
+        pos[1] *= ofGetHeight() * meshScale;
+        pos[2] *= ofGetHeight() * meshScale;
 
         node.setPosition(pos);
         node.setOrientation(pos);
@@ -64,31 +72,43 @@ FrameMesh::FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f t
     }
     buffer.updateData(0, matrices);
 }
+//--------------------------------------------------------------
 
 void FrameMesh::drawPoints() {
     mesh.drawInstanced(OF_MESH_POINTS, matrices.size());
 }
+//--------------------------------------------------------------
+
 void FrameMesh::drawWireframe() {
     mesh.drawInstanced(OF_MESH_WIREFRAME, matrices.size());
 }
+//--------------------------------------------------------------
+
 void FrameMesh::drawFaces() {
     mesh.drawInstanced(OF_MESH_FILL, matrices.size());
 }
+//--------------------------------------------------------------
 
 bool FrameMesh::isTexAllocated() {
     return tex.isAllocated();
 }
+//--------------------------------------------------------------
 
 ofTexture FrameMesh::getTexture() {
     return tex;
 }
+//--------------------------------------------------------------
 
 int FrameMesh::getParticleNum() {
     return particles.size();
 }
+//--------------------------------------------------------------
+
 int FrameMesh::getWidth() {
     return pixels.getWidth();
 }
+//--------------------------------------------------------------
+
 int FrameMesh::getHeight() {
     return pixels.getHeight();
 }

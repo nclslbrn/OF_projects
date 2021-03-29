@@ -10,35 +10,39 @@ ofVec2f ofApp::getRandomPos(ofVec2f c, float scale) {
 }
 //--------------------------------------------------------------
 void ofApp::setup() {
+    ofSetVerticalSync(false);
+    ofSetFrameRate(25);
     ofSetBackgroundColor(25);
     glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     // initialize video player
     video.setLoopState(OF_LOOP_NORMAL);
-    video.load("Kelly-Lacy-shoot-1.Pexels-Videos-2818567.mp4");
+    video.load("videos/pond-way-merce-cunningham-full-performance.mp4");
+    video.setUseTexture(false);
     video.play();
     video.setPaused(true);
-
     if (video.isLoaded()) {
-        totalNumFrame = video.getTotalNumFrames();
         frames.resize(framesInLoop);
 
         // load spark texture
         sparkTexture.allocate(248, 248, OF_IMAGE_COLOR_ALPHA);
-        sparkTexture.load("spark-2.png");
+        sparkTexture.load("textures/spark-2.png");
         sparkTexCoord = ofVec2f(
             sparkTexture.getWidth(),
             sparkTexture.getHeight());
-
+        video.nextFrame();
+        video.update();
         for (int i = 0; i <= framesInLoop; i++) {
-            ofPixels framePixels = video.getPixels();
-            frames.push_back(FrameMesh(framePixels, minPixelsBrightness, meshScale, sparkTexCoord));
-            lastFrameIn++;
-            video.nextFrame();
-            video.update();
-            //video.setFrame(lastFrameIn);
+            if (video.isFrameNew()) {
+                ofPixels framePixels = video.getPixels();
+                FrameMesh j = FrameMesh(framePixels, minPixelsBrightness, meshScale, sparkTexCoord);
+                j.compute();
+                frames.push_back(j);
+                video.nextFrame();
+                video.update();
+            }
         }
 
-        shader.load("particle");
+        shader.load("shaders/particle");
         //ofDisableArbTex();
         ofEnableAlphaBlending();
 
@@ -53,25 +57,37 @@ void ofApp::setup() {
         repulsor.resize(2);
         repulsor[0] = getRandomPos(center, meshScale);
         repulsor[1] = getRandomPos(center, meshScale);
+
+        // setup our thread
+        // nextFrame.setup();
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
     // Move frame forward
-    for (int i = 0; i < frames.size() - 1; i++) {
-        frames[i] = frames[i + 1];
-    }
-    lastFrameIn++;
     video.nextFrame();
     video.update();
-    ofPixels framePixels = video.getPixels();
-    frames[framesInLoop] = FrameMesh(framePixels, minPixelsBrightness, meshScale, sparkTexCoord);
+    // nextFrame.start();
 
-    if (ofGetFrameNum() % numFrame == 0) {
-        repulsor[0] = repulsor[1];
-        repulsor[1] = getRandomPos(center, meshScale);
+    if (video.isFrameNew()) {
+        for (int i = 0; i < framesInLoop; i++) {
+            frames[i] = frames[i + 1];
+        }
+        ofPixels framePixels = video.getPixels();
+        FrameMesh newFrame = FrameMesh(framePixels, minPixelsBrightness, meshScale, sparkTexCoord);
+
+        newFrame.compute();
+        frames[framesInLoop] = newFrame;
+        // nextFrame.update(framePixels, minPixelsBrightness, meshScale, sparkTexCoord);
+        // frames[framesInLoop] = nextFrame.frame;
+
+        if (ofGetFrameNum() % numFrame == 0) {
+            repulsor[0] = repulsor[1];
+            repulsor[1] = getRandomPos(center, meshScale);
+        }
     }
+    // nextFrame.stop();
 }
 
 //--------------------------------------------------------------
@@ -90,12 +106,12 @@ void ofApp::draw() {
 
     for (int i = frames.size() - 1; i >= 0; i--) {
         ofPushMatrix();
-        ofTranslate(center.x, center.y, i * 125);
+        ofTranslate(center.x, center.y, i * 150);
         ofRotateX(180);
 
         if (frames[i].isTexAllocated()) {
             shader.setUniform1f("u_time", t);
-            shader.setUniform1f("u_layer", i);
+            shader.setUniform1f("u_layer", i / (float)framesInLoop);
             shader.setUniform2f("u_frameRes", frames[i].getWidth(), frames[i].getHeight());
             shader.setUniform2f("u_mouse", (ofGetMouseX() - center.x) * meshScale, (ofGetMouseY() - center.y) * meshScale);
             shader.setUniform3f("u_camera", camera.getGlobalPosition());
@@ -109,7 +125,6 @@ void ofApp::draw() {
     }
 
     sparkTexture.getTexture().unbind();
-
     shader.end();
     camera.end();
 
@@ -127,47 +142,7 @@ void ofApp::draw() {
         ofGetWidth() - 200, ofGetHeight() - 20);
     // glDisable(GL_CULL_FACE);
 }
-
 //--------------------------------------------------------------
-void ofApp::keyPressed(int key) {
-}
-
-//--------------------------------------------------------------
-void ofApp::keyReleased(int key) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y) {
-}
-
-//--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y) {
-}
-
-//--------------------------------------------------------------
-void ofApp::windowResized(int w, int h) {
-}
-
-//--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg) {
-}
-
-//--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo) {
+void ofApp::exit() {
+    //thread.stopThread();
 }

@@ -6,6 +6,7 @@ class FrameMesh {
    public:
     FrameMesh();
     FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f texcoord);
+    void compute();
     void update();
     void drawPoints();
     void drawWireframe();
@@ -16,7 +17,6 @@ class FrameMesh {
     int getWidth();
     int getHeight();
     bool isTexAllocated();
-    ofPixels pixels;
 
     struct Particle {
         glm::vec4 pos;
@@ -26,6 +26,10 @@ class FrameMesh {
 
     vector<Particle> particles;
 
+    ofPixels pixels;
+    int brightThreshold;
+    float meshScale;
+    ofVec2f coord;
     ofVboMesh mesh;
     ofBufferObject buffer;
     ofTexture tex;
