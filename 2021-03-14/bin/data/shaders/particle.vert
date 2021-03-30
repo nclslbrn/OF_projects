@@ -10,19 +10,20 @@ uniform mat4 modelViewProjectionMatrix;
 
 in vec4 position;
 in vec4 instanceColor;
+in float point_size;
 in vec4 normal;
 in vec2 texcoord;
 
 uniform float u_time;
 uniform float u_layer;
-uniform vec2 u_mouse;
-uniform vec3 u_camera;
-uniform vec2 u_frameRes;
+//uniform vec2 u_mouse;
+//uniform vec3 u_camera;
+//uniform vec2 u_frameRes;
 uniform vec2 u_screenRes;
 uniform float u_scale;
 uniform samplerBuffer u_frameTex;
 uniform sampler2D spark;
-uniform vec2 u_repulsor;
+//uniform vec2 u_repulsor;
 
 out vec4 color;
 
@@ -65,15 +66,16 @@ void main(){
         texelFetch(u_frameTex,x+2),
         texelFetch(u_frameTex,x+3)
     );
-    float noiseFrequency=1.;
+    float noiseFrequency=500;
     float noiseScaling=1000;
     float radius=2000.;
     
-    vec4 pos=transformMatrix*position;
-    /* random pos from u_repulsor */
-    float distRep=distance(pos.xy,u_repulsor.xy);
-    if(distRep>0&&distRep<radius){
-        vec2 dirRep=((pos.xy)-u_repulsor);
+    vec4 pos=modelViewProjectionMatrix*transformMatrix*position;
+    float n=noise((pos.xy+u_time)/noiseFrequency);
+    /* float distRep=distance(pos.xy,vec2(0.));
+    if(pos.y>.5&&u_layer>.2){
+        
+        vec2 dirRep=((pos.xy)-vec2(0));
         float displaceNoiseRep=noise((pos.xy+u_time)/noiseFrequency)*noiseScaling;
         float distNormRep=distRep/radius;
         
@@ -85,36 +87,14 @@ void main(){
             sin(displaceNoiseRep*PI)*u_layer*distNormRep
         );
         pos.xy+=displacementRep.xy;
-        pos.y+=u_layer*200*u_scale;
-    }
-    float dist=distance(position.xy,vec2(1,0));
-    float distNorm=dist/radius;
-    distNorm=1.-distNorm;
-    float displaceNoise=noise((pos.xy*u_scale*u_layer)/noiseFrequency)*noiseScaling;
-    vec2 displacement=vec2(
-        cos(displaceNoise)*distNorm,
-        sin(displaceNoise)*distNorm
-    );
-    if(dist>.5&&dist<1.){
-        pos.zw*=vec2(u_layer*.01);
-        pos.xy*=displacement*mix(1.,8000*u_time,1.-u_layer);
-        
-    }
-    // zoom in
-    //pos.xyz*=vec3(u_layer*mix(1.,3.,u_time));
-    //pos.xy+=mix(mix(1.,3.,u_time),2000*u_time,1.-step(.5,u_layer));
+        pos.y+=u_layer*u_scale;
+    } */
     
-    //vec4 particleColor=instanceColor;
-    //vec4 particleAlpha=texture2D(spark,texcoord);
-    //particleColor.a=particleAlpha.a;
-    //particleColor.rgb+=(.5-u_layer);
-    //particleColor.a-=smoothstep(.25,.75,u_layer);
-    //color=particleColor;
-    float smoothDepth=smoothstep(.2,.95,u_layer);
-    vec4 particleColor=mix(vec4(0),instanceColor,smoothDepth);
-    particleColor.a=smoothDepth;
+    float smoothDepth=smoothstep(.01,.6,1-u_layer);
+    vec4 particleColor=mix(vec4(0.,0.,u_layer,0.),instanceColor,smoothDepth);
+    pos.y-=200*u_layer*n;
     color=particleColor;
     
-    // gl_PointSize=(1-u_layer)*.5;
-    gl_Position=modelViewProjectionMatrix*pos;
+    gl_PointSize=n*(1.-u_layer);
+    gl_Position=pos;
 }

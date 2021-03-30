@@ -6,7 +6,7 @@ class FrameMesh {
    public:
     FrameMesh();
     FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f texcoord);
-    void compute();
+    void compute(ofxShader shader);
     void update();
     void drawPoints();
     void drawWireframe();

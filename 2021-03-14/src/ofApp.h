@@ -14,10 +14,9 @@ class ofApp : public ofBaseApp {
 
     ofVec2f getRandomPos(ofVec2f c, float scale);
     ofVec2f center = ofVec2f(ofGetWidth() / 2.0, ofGetHeight() / 2.0);
-    vector<ofVec2f> repulsor;
 
-    int framesInLoop = 12,
-        minPixelsBrightness = 30,
+    int framesInLoop = 8,
+        minPixelsBrightness = 25,
         numFrame = 300;
 
     float meshScale = 12.0;

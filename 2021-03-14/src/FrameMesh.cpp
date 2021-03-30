@@ -10,8 +10,9 @@ FrameMesh::FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f t
     coord = texcoord;
 }
 //--------------------------------------------------------------
-void FrameMesh::compute() {
+void FrameMesh::compute(ofxShader shader) {
     int numChannels = pixels.getNumChannels();
+    vector<float> pointsSize;
     for (int x = 0; x < pixels.getWidth(); x++) {
         for (int y = 0; y < pixels.getHeight(); y++) {
             int pixId = y * pixels.getWidth() + x;
@@ -23,12 +24,14 @@ void FrameMesh::compute() {
                 green > brightThreshold &&
                 blue > brightThreshold) {
                 int z = round(((red + blue + green) / 765.0f) * pixels.getHeight() * -0.15);
+                float size = ofRandomuf() * 3.0f;
+                pointsSize.push_back(size);
                 particles.push_back({{x, y, z, 1},
                                      {ofRandomuf() * glm::pi<float>(),
                                       ofRandomuf() * glm::pi<float>(),
                                       ofRandomuf() * glm::pi<float>()},
                                      {red, green, blue},
-                                     {ofRandomuf() * 3.0f}});
+                                     {size}});
             }
         }
     }
@@ -39,14 +42,6 @@ void FrameMesh::compute() {
     tex.allocateAsBufferTexture(buffer, GL_RGBA32F);
     // mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
     mesh = ofMesh::plane(20, 20, 2, 2);
-    //mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
-    /*
-    mesh.addTexCoord(ofVec2f(0, 0));
-    mesh.addTexCoord(ofVec2f(coord.x, 0));
-    mesh.addTexCoord(ofVec2f(coord.x, coord.y));
-    mesh.addTexCoord(ofVec2f(0, coord.y));
-    mesh.addTexCoord(ofVec2f(0, 0));
-    */
     mesh.setUsage(GL_STATIC_DRAW);
     mesh.getColors().resize(matrices.size());
     for (size_t i = 0; i < mesh.getColors().size(); i++) {
@@ -55,8 +50,13 @@ void FrameMesh::compute() {
             particles[i].color[1],
             particles[i].color[2]);
     }
-
     mesh.getVbo().setAttributeDivisor(ofShader::COLOR_ATTRIBUTE, 1);
+    /*  mesh.getVbo().setAttributeData(
+        shader.getAttributeLocation("point_size"),
+        &pointsSize[0], 1, pointsSize.size(), GL_STATIC_DRAW, sizeof(float));
+    mesh.getVbo().setAttributeDivisor(shader.getAttributeLocation("point_size"), 2);
+     */
+
     for (size_t i = 0; i < matrices.size(); i++) {
         ofNode node;
         glm::vec3 pos(
@@ -71,6 +71,7 @@ void FrameMesh::compute() {
         node.setPosition(pos);
         node.setOrientation(particles[i].rot);
         node.setScale(particles[i].size);
+
         matrices[i] = node.getLocalTransformMatrix();
     }
     buffer.updateData(0, matrices);

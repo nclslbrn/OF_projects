@@ -14,6 +14,9 @@ void ofApp::setup() {
     ofSetFrameRate(25);
     ofDisableArbTex();
     ofSetBackgroundColor(25);
+    ofEnablePointSprites();
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     // initialize video player
     video.setLoopState(OF_LOOP_NORMAL);
     video.setPlayer(ofPtr<ofGstVideoPlayer>(new ofGstVideoPlayer));
@@ -21,6 +24,9 @@ void ofApp::setup() {
     video.setUseTexture(false);
     video.play();
     video.setPaused(true);
+
+    shader.load("shaders/particle");
+
     if (video.isLoaded()) {
         frames.resize(framesInLoop);
         // load spark texture
@@ -35,14 +41,13 @@ void ofApp::setup() {
             if (video.isFrameNew()) {
                 ofPixels framePixels = video.getPixels();
                 FrameMesh j = FrameMesh(framePixels, minPixelsBrightness, meshScale, sparkTexCoord);
-                j.compute();
+                j.compute(shader);
                 frames.push_back(j);
                 video.nextFrame();
                 video.update();
             }
         }
 
-        shader.load("shaders/particle");
         ofDisableArbTex();
         ofEnableAlphaBlending();
 
@@ -53,11 +58,6 @@ void ofApp::setup() {
 
         camera.setDistance(ofGetWidth() * meshScale);
         camera.setFarClip(ofGetWidth() * meshScale);
-
-        repulsor.resize(2);
-        repulsor[0] = getRandomPos(center, meshScale);
-        repulsor[1] = getRandomPos(center, meshScale);
-
         frameCapture.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
         toSave.allocate(ofGetWidth(), ofGetHeight(), ofImageType::OF_IMAGE_COLOR);
     }
@@ -71,7 +71,6 @@ void ofApp::update() {
         toSave.setFromPixels(pixels);
         toSave.save("output/frameMesh-frame" + ofToString(ofGetFrameNum()) + ".jpg", OF_IMAGE_QUALITY_BEST);
     }
-    video.nextFrame();
     video.update();
     if (video.isFrameNew()) {
         for (int i = framesInLoop; i > 0; i--) {
@@ -79,26 +78,20 @@ void ofApp::update() {
         }
         ofPixels framePixels = video.getPixels();
         FrameMesh newFrame = FrameMesh(framePixels, minPixelsBrightness, meshScale, sparkTexCoord);
-        newFrame.compute();
+        newFrame.compute(shader);
         frames[0] = newFrame;
-
-        if (ofGetFrameNum() % numFrame == 0) {
-            repulsor[0] = repulsor[1];
-            repulsor[1] = getRandomPos(center, meshScale);
-        }
     }
+    video.nextFrame();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
     float t = (ofGetFrameNum() % numFrame) / static_cast<float>(numFrame);
-    ofVec2f repulsT = repulsor[0].getInterpolated(repulsor[1], t);
-
     if (isRecording) {
         frameCapture.begin();
-        ofClear(0);
     }
 
+    ofClear(0);
     camera.begin();
     shader.begin();
     shader.bindDefaults();
@@ -111,14 +104,11 @@ void ofApp::draw() {
         if (frames[i].isTexAllocated()) {
             shader.setUniform1f("u_time", t);
             shader.setUniform1f("u_layer", i / (float)framesInLoop);
-            shader.setUniform2f("u_frameRes", frames[i].getWidth(), frames[i].getHeight());
-            shader.setUniform2f("u_mouse", (ofGetMouseX() - center.x) * meshScale, (ofGetMouseY() - center.y) * meshScale);
-            shader.setUniform3f("u_camera", camera.getGlobalPosition());
-            shader.setUniform2f("u_repulsor", repulsT);
             sparkTexture.getTexture().bind();
             shader.setUniformTexture("spark", sparkTexture.getTexture(), 2);
             shader.setUniformTexture("u_frameTex", frames[i].getTexture(), 0);
-            frames[i].drawFaces();
+            //frames[i].drawFaces();
+            frames[i].drawPoints();
         }
         ofPopMatrix();
     }
@@ -139,9 +129,9 @@ void ofApp::draw() {
     ofDrawBitmapString(
         ofToString(t) + " / 1.0",
         20, ofGetHeight() - 20);
-    ofDrawBitmapString(
-        "[" + ofToString(repulsT.x) + ", " + ofToString(repulsT.y) + "]",
-        ofGetWidth() - 200, ofGetHeight() - 20);
+    if (isRecording) {
+        ofDrawBitmapString("Recording", ofGetWidth() - 120, ofGetHeight() - 20);
+    }
 }
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
