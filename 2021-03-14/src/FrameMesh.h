@@ -20,8 +20,9 @@ class FrameMesh {
 
     struct Particle {
         glm::vec4 pos;
-        glm::vec4 vel;
+        glm::vec3 rot;
         glm::vec3 color;
+        float size;
     };
 
     vector<Particle> particles;

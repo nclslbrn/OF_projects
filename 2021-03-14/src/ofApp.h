@@ -1,6 +1,6 @@
 #pragma once
 #include "FrameMesh.h"
-#include "LiveFrameReader.h"
+//#include "LiveFrameReader.h"
 #include "ofMain.h"
 #include "ofxShaderFilter.h"
 
@@ -10,20 +10,26 @@ class ofApp : public ofBaseApp {
     void update();
     void draw();
     void exit();
+    void keyPressed(int key);
+
     ofVec2f getRandomPos(ofVec2f c, float scale);
     ofVec2f center = ofVec2f(ofGetWidth() / 2.0, ofGetHeight() / 2.0);
     vector<ofVec2f> repulsor;
 
-    int framesInLoop = 8,
+    int framesInLoop = 12,
         minPixelsBrightness = 30,
-        numFrame = 600;
+        numFrame = 300;
 
     float meshScale = 12.0;
     ofVideoPlayer video;
     vector<FrameMesh> frames;
-    LiveFrameReader nextFrame;
+    // LiveFrameReader nextFrame;
     ofxShader shader;
     ofEasyCam camera;
     ofImage sparkTexture;
     ofVec2f sparkTexCoord;
+
+    ofFbo frameCapture;
+    ofImage toSave;
+    bool isRecording = false;
 };

@@ -1,7 +1,7 @@
 #include "ofApp.h"
 
 #include "ofConstants.h"
-
+#include "ofGstVideoPlayer.h"
 //--------------------------------------------------------------
 ofVec2f ofApp::getRandomPos(ofVec2f c, float scale) {
     return ofVec2f(
@@ -12,17 +12,17 @@ ofVec2f ofApp::getRandomPos(ofVec2f c, float scale) {
 void ofApp::setup() {
     ofSetVerticalSync(false);
     ofSetFrameRate(25);
+    ofDisableArbTex();
     ofSetBackgroundColor(25);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     // initialize video player
     video.setLoopState(OF_LOOP_NORMAL);
-    video.load("videos/pond-way-merce-cunningham-full-performance.mp4");
+    video.setPlayer(ofPtr<ofGstVideoPlayer>(new ofGstVideoPlayer));
+    video.loadMovie("videos/pond-way-merce-cunningham-full-performance.mp4");
     video.setUseTexture(false);
     video.play();
     video.setPaused(true);
     if (video.isLoaded()) {
         frames.resize(framesInLoop);
-
         // load spark texture
         sparkTexture.allocate(248, 248, OF_IMAGE_COLOR_ALPHA);
         sparkTexture.load("textures/spark-2.png");
@@ -31,7 +31,7 @@ void ofApp::setup() {
             sparkTexture.getHeight());
         video.nextFrame();
         video.update();
-        for (int i = 0; i <= framesInLoop; i++) {
+        for (int i = 0; i < framesInLoop; i++) {
             if (video.isFrameNew()) {
                 ofPixels framePixels = video.getPixels();
                 FrameMesh j = FrameMesh(framePixels, minPixelsBrightness, meshScale, sparkTexCoord);
@@ -43,7 +43,7 @@ void ofApp::setup() {
         }
 
         shader.load("shaders/particle");
-        //ofDisableArbTex();
+        ofDisableArbTex();
         ofEnableAlphaBlending();
 
         shader.begin();
@@ -58,53 +58,52 @@ void ofApp::setup() {
         repulsor[0] = getRandomPos(center, meshScale);
         repulsor[1] = getRandomPos(center, meshScale);
 
-        // setup our thread
-        // nextFrame.setup();
+        frameCapture.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
+        toSave.allocate(ofGetWidth(), ofGetHeight(), ofImageType::OF_IMAGE_COLOR);
     }
 }
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    // Move frame forward
+    if (isRecording) {
+        ofPixels pixels;
+        frameCapture.readToPixels(pixels);
+        toSave.setFromPixels(pixels);
+        toSave.save("output/frameMesh-frame" + ofToString(ofGetFrameNum()) + ".jpg", OF_IMAGE_QUALITY_BEST);
+    }
     video.nextFrame();
     video.update();
-    // nextFrame.start();
-
     if (video.isFrameNew()) {
-        for (int i = 0; i < framesInLoop; i++) {
-            frames[i] = frames[i + 1];
+        for (int i = framesInLoop; i > 0; i--) {
+            frames[i] = frames[i - 1];
         }
         ofPixels framePixels = video.getPixels();
         FrameMesh newFrame = FrameMesh(framePixels, minPixelsBrightness, meshScale, sparkTexCoord);
-
         newFrame.compute();
-        frames[framesInLoop] = newFrame;
-        // nextFrame.update(framePixels, minPixelsBrightness, meshScale, sparkTexCoord);
-        // frames[framesInLoop] = nextFrame.frame;
+        frames[0] = newFrame;
 
         if (ofGetFrameNum() % numFrame == 0) {
             repulsor[0] = repulsor[1];
             repulsor[1] = getRandomPos(center, meshScale);
         }
     }
-    // nextFrame.stop();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    ofSetBackgroundColor(0);
-    // glCullFace(GL_CW);
-    // glEnable(GL_CULL_FACE);
-
     float t = (ofGetFrameNum() % numFrame) / static_cast<float>(numFrame);
     ofVec2f repulsT = repulsor[0].getInterpolated(repulsor[1], t);
 
+    if (isRecording) {
+        frameCapture.begin();
+        ofClear(0);
+    }
+
     camera.begin();
     shader.begin();
-
     shader.bindDefaults();
 
-    for (int i = frames.size() - 1; i >= 0; i--) {
+    for (int i = 0; i < frames.size(); i++) {
         ofPushMatrix();
         ofTranslate(center.x, center.y, i * 150);
         ofRotateX(180);
@@ -119,7 +118,7 @@ void ofApp::draw() {
             sparkTexture.getTexture().bind();
             shader.setUniformTexture("spark", sparkTexture.getTexture(), 2);
             shader.setUniformTexture("u_frameTex", frames[i].getTexture(), 0);
-            frames[i].drawPoints();
+            frames[i].drawFaces();
         }
         ofPopMatrix();
     }
@@ -127,7 +126,10 @@ void ofApp::draw() {
     sparkTexture.getTexture().unbind();
     shader.end();
     camera.end();
-
+    if (isRecording) {
+        frameCapture.end();
+        frameCapture.draw(0, 0);
+    }
     ofDrawBitmapString(
         ofToString(ofGetFrameRate()) + " fps",
         20, 20);
@@ -140,9 +142,17 @@ void ofApp::draw() {
     ofDrawBitmapString(
         "[" + ofToString(repulsT.x) + ", " + ofToString(repulsT.y) + "]",
         ofGetWidth() - 200, ofGetHeight() - 20);
-    // glDisable(GL_CULL_FACE);
 }
 //--------------------------------------------------------------
-void ofApp::exit() {
-    //thread.stopThread();
+void ofApp::keyPressed(int key) {
+    if (key == 114) {
+        isRecording = !isRecording;
+        std::cout << (isRecording ? "start recording" : "stop recording") << endl;
+    } else {
+        std::cout << "Unaffected key = " << key << endl;
+    }
 }
+
+//--------------------------------------------------------------
+
+void ofApp::exit() {}

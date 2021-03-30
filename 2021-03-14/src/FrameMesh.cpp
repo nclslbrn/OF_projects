@@ -23,10 +23,12 @@ void FrameMesh::compute() {
                 green > brightThreshold &&
                 blue > brightThreshold) {
                 int z = round(((red + blue + green) / 765.0f) * pixels.getHeight() * -0.15);
-                particles.push_back(
-                    {{x, y, z, 1},
-                     {0.0, 0.0, 0.0, 0.0},
-                     {red, green, blue}});
+                particles.push_back({{x, y, z, 1},
+                                     {ofRandomuf() * glm::pi<float>(),
+                                      ofRandomuf() * glm::pi<float>(),
+                                      ofRandomuf() * glm::pi<float>()},
+                                     {red, green, blue},
+                                     {ofRandomuf() * 3.0f}});
             }
         }
     }
@@ -35,16 +37,16 @@ void FrameMesh::compute() {
     buffer.bind(GL_TEXTURE_BUFFER);
     buffer.setData(matrices, GL_STREAM_DRAW);
     tex.allocateAsBufferTexture(buffer, GL_RGBA32F);
-    mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
-    // mesh = ofMesh::plane(75, 75, 2, 2);
-    // mesh.disableNormals();
-    // mesh.enableTextures();
-    // mesh = ofMesh::plane(100, 100, 2, 2);
+    // mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
+    mesh = ofMesh::plane(20, 20, 2, 2);
+    //mesh.setMode(OF_PRIMITIVE_TRIANGLE_STRIP);
+    /*
     mesh.addTexCoord(ofVec2f(0, 0));
     mesh.addTexCoord(ofVec2f(coord.x, 0));
     mesh.addTexCoord(ofVec2f(coord.x, coord.y));
     mesh.addTexCoord(ofVec2f(0, coord.y));
     mesh.addTexCoord(ofVec2f(0, 0));
+    */
     mesh.setUsage(GL_STATIC_DRAW);
     mesh.getColors().resize(matrices.size());
     for (size_t i = 0; i < mesh.getColors().size(); i++) {
@@ -67,7 +69,8 @@ void FrameMesh::compute() {
         pos[2] *= ofGetHeight() * meshScale;
 
         node.setPosition(pos);
-        node.setOrientation(pos);
+        node.setOrientation(particles[i].rot);
+        node.setScale(particles[i].size);
         matrices[i] = node.getLocalTransformMatrix();
     }
     buffer.updateData(0, matrices);
