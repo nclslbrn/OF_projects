@@ -16,14 +16,10 @@ in vec2 texcoord;
 
 uniform float u_time;
 uniform float u_layer;
-//uniform vec2 u_mouse;
-//uniform vec3 u_camera;
-//uniform vec2 u_frameRes;
 uniform vec2 u_screenRes;
 uniform float u_scale;
 uniform samplerBuffer u_frameTex;
 uniform sampler2D spark;
-//uniform vec2 u_repulsor;
 
 out vec4 color;
 
@@ -66,35 +62,26 @@ void main(){
         texelFetch(u_frameTex,x+2),
         texelFetch(u_frameTex,x+3)
     );
-    float noiseFrequency=500;
-    float noiseScaling=1000;
-    float radius=2000.;
+    vec4 modelPos = transformMatrix*position;
+    vec4 pos=modelViewProjectionMatrix*modelPos;
+    float smoothDepth=smoothstep(0.2,0.6,1.2-u_layer);
+    float noiseFrequency=0.01;
+    float noiseScale = 10.0 * smoothDepth;
+    vec2 st=normalize(modelPos.xy);
+    float n=noiseScale * noise((modelPos.xy + u_time)/noiseFrequency);
     
-    vec4 pos=modelViewProjectionMatrix*transformMatrix*position;
-    float n=noise((pos.xy+u_time)/noiseFrequency);
-    /* float distRep=distance(pos.xy,vec2(0.));
-    if(pos.y>.5&&u_layer>.2){
-        
-        vec2 dirRep=((pos.xy)-vec2(0));
-        float displaceNoiseRep=noise((pos.xy+u_time)/noiseFrequency)*noiseScaling;
-        float distNormRep=distRep/radius;
-        
-        distNormRep=1.-distNormRep;
-        dirRep*=distNormRep;
-        
-        vec2 displacementRep=vec2(
-            cos(displaceNoiseRep*PI)*u_layer*distNormRep,
-            sin(displaceNoiseRep*PI)*u_layer*distNormRep
-        );
-        pos.xy+=displacementRep.xy;
-        pos.y+=u_layer*u_scale;
-    } */
     
-    float smoothDepth=smoothstep(.01,.6,1-u_layer);
-    vec4 particleColor=mix(vec4(0.,0.,u_layer,0.),instanceColor,smoothDepth);
-    pos.y-=200*u_layer*n;
+    vec4 newPos = pos + normal * n;
+    // pos.x-=noiseScale*cos(n*PI*2.0)*(1.0-smoothDepth);
+    // pos.y-=noiseScale*sin(n*PI*2.0)*(1.0-smoothDepth);
+    //pos.y = (pos.y/u_screenRes.y) * n * (1.0-smoothDepth);
+    
+    vec4 particleColor=mix(vec4(0.15, 0.75, 0.15,0.),instanceColor,smoothDepth);
+    // vec4 particleColor=vec4(0.5);
+    // particleColor.rg=st;
+    // particleColor.a=1.0;
     color=particleColor;
     
-    gl_PointSize=n*(1.-u_layer);
-    gl_Position=pos;
+    gl_PointSize=2.0*n*(1.0-smoothDepth);
+    gl_Position=newPos;
 }

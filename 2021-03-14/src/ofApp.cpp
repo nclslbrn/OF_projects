@@ -2,27 +2,24 @@
 
 #include "ofConstants.h"
 #include "ofGstVideoPlayer.h"
-//--------------------------------------------------------------
-ofVec2f ofApp::getRandomPos(ofVec2f c, float scale) {
-    return ofVec2f(
-        ((ofRandomuf() * ofGetWidth()) - c.x) * scale,
-        ((ofRandomuf() * ofGetHeight()) - c.y) * scale);
-}
+
 //--------------------------------------------------------------
 void ofApp::setup() {
     ofSetVerticalSync(false);
+    // this prevent frame drop
     ofSetFrameRate(25);
     ofDisableArbTex();
     ofSetBackgroundColor(25);
     ofEnablePointSprites();
-    glEnable(GL_POINT_SMOOTH);
-    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
+    ofEnableAlphaBlending();
+
     // initialize video player
     video.setLoopState(OF_LOOP_NORMAL);
     video.setPlayer(ofPtr<ofGstVideoPlayer>(new ofGstVideoPlayer));
     video.loadMovie("videos/pond-way-merce-cunningham-full-performance.mp4");
     video.setUseTexture(false);
     video.play();
+    // we will pass frame manually so put video on pause
     video.setPaused(true);
 
     shader.load("shaders/particle");
@@ -48,9 +45,6 @@ void ofApp::setup() {
             }
         }
 
-        ofDisableArbTex();
-        ofEnableAlphaBlending();
-
         shader.begin();
         shader.setUniform2f("u_screenRes", ofGetWidth(), ofGetHeight());
         shader.setUniform1f("u_scale", meshScale);
@@ -65,17 +59,24 @@ void ofApp::setup() {
 
 //--------------------------------------------------------------
 void ofApp::update() {
-    if (isRecording) {
-        ofPixels pixels;
-        frameCapture.readToPixels(pixels);
-        toSave.setFromPixels(pixels);
-        toSave.save("output/frameMesh-frame" + ofToString(ofGetFrameNum()) + ".jpg", OF_IMAGE_QUALITY_BEST);
-    }
     video.update();
     if (video.isFrameNew()) {
+        // record on only if new frame append to prevent
+        // recording when the apps is laggin
+        if (isRecording) {
+            ofPixels pixels;
+            frameCapture.readToPixels(pixels);
+            toSave.setFromPixels(pixels);
+            // don't use ofGetFrameNum if the apps lagg we will
+            // have a gap and NLE will not recognize as image sequence
+            toSave.save("output/frameMesh-frame" + ofToString(recordFrameNum) + ".jpg", OF_IMAGE_QUALITY_BEST);
+            recordFrameNum++;
+        }
+        // move frame forward
         for (int i = framesInLoop; i > 0; i--) {
             frames[i] = frames[i - 1];
         }
+        // replace a mesh on the scene with a new one
         ofPixels framePixels = video.getPixels();
         FrameMesh newFrame = FrameMesh(framePixels, minPixelsBrightness, meshScale, sparkTexCoord);
         newFrame.compute(shader);
@@ -86,11 +87,11 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
-    float t = (ofGetFrameNum() % numFrame) / static_cast<float>(numFrame);
     if (isRecording) {
         frameCapture.begin();
     }
-
+    glEnable(GL_POINT_SMOOTH);
+    glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
     ofClear(0);
     camera.begin();
     shader.begin();
@@ -102,18 +103,18 @@ void ofApp::draw() {
         ofRotateX(180);
 
         if (frames[i].isTexAllocated()) {
-            shader.setUniform1f("u_time", t);
+            shader.setUniform1f("u_time", ofGetFrameNum() / 1000.0f);
             shader.setUniform1f("u_layer", i / (float)framesInLoop);
             sparkTexture.getTexture().bind();
             shader.setUniformTexture("spark", sparkTexture.getTexture(), 2);
             shader.setUniformTexture("u_frameTex", frames[i].getTexture(), 0);
             //frames[i].drawFaces();
             frames[i].drawPoints();
+            sparkTexture.getTexture().unbind();
         }
         ofPopMatrix();
     }
 
-    sparkTexture.getTexture().unbind();
     shader.end();
     camera.end();
     if (isRecording) {
@@ -126,16 +127,14 @@ void ofApp::draw() {
     ofDrawBitmapString(
         ofToString(frames[0].getParticleNum()) + " particles",
         ofGetWidth() - 120, 20);
-    ofDrawBitmapString(
-        ofToString(t) + " / 1.0",
-        20, ofGetHeight() - 20);
     if (isRecording) {
-        ofDrawBitmapString("Recording", ofGetWidth() - 120, ofGetHeight() - 20);
+        ofDrawBitmapString("Recording", 20, ofGetHeight() - 20);
     }
 }
+
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
-    if (key == 114) {
+    if (key == 114 || key == 'r') {
         isRecording = !isRecording;
         std::cout << (isRecording ? "start recording" : "stop recording") << endl;
     } else {
@@ -144,5 +143,4 @@ void ofApp::keyPressed(int key) {
 }
 
 //--------------------------------------------------------------
-
 void ofApp::exit() {}
