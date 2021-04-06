@@ -8,6 +8,7 @@ class FrameMesh {
     FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f texcoord);
     void compute(ofxShader shader);
     void update();
+    void unvalidate();
     void drawPoints();
     void drawWireframe();
     void drawFaces();
@@ -16,6 +17,7 @@ class FrameMesh {
     int getParticleNum();
     int getWidth();
     int getHeight();
+    bool isValidFrame();
     bool isTexAllocated();
 
     struct Particle {
@@ -30,6 +32,7 @@ class FrameMesh {
     ofPixels pixels;
     int brightThreshold;
     float meshScale;
+    bool isUpdatedFrame = false;
     ofVec2f coord;
     ofVboMesh mesh;
     ofBufferObject buffer;

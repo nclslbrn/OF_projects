@@ -12,7 +12,8 @@ FrameMesh::FrameMesh(ofPixels framePixels, int threshold, float scale, ofVec2f t
 //--------------------------------------------------------------
 void FrameMesh::compute(ofxShader shader) {
     int numChannels = pixels.getNumChannels();
-    vector<float> pointsSize;
+    //vector<float> pointsSize;
+
     for (int x = 0; x < pixels.getWidth(); x++) {
         for (int y = 0; y < pixels.getHeight(); y++) {
             int pixId = y * pixels.getWidth() + x;
@@ -25,7 +26,7 @@ void FrameMesh::compute(ofxShader shader) {
                 blue > brightThreshold) {
                 int z = round(((red + blue + green) / 765.0f) * pixels.getHeight() * -0.15);
                 float size = ofRandomuf() * 3.0f;
-                pointsSize.push_back(size);
+                //pointsSize.push_back(size);
                 particles.push_back({{x, y, z, 1},
                                      {ofRandomuf() * glm::pi<float>(),
                                       ofRandomuf() * glm::pi<float>(),
@@ -75,6 +76,11 @@ void FrameMesh::compute(ofxShader shader) {
         matrices[i] = node.getLocalTransformMatrix();
     }
     buffer.updateData(0, matrices);
+    isUpdatedFrame = true;
+}
+//--------------------------------------------------------------
+void FrameMesh::unvalidate() {
+    isUpdatedFrame = false;
 }
 //--------------------------------------------------------------
 
@@ -91,6 +97,12 @@ void FrameMesh::drawWireframe() {
 void FrameMesh::drawFaces() {
     mesh.drawInstanced(OF_MESH_FILL, matrices.size());
 }
+
+//--------------------------------------------------------------
+bool FrameMesh::isValidFrame() {
+    return isUpdatedFrame;
+}
+
 //--------------------------------------------------------------
 
 bool FrameMesh::isTexAllocated() {

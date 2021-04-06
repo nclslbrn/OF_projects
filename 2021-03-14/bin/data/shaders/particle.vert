@@ -53,6 +53,19 @@ float noise(in vec2 st){
     (d-b)*u.x*u.y;
 }
 
+// beesandbombs ease function
+float ease(float p,float g){
+    if(g!=0){
+        if(p<.5){
+            return.5*pow(2*p,g);
+        }else{
+            return 1-.5*pow(2*(1-p),g);
+        }
+    }else{
+        return 3*p*p-2*p*p*p;
+    }
+}
+
 void main(){
     
     int x=gl_InstanceID*4;
@@ -62,26 +75,31 @@ void main(){
         texelFetch(u_frameTex,x+2),
         texelFetch(u_frameTex,x+3)
     );
-    vec4 modelPos = transformMatrix*position;
+    vec4 modelPos=transformMatrix*position;
     vec4 pos=modelViewProjectionMatrix*modelPos;
-    float smoothDepth=smoothstep(0.2,0.6,1.2-u_layer);
-    float noiseFrequency=0.01;
-    float noiseScale = 10.0 * smoothDepth;
+    
+    // u_layer 0 ot 1 from first to last frame
+    float smoothDepth=smoothstep(.2,1.,u_layer);
+    float easeDepth=ease(u_layer,.5);
+    float noiseFrequency=10.;
+    float noiseScale=4000.*easeDepth;
+    
     vec2 st=normalize(modelPos.xy);
-    float n=noiseScale * noise((modelPos.xy + u_time)/noiseFrequency);
+    float noisePosValue=noise((modelPos.xy+u_time)/noiseFrequency);
+    float noiseSizeValue=noise((pos.xy+u_layer)/noiseFrequency);
+    // noise displacement increase from front to back
+    float noiseDisplacement=noiseScale*noisePosValue;
     
+    vec4 newPos=pos+normal*(easeDepth*noiseDisplacement);
     
-    vec4 newPos = pos + normal * n;
-    // pos.x-=noiseScale*cos(n*PI*2.0)*(1.0-smoothDepth);
-    // pos.y-=noiseScale*sin(n*PI*2.0)*(1.0-smoothDepth);
-    //pos.y = (pos.y/u_screenRes.y) * n * (1.0-smoothDepth);
+    vec4 diedColor=vec4(.3,.3,.3,0);
+    vec4 particleColor=mix(instanceColor,diedColor,easeDepth);
+    // vec4 posColor=vec4(1.);
+    // posColor.rg=st;
+    // vec4 particleColor=mix(posColor,diedColor,easeDepth);
     
-    vec4 particleColor=mix(vec4(0.15, 0.75, 0.15,0.),instanceColor,smoothDepth);
-    // vec4 particleColor=vec4(0.5);
-    // particleColor.rg=st;
-    // particleColor.a=1.0;
     color=particleColor;
     
-    gl_PointSize=2.0*n*(1.0-smoothDepth);
+    gl_PointSize=noiseSizeValue*2.5;
     gl_Position=newPos;
 }

@@ -13,8 +13,8 @@ class ofApp : public ofBaseApp {
 
     ofVec2f center = ofVec2f(ofGetWidth() / 2.0, ofGetHeight() / 2.0);
 
-    int framesInLoop = 25,
-        minPixelsBrightness = 30;
+    int framesInLoop = 12,
+        minPixelsBrightness = 70;
 
     float meshScale = 12.0;
     ofVideoPlayer video;
