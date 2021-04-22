@@ -42,7 +42,8 @@ void FrameMesh::compute(ofxShader shader) {
     buffer.setData(matrices, GL_STREAM_DRAW);
     tex.allocateAsBufferTexture(buffer, GL_RGBA32F);
     // mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
-    mesh = ofMesh::plane(20, 20, 2, 2);
+    mesh.setMode(OF_PRIMITIVE_POINTS);
+    mesh.addVertex(glm::vec3(0, 0, 0));
     mesh.setUsage(GL_STATIC_DRAW);
     mesh.getColors().resize(matrices.size());
     for (size_t i = 0; i < mesh.getColors().size(); i++) {

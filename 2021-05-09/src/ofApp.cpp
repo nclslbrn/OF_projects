@@ -5,7 +5,7 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
     ofImage sampleImage;
-    sampleImage.load("images/al-khwarizmi.jpg");
+    sampleImage.load("images/aaron-swartz.jpg");
     ofPixels samplePixels = sampleImage.getPixels();
     sparkTexture.load("images/spark-2.png");
     sparkTexture.setImageType(OF_IMAGE_COLOR_ALPHA);
@@ -13,7 +13,7 @@ void ofApp::setup() {
 
     imageMesh = FrameMesh(
         samplePixels,
-        60,
+        120,
         12,
         glm::vec2(sparkTexture.getWidth(), sparkTexture.getHeight()));
     imageMesh.compute(shader);
@@ -21,7 +21,7 @@ void ofApp::setup() {
     camera.setVFlip(true);
     camera.setDistance(ofGetWidth());
     camera.setNearClip(0.1);
-    camera.setFarClip(-12 * ofGetWidth() * 1.5);
+    camera.setFarClip(ofGetWidth() * -1.5);
     camera.setFov(45.0f);
     ofDisableArbTex();
 }
@@ -32,6 +32,8 @@ void ofApp::update() {
 
 //--------------------------------------------------------------
 void ofApp::draw() {
+    float t = (ofGetFrameNum() % numFrame) / static_cast<float>(numFrame);
+
     ofEnableDepthTest();
     glEnable(GL_POINT_SMOOTH);
     glEnable(GL_BLEND);
@@ -46,7 +48,7 @@ void ofApp::draw() {
     ofPushMatrix();
     ofTranslate(ofGetWidth() / 2.0f, ofGetHeight() / 2.0f);
     shader.setUniform2f("u_resolution", ofGetWidth(), ofGetHeight());
-    shader.setUniform1f("u_time", ofGetFrameNum() / 1000.0f);
+    shader.setUniform1f("u_time", t);
     shader.setUniformTexture("u_frameTex", imageMesh.getTexture(), 0);
     shader.setUniformTexture("u_sparkTex", sparkTexture.getTexture(), 1);
     imageMesh.drawPoints();

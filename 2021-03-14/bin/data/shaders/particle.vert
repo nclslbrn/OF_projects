@@ -100,6 +100,7 @@ void main(){
     
     color=particleColor;
     
-    gl_PointSize=noiseSizeValue*2.5;
+    //gl_PointSize=noiseSizeValue*2.5;
+    gl_PointSize=noiseSizeValue*.1;
     gl_Position=newPos;
 }

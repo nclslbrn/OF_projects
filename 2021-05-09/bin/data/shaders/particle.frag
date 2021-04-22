@@ -3,17 +3,20 @@ in vec4 color;
 in vec4 particlePos;
 uniform vec2 u_resolution;
 in vec4 gl_FragCoord;
+in float uVsize;
+in float uEdgeSize;
 out vec4 outColor;
 
 
-float circleShape(vec2 position, float radius) {
-	return step(radius, length(position));
-}
-
 void main(){
-	vec2 position = (gl_FragCoord.xy / u_resolution) * particlePos.xy;
-	vec4 circleColor = color;
-	float circle = circleShape(position, 0.9);
-	circleColor *= vec4(circle);
-	outColor = circleColor;
+	float dist = length(2.0 * gl_PointCoord - 1.0);
+	if (dist > 1.0) {
+		discard;
+	}
+	float sEdge = smoothstep(
+		uVsize - uEdgeSize - 2.0,
+		uVsize - uEdgeSize,
+		dist * (uVsize + uEdgeSize)
+	);
+	outColor = (color * sEdge) + ((1.0 - sEdge) * gl_FragColor);
 }

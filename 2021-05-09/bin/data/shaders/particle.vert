@@ -20,6 +20,8 @@ uniform sampler2D u_sparkTex;
 
 out vec4 color;
 out vec4 particlePos;
+out float uVsize;
+out float uEdgeSize;
 
 void main(){
     
@@ -32,9 +34,16 @@ void main(){
     );
     vec4 modelPos=transformMatrix*position;
     vec4 pos=modelViewProjectionMatrix*modelPos;
+    
+    float aSize=u_time*2;
+    float vSize=2.*sqrt(aSize/PI);
+    float edgeSize=u_time;
+    
+    uVsize=vSize;
     particlePos=pos;
     color=instanceColor;
+    uEdgeSize=edgeSize;
     
-    gl_PointSize=8;
+    gl_PointSize=vSize+edgeSize+1.;
     gl_Position=pos;
 }

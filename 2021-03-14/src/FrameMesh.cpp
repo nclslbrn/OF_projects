@@ -25,7 +25,7 @@ void FrameMesh::compute(ofxShader shader) {
                 green > brightThreshold &&
                 blue > brightThreshold) {
                 int z = round(((red + blue + green) / 765.0f) * pixels.getHeight() * -0.15);
-                float size = ofRandomuf() * 3.0f;
+                float size = ofRandomuf() * 0.001;
                 //pointsSize.push_back(size);
                 particles.push_back({{x, y, z, 1},
                                      {ofRandomuf() * glm::pi<float>(),
@@ -42,7 +42,8 @@ void FrameMesh::compute(ofxShader shader) {
     buffer.setData(matrices, GL_STREAM_DRAW);
     tex.allocateAsBufferTexture(buffer, GL_RGBA32F);
     // mesh = ofMesh::box(50, 50, 50, 1, 1, 1);
-    mesh = ofMesh::plane(20, 20, 2, 2);
+    // mesh = ofMesh::plane(20, 20, 2, 2);
+    mesh = ofMesh::sphere(0.001, 6);
     mesh.setUsage(GL_STATIC_DRAW);
     mesh.getColors().resize(matrices.size());
     for (size_t i = 0; i < mesh.getColors().size(); i++) {

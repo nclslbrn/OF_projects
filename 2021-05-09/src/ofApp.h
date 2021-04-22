@@ -22,6 +22,7 @@ class ofApp : public ofBaseApp {
     void dragEvent(ofDragInfo dragInfo);
     void gotMessage(ofMessage msg);
 
+    int numFrame = 60;
     FrameMesh imageMesh;
     ofxShader shader;
     ofImage sparkTexture;
