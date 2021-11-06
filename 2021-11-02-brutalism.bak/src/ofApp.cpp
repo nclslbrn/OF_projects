@@ -4,7 +4,8 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
     ofSetVerticalSync(true);
-    sample.load("images/yann-allegre-TwzsNM7nsW8-unsplash.jpg");
+    sample.load("images/sergio-rola-viNlSqFX09k-unsplash.jpg");
+    //sample.load("images/ivan-aleksic-FoYLV60_eHY-unsplash.jpg");
     screenShader.load("shaders/Screen");
     billboardShader.load("shaders/Billboard");
 
@@ -25,9 +26,9 @@ void ofApp::setup() {
 }
 //--------------------------------------------------------------
 void ofApp::nextMove() {
-    size = ofRandomuf() * ofGetWidth() * 0.015;
-    stepSize = 8.0f * ofRandomuf() * 16.0f;
-    numFrame = static_cast<int>(7 * ceil(ofRandomuf() * 5));
+    size = 1.0f + (ofRandomuf() * (float)ofGetWidth() * 0.01f);
+    stepSize = 1.0f + ofRandomuf() * 120.0f;
+    numFrame = (int)(10 * glm::ceil(ofRandomuf() * 10));
     goForward = ofRandomuf() > 0.5;
     isVertical = ofRandomuf() > 0.5;
     d = 0;
@@ -35,6 +36,13 @@ void ofApp::nextMove() {
     rect.setY(roundf(ofRandomuf() * sample.getHeight()));
     rect.setWidth(isVertical ? size : stepSize);
     rect.setHeight(isVertical ? stepSize : size);
+    if (rect.getX() + rect.getWidth() > ofGetWidth()) {
+        rect.setWidth(rect.getWidth() * -1);
+    }
+
+    if (rect.getX() + rect.getHeight() > ofGetHeight()) {
+        rect.setHeight(rect.getHeight() * -1);
+    }
 
     sampleCroped = sample;
     sampleCroped.crop(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
@@ -42,11 +50,23 @@ void ofApp::nextMove() {
         .cropTo(crop, rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 
     for (int i = 0; i < NUM_BILLBOARDS; i++) {
-        billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
-        billboards.getVertices()[i] = {ofRandom(-500, 500), ofRandom(-500, 500), ofRandom(-500, 500)};
+        ofVec2f particlePos( 
+            rect.getX() + (ofRandomf() * rect.getWidth() * 0.5), 
+            rect.getY() + (ofRandomf() * rect.getHeight() * 0.5)
+        );
 
-        billboards.getColors()[i].set(ofColor::fromHsb(ofRandom(96, 160), 255, 255));
-        billboardSizeTarget[i] = stepSize;
+        billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
+        billboards.getVertices()[i] = {
+            particlePos.x,
+            particlePos.y,
+            0
+        };
+
+        billboards.getColors()[i].set(
+            sample.getColor(particlePos.x, particlePos.y)
+            //ofColor::fromHsb(ofRandom(0, 96), 255, 255)
+        );
+        billboardSizeTarget[i] = stepSize * ofRandomuf();
     }
 }
 
@@ -61,14 +81,7 @@ void ofApp::update() {
             rect.getX() + (goForward ? 1 : -1) * (isVertical ? d : 0) * rect.getWidth(),
             rect.getY() + (goForward ? 1 : -1) * (isVertical ? 0 : d) * rect.getHeight());
 
-        if (rect.getX() + rect.getWidth() > ofGetWidth()) {
-            rect.setWidth(rect.getWidth() * -1);
-        }
-
-        if (rect.getX() + rect.getHeight() > ofGetHeight()) {
-            rect.setHeight(rect.getHeight() * -1);
-        }
-
+        
         if (displace.x < 0) {
             displace.x += sample.getWidth();
         }
@@ -80,17 +93,19 @@ void ofApp::update() {
         sample.update();
         d++;
 
-        float t = (ofGetElapsedTimef()) * 0.9f;
-        float div = 250.0;
+        float t = 1.0f -((f % numFrame) / static_cast<float>(numFrame));
+        //float div = 250.0;
 
         for (int i = 0; i < NUM_BILLBOARDS; i++) {
             // noise
-            glm::vec3 vec(ofSignedNoise(t, billboards.getVertex(i).y / div, billboards.getVertex(i).z / div),
+           /*  glm::vec3 vec(ofSignedNoise(t, billboards.getVertex(i).y / div, billboards.getVertex(i).z / div),
                           ofSignedNoise(billboards.getVertex(i).x / div, t, billboards.getVertex(i).z / div),
                           ofSignedNoise(billboards.getVertex(i).x / div, billboards.getVertex(i).y / div, t));
 
-            vec *= 10 * ofGetLastFrameTime();
+ */            
+            glm::vec3 vec(0, t + ofSignedNoise(billboards.getVertex(i).x, billboards.getVertex(i).y, 0, 0), 0);
             billboardVels[i] += vec;
+            billboardVels[i].y += 0.25f;
             billboards.getVertices()[i] += billboardVels[i];
             billboardVels[i] *= 0.94f;
             billboards.setNormal(i, glm::vec3(12 + billboardSizeTarget[i] * ofNoise(t + i), 0, 0));
@@ -101,32 +116,39 @@ void ofApp::update() {
 //--------------------------------------------------------------
 void ofApp::draw() {
     // ofBackgroundGradient(ofColor(255), ofColor(230, 240, 255));
-
+    float animT = 1.0f - ((ofGetFrameNum() % numFrame)/(float)numFrame);
     cam.begin();
+
     sample.getTexture().bind();
     screenShader.begin();
     screenShader.setUniform2f("u_screen_res", ofGetWidth(), ofGetHeight());
     screen.draw();
     screenShader.end();
     sample.getTexture().unbind();
-
+    
+    cam.end();
+    
+    ofEnableAlphaBlending();
     ofPushMatrix();
     sampleCroped.getTexture().bind();
+    ofEnablePointSprites();
     billboardShader.begin();
+    billboardShader.setUniform1f("u_alpha", animT);
     billboardShader.setUniform2f("u_crop_res", sampleCroped.getWidth(), sampleCroped.getHeight());
     billboardShader.setUniformTexture("u_crop_tex", sampleCroped.getTexture(), 0);
-    ofEnablePointSprites();
     billboards.draw();
     ofDisablePointSprites();
     billboardShader.end();
     sampleCroped.getTexture().unbind();
     ofPopMatrix();
+    ofDisableAlphaBlending();
 
-    cam.end();
 
     string info = ofToString(ofGetFrameRate(), 2) + "\n";
+    string time = ofToString(animT, 2) + "\n";
+    info += time;
     info += "Particle Count: " + ofToString(NUM_BILLBOARDS);
     ofDrawBitmapStringHighlight(info, 30, 30);
     ofSetColor(255);
-    sampleCroped.draw(0, 0);
+    sampleCroped.draw(4, 4);
 }

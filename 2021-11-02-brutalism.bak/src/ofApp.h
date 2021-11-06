@@ -4,7 +4,7 @@
 #include "ofVbo.h"
 #include "ofxShaderFilter.h"
 
-#define NUM_BILLBOARDS 1000
+#define NUM_BILLBOARDS 5000
 
 class ofApp : public ofBaseApp {
    public:
