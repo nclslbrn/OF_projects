@@ -3,7 +3,7 @@ in vec4 position;
 in vec4 color;
 in vec3 normal;
 
-uniform float u_alpha;
+uniform float u_size;
 uniform mat4 orientationMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
@@ -19,7 +19,7 @@ void main()
     vec4 pos=projectionMatrix*eyeCoord;
     gl_Position = pos;
     //float dist=sqrt(eyeCoord.x*eyeCoord.x+eyeCoord.y*eyeCoord.y+eyeCoord.z*eyeCoord.z);
-    float att= 0.1*u_alpha;
+    float att= 0.1*u_size;
     
     gl_PointSize=normal.x*att;
     colorVarying=color;
