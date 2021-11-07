@@ -14,13 +14,9 @@ out vec4 colorVarying;
 
 void main()
 {
-    vec4 eyeCoord=modelViewMatrix*position;
-    // to be accurate this should premultiply by orientationMatrix
-    vec4 pos=projectionMatrix*eyeCoord;
-    gl_Position = pos;
-    //float dist=sqrt(eyeCoord.x*eyeCoord.x+eyeCoord.y*eyeCoord.y+eyeCoord.z*eyeCoord.z);
-    float att= 0.1*u_size;
+    float att= 0.15*u_size;
     
+    gl_Position = modelViewProjectionMatrix*position;
     gl_PointSize=normal.x*att;
     colorVarying=color;
 }

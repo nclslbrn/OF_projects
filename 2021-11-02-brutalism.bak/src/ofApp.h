@@ -30,8 +30,6 @@ public:
 
   ofPlanePrimitive screen;
 
-  ofEasyCam cam;
-
   // of/exmaples/billboardExemple
   float billboardSizeTarget[NUM_BILLBOARDS];
   ofVboMesh billboards;
