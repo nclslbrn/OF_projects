@@ -1,8 +1,8 @@
 #pragma once
 
 #include "ofMain.h"
-#include "ofVbo.h"
 #include "ofxShaderFilter.h"
+#include "ofxTextureRecorder.h"
 
 #define NUM_BILLBOARDS 5000
 
@@ -11,6 +11,7 @@ public:
   void setup();
   void update();
   void nextMove();
+  void nextFrame();
   void draw();
 
   bool goForward;
@@ -30,8 +31,13 @@ public:
 
   ofPlanePrimitive screen;
 
-  // of/exmaples/billboardExemple
+  // VBO particle of/exmaples/billboardExemple
   float billboardSizeTarget[NUM_BILLBOARDS];
   ofVboMesh billboards;
   glm::vec3 billboardVels[NUM_BILLBOARDS];
+
+  // Screen recording https://forum.openframeworks.cc/t/screenrecording/7090/9
+  bool isRecording; 
+  ofxTextureRecorder recorder;
+	ofFbo capture;
 };

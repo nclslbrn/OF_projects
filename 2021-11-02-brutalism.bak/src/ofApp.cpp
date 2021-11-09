@@ -1,17 +1,17 @@
 #include "ofApp.h"
-//#include "ofConstants.h"
 
 //--------------------------------------------------------------
 void ofApp::setup() {
+  isRecording = false;
   center = ofVec2f(ofGetWidth() / 2, ofGetHeight() / 2);
-  ofSetVerticalSync(true);
-  // sample.load("images/1080x1080/sergio-rola-viNlSqFX09k-unsplash.jpg");
-  sample.load("images/1080x1080/ivan-aleksic-FoYLV60_eHY-unsplash.jpg");
+
+  sample.load("images/2880x1620/chuttersnap-otN9QPy_veg-unsplash.jpg");
   screenShader.load("shaders/Screen");
   billboardShader.load("shaders/Billboard");
 
   screen.set(ofGetWidth(), ofGetHeight());
   screen.setPosition(center.x, center.y, 0);
+  screen.setScale(1, -1, 1);
   screen.mapTexCoords(0, 0, sample.getWidth(), sample.getHeight());
 
   // of/exmaples/billboardExemple
@@ -20,14 +20,21 @@ void ofApp::setup() {
   billboards.getNormals().resize(NUM_BILLBOARDS, glm::vec3(0));
   billboards.setUsage(GL_DYNAMIC_DRAW);
   billboards.setMode(OF_PRIMITIVE_POINTS);
+  // of/addons/ofxTextureRecorder/example
+  capture.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
+  ofxTextureRecorder::Settings settings(capture.getTexture());
+	settings.imageFormat = OF_IMAGE_FORMAT_JPEG;
+	settings.numThreads = 4;
+	settings.maxMemoryUsage = 9000000000;
+	recorder.setup(settings); 
 
   nextMove();
 }
 //--------------------------------------------------------------
 void ofApp::nextMove() {
-  size = 1.0f + (ofRandomuf() * (float)ofGetWidth() * 0.01f);
-  stepSize = 1.0f + ofRandomuf() * 120.0f;
-  numFrame = (int)(10 * glm::ceil(ofRandomuf() * 10));
+  size = 1.0f + (ofRandomuf() * (float)ofGetWidth() * 0.1f);
+  stepSize = 1.0f + ofRandomuf() * 460.0f;
+  numFrame = (int)(6 * glm::ceil(ofRandomuf() * 10));
   goForward = ofRandomuf() > 0.5;
   isVertical = ofRandomuf() > 0.5;
   d = 0;
@@ -86,18 +93,9 @@ void ofApp::update() {
 
     float t =
         1.0f - ((ofGetFrameNum() % numFrame) / static_cast<float>(numFrame));
-    // float div = 250.0;
 
     for (int i = 0; i < NUM_BILLBOARDS; i++) {
-      // noise
-      /*  glm::vec3 vec(ofSignedNoise(t, billboards.getVertex(i).y / div,
-         billboards.getVertex(i).z / div),
-                     ofSignedNoise(billboards.getVertex(i).x / div, t,
-         billboards.getVertex(i).z / div),
-                     ofSignedNoise(billboards.getVertex(i).x / div,
-         billboards.getVertex(i).y / div, t));
 
-*/
       glm::vec3 vec(0,
                     t + ofSignedNoise(billboards.getVertex(i).x,
                                       billboards.getVertex(i).y, 0, 0),
@@ -109,16 +107,27 @@ void ofApp::update() {
       billboards.setNormal(
           i, glm::vec3(12 + billboardSizeTarget[i] * ofNoise(t + i), 0, 0));
     }
+
+
+    capture.begin();
+    ofClear(255, 255);
+    nextFrame();
+    capture.end();
+
+    if(ofGetFrameNum()>0){
+		  recorder.save(capture.getTexture());
+	  }
+	  if(ofGetFrameNum() > ofGetWidth() + 50){
+		  ofExit(0);
+	  } 
   }
 }
-
 //--------------------------------------------------------------
-void ofApp::draw() {
-  // ofBackgroundGradient(ofColor(255), ofColor(230, 240, 255));
+
+void ofApp::nextFrame() {
   float animT = 1.0f - ((ofGetFrameNum() % numFrame) / (float)numFrame);
+
   ofPushMatrix();
-  ofTranslate(0.0f, ofGetHeight());
-  ofScale(1, -1, 1);
   sample.getTexture().bind();
   screenShader.begin();
   screenShader.setUniform2f("u_screen_res", ofGetWidth(), ofGetHeight());
@@ -128,7 +137,6 @@ void ofApp::draw() {
   ofPopMatrix();
 
   ofEnableAlphaBlending();
-
   sampleCroped.getTexture().bind();
   ofEnablePointSprites();
   billboardShader.begin();
@@ -139,9 +147,14 @@ void ofApp::draw() {
   sampleCroped.getTexture().unbind();
   ofDisableAlphaBlending();
 
+}
+//--------------------------------------------------------------
+void ofApp::draw() {
+  capture.draw(0,0,1920, 1080);
+
+  // capture.draw(0,0);
+  // debug & info
   string info = ofToString(ofGetFrameRate(), 2) + "\n";
-  string time = ofToString(animT, 2) + "\n";
-  info += time;
   info += "Particle Count: " + ofToString(NUM_BILLBOARDS);
   ofDrawBitmapStringHighlight(info, 30, 30);
   ofSetColor(255);
