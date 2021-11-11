@@ -1,162 +1,176 @@
 #include "ofApp.h"
 
 //--------------------------------------------------------------
-void ofApp::setup() {
-  isRecording = false;
-  center = ofVec2f(ofGetWidth() / 2, ofGetHeight() / 2);
+void ofApp::setup(){
+	screenWidth = 2880;
+	screenHeight = 1620;
+	isRecording = false;
+	showInfo = false;
+	ofSetWindowShape(screenWidth, screenHeight);
+	center = ofVec2f(screenWidth / 2, screenHeight / 2);
 
-  sample.load("images/2880x1620/chuttersnap-otN9QPy_veg-unsplash.jpg");
-  screenShader.load("shaders/Screen");
-  billboardShader.load("shaders/Billboard");
+	sample.load("images/2880x1620/carl-nenzen-loven-mbfile7XE44-unsplash.jpg");
+	screenShader.load("shaders/Screen");
+	billboardShader.load("shaders/Billboard");
 
-  screen.set(ofGetWidth(), ofGetHeight());
-  screen.setPosition(center.x, center.y, 0);
-  screen.setScale(1, -1, 1);
-  screen.mapTexCoords(0, 0, sample.getWidth(), sample.getHeight());
+	screen.set(screenWidth, screenHeight);
+	screen.setPosition(center.x, center.y, 0);
+	screen.setScale(1, -1, 1);
+	screen.mapTexCoords(0, 0, sample.getWidth(), sample.getHeight());
 
-  // of/exmaples/billboardExemple
-  billboards.getVertices().resize(NUM_BILLBOARDS);
-  billboards.getColors().resize(NUM_BILLBOARDS);
-  billboards.getNormals().resize(NUM_BILLBOARDS, glm::vec3(0));
-  billboards.setUsage(GL_DYNAMIC_DRAW);
-  billboards.setMode(OF_PRIMITIVE_POINTS);
-  // of/addons/ofxTextureRecorder/example
-  capture.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
-  ofxTextureRecorder::Settings settings(capture.getTexture());
+	// of/exmaples/billboardExemple
+	billboards.getVertices().resize(NUM_BILLBOARDS);
+	billboards.getColors().resize(NUM_BILLBOARDS);
+	billboards.getNormals().resize(NUM_BILLBOARDS, glm::vec3(0));
+	billboards.setUsage(GL_DYNAMIC_DRAW);
+	billboards.setMode(OF_PRIMITIVE_POINTS);
+
+	// of/addons/ofxTextureRecorder/example
+	capture.allocate(screenWidth, screenHeight, GL_RGB);
+	ofxTextureRecorder::Settings settings(capture.getTexture());
 	settings.imageFormat = OF_IMAGE_FORMAT_JPEG;
-	settings.numThreads = 4;
+	settings.numThreads = 2;
 	settings.maxMemoryUsage = 9000000000;
-	recorder.setup(settings); 
-
-  nextMove();
+	settings.folderPath = "capture/";
+	recorder.setup(settings);
+	nextMove();
 }
 //--------------------------------------------------------------
-void ofApp::nextMove() {
-  size = 1.0f + (ofRandomuf() * (float)ofGetWidth() * 0.1f);
-  stepSize = 1.0f + ofRandomuf() * 460.0f;
-  numFrame = (int)(6 * glm::ceil(ofRandomuf() * 10));
-  goForward = ofRandomuf() > 0.5;
-  isVertical = ofRandomuf() > 0.5;
-  d = 0;
-  rect.setX(roundf(ofRandomuf() * sample.getWidth()));
-  rect.setY(roundf(ofRandomuf() * sample.getHeight()));
-  rect.setWidth(isVertical ? size : stepSize);
-  rect.setHeight(isVertical ? stepSize : size);
+void ofApp::nextMove(){
+	isVertical = ofRandomuf() > 0.5;
+	size = 1.0 + (ofRandomuf() * (isVertical ? screenHeight : screenWidth) * 0.015f);
+	stepSize = 1.0f + ofRandomuf() * 320.0f;
+	numFrame = 6 * ceil(ofRandomuf() * 16);
+	goForward = ofRandomuf() > 0.5;
+	d = 0;
+	float sampleWidth = isVertical ? size : stepSize;
+	float sampleHeight = isVertical ? stepSize : size;
+	rect.setX(ofRandom(0, screenWidth - sampleWidth));
+	rect.setY(ofRandom(0, screenHeight - sampleHeight));
+	rect.setWidth(sampleWidth);
+	rect.setHeight(sampleHeight);
 
-  if (rect.getX() + rect.getWidth() > ofGetWidth()) {
-    rect.setWidth(rect.getWidth() * -1);
-  }
+	sampleCroped = sample;
+	sampleCroped.crop(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
+	sample.getPixels().cropTo(crop, rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 
-  if (rect.getX() + rect.getHeight() > ofGetHeight()) {
-    rect.setHeight(rect.getHeight() * -1);
-  }
+	for(int i = 0; i < NUM_BILLBOARDS; i++){
+		ofVec2f particlePos(
+			rect.getX() + (ofRandomf() * rect.getWidth() * 0.5),
+			rect.getY() + (ofRandomf() * rect.getHeight() * 0.5)
+			);
 
-  sampleCroped = sample;
-  sampleCroped.crop(rect.getX(), rect.getY(), rect.getWidth(),
-                    rect.getHeight());
-  sample.getPixels().cropTo(crop, rect.getX(), rect.getY(), rect.getWidth(),
-                            rect.getHeight());
-
-  for (int i = 0; i < NUM_BILLBOARDS; i++) {
-    ofVec2f particlePos(rect.getX() + (ofRandomf() * rect.getWidth() * 0.5),
-                        rect.getY() + (ofRandomf() * rect.getHeight() * 0.5));
-
-    billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
-    billboards.getVertices()[i] = {particlePos.x, particlePos.y, 0};
-    billboards.getColors()[i].set(
-        sample.getColor((int)particlePos.x, (int)particlePos.y));
-    billboardSizeTarget[i] = stepSize * ofRandomuf();
-  }
+		billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
+		billboards.getVertices()[i] = {particlePos.x, particlePos.y, 0};
+		billboards.getColors()[i].set(
+			sample.getColor((int)particlePos.x, (int)particlePos.y));
+		billboardSizeTarget[i] = stepSize * ofRandomuf();
+	}
 }
 
 //--------------------------------------------------------------
-void ofApp::update() {
+void ofApp::update(){
 
-  if ((int)ofGetFrameNum() % numFrame == 0) {
-    nextMove();
-  } else {
-    ofVec2f displace(rect.getX() + (goForward ? 1 : -1) * (isVertical ? d : 0) *
-                                       rect.getWidth(),
-                     rect.getY() + (goForward ? 1 : -1) * (isVertical ? 0 : d) *
-                                       rect.getHeight());
+	if((int)ofGetFrameNum() % numFrame == 0){
+		nextMove();
+	}else{
 
-    if (displace.x < 0) {
-      displace.x += sample.getWidth();
-    }
-    if (displace.y < 0) {
-      displace.y += sample.getHeight();
-    }
+		ofVec2f displace(
+			rect.getX() + (goForward ? 1 : -1) * (isVertical ? d : 0) * rect.getWidth(),
+			rect.getY() + (goForward ? 1 : -1) * (isVertical ? 0 : d) * rect.getHeight()
+			);
 
-    crop.pasteInto(sample.getPixels(), displace.x, displace.y);
-    sample.update();
-    d++;
+		if(displace.x < 0){
+			displace.x += sample.getWidth();
+		}
+		if(displace.y < 0){
+			displace.y += sample.getHeight();
+		}
+		if(displace.x > screenWidth){
+			displace.x = 1.0f * (int(displace.x) % screenWidth);
+		}
+		if(displace.y < screenHeight){
+			displace.y = 1.0f * (int(displace.y) % screenHeight);
+		}
 
-    float t =
-        1.0f - ((ofGetFrameNum() % numFrame) / static_cast<float>(numFrame));
+		crop.pasteInto(sample.getPixels(), displace.x, displace.y);
+		sample.update();
+		d++;
 
-    for (int i = 0; i < NUM_BILLBOARDS; i++) {
+		float t =
+			1.0f - ((ofGetFrameNum() % numFrame) / static_cast <float>(numFrame));
 
-      glm::vec3 vec(0,
-                    t + ofSignedNoise(billboards.getVertex(i).x,
-                                      billboards.getVertex(i).y, 0, 0),
-                    0);
-      billboardVels[i] += vec;
-      // billboardVels[i].y *= 1.01f;
-      billboards.getVertices()[i] += billboardVels[i];
-      billboardVels[i] *= 0.94f;
-      billboards.setNormal(
-          i, glm::vec3(12 + billboardSizeTarget[i] * ofNoise(t + i), 0, 0));
-    }
+		for(int i = 0; i < NUM_BILLBOARDS; i++){
 
+			glm::vec3 vec(0, t + ofSignedNoise(billboards.getVertex(i).x, billboards.getVertex(i).y, 0, 0), 0);
+			billboardVels[i] += vec;
+			// billboardVels[i].y *= 1.01f;
+			billboards.getVertices()[i] += billboardVels[i];
+			billboardVels[i] *= 0.94f;
+			billboards.setNormal(
+				i, glm::vec3(12 + billboardSizeTarget[i] * ofNoise(t + i), 0, 0));
+		}
 
-    capture.begin();
-    ofClear(255, 255);
-    nextFrame();
-    capture.end();
+		capture.begin();
+		ofClear(0, 255);
+		nextFrame();
+		capture.end();
 
-    if(ofGetFrameNum()>0){
-		  recorder.save(capture.getTexture());
-	  }
-	  if(ofGetFrameNum() > ofGetWidth() + 50){
-		  ofExit(0);
-	  } 
-  }
+		if(isRecording){
+			if(ofGetFrameNum() > 0){
+				recorder.save(capture.getTexture());
+			}
+		}
+	}
 }
 //--------------------------------------------------------------
 
-void ofApp::nextFrame() {
-  float animT = 1.0f - ((ofGetFrameNum() % numFrame) / (float)numFrame);
+void ofApp::nextFrame(){
+	float animT = 1.0f - ((ofGetFrameNum() % numFrame) / (float)numFrame);
+	ofEnableAlphaBlending();
+	ofEnablePointSprites();
 
-  ofPushMatrix();
-  sample.getTexture().bind();
-  screenShader.begin();
-  screenShader.setUniform2f("u_screen_res", ofGetWidth(), ofGetHeight());
-  screen.draw();
-  screenShader.end();
-  sample.getTexture().unbind();
-  ofPopMatrix();
+	sample.getTexture().bind();
+	screenShader.begin();
+	screenShader.setUniform2f("u_screen_res", screenWidth, screenHeight);
+	screen.draw();
+	screenShader.end();
+	sample.getTexture().unbind();
 
-  ofEnableAlphaBlending();
-  sampleCroped.getTexture().bind();
-  ofEnablePointSprites();
-  billboardShader.begin();
-  billboardShader.setUniform1f("u_size", animT);
-  billboards.draw();
-  ofDisablePointSprites();
-  billboardShader.end();
-  sampleCroped.getTexture().unbind();
-  ofDisableAlphaBlending();
-
+	sampleCroped.getTexture().bind();
+	billboardShader.begin();
+	billboardShader.setUniform1f("u_size", animT);
+	billboards.draw();
+	billboardShader.end();
+	sampleCroped.getTexture().unbind();
+	ofDisablePointSprites();
+	ofDisableAlphaBlending();
 }
 //--------------------------------------------------------------
-void ofApp::draw() {
-  capture.draw(0,0,1920, 1080);
+void ofApp::draw(){
+	capture.draw(0, 0, 1920, 1080);
 
-  // capture.draw(0,0);
-  // debug & info
-  string info = ofToString(ofGetFrameRate(), 2) + "\n";
-  info += "Particle Count: " + ofToString(NUM_BILLBOARDS);
-  ofDrawBitmapStringHighlight(info, 30, 30);
-  ofSetColor(255);
-  sampleCroped.draw(4, 4);
+	// debug & info
+	if(showInfo){
+		string frameRate = ofToString(ofGetFrameRate(), 2) + "\n";
+		string particleCount = "Particle Count: " + ofToString(NUM_BILLBOARDS);
+		ofDrawBitmapStringHighlight(frameRate + particleCount, 30, 30);
+		ofSetColor(255);
+		sampleCroped.draw(4, 50);
+	}
+	if(isRecording && ofGetFrameNum() % 10 == 0){
+		ofPushStyle();
+		ofSetColor(ofColor::red);
+		ofDrawCircle(10, 10, 0, 15);
+		ofPopStyle();
+
+	}
+}
+void ofApp::keyPressed(int key){
+	if(key == 'r' || key == 'R'){
+		isRecording = !isRecording;
+	}
+	if(key == 'i' || key == 'I'){
+		showInfo = !showInfo;
+	}
 }

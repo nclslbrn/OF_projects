@@ -4,40 +4,44 @@
 #include "ofxShaderFilter.h"
 #include "ofxTextureRecorder.h"
 
-#define NUM_BILLBOARDS 5000
+#define NUM_BILLBOARDS 10000
 
 class ofApp : public ofBaseApp {
-public:
-  void setup();
-  void update();
-  void nextMove();
-  void nextFrame();
-  void draw();
+	public:
+		void setup();
+		void update();
+		void nextMove();
+		void nextFrame();
+		void draw();
+		void keyPressed(int key);
 
-  bool goForward;
-  bool isVertical;
-  ofRectangle rect;
-  float stepSize;
-  float size;
-  int d;
-  int numFrame;
+		bool goForward;
+		bool isVertical;
+		ofRectangle rect;
+		float stepSize;
+		float size;
+		int d;
+		int screenWidth, screenHeight;
+		int numFrame;
 
-  ofVec2f center;
-  ofImage sample;
-  ofImage sampleCroped;
-  ofPixels crop;
-  ofxShader screenShader;
-  ofxShader billboardShader;
+		ofVec2f center;
+		ofImage sample;
+		ofImage sampleCroped;
+		ofPixels crop;
+		ofxShader screenShader;
+		ofxShader billboardShader;
 
-  ofPlanePrimitive screen;
+		ofPlanePrimitive screen;
 
-  // VBO particle of/exmaples/billboardExemple
-  float billboardSizeTarget[NUM_BILLBOARDS];
-  ofVboMesh billboards;
-  glm::vec3 billboardVels[NUM_BILLBOARDS];
+		// VBO particle of/exmaples/billboardExemple
+		float billboardSizeTarget[NUM_BILLBOARDS];
+		ofVboMesh billboards;
+		glm::vec3 billboardVels[NUM_BILLBOARDS];
 
-  // Screen recording https://forum.openframeworks.cc/t/screenrecording/7090/9
-  bool isRecording; 
-  ofxTextureRecorder recorder;
-	ofFbo capture;
+		// Screen recording https://forum.openframeworks.cc/t/screenrecording/7090/9
+		bool isRecording;
+		ofxTextureRecorder recorder;
+		ofFbo capture;
+
+		bool showInfo;
 };
