@@ -13,10 +13,37 @@ void ofApp::setup(){
 	// std::cout << imageFile << endl;
 	sample.load("images/2880x1620/" + imageFile);
 
+
+
+
+	screenShader.load("shaders/Screen");
+	billboardShader.load("shaders/Billboard");
+
+	screen.set(screenWidth, screenHeight);
+	screen.setPosition(center.x, center.y, 0);
+	screen.setScale(1, -1, 1);
+	screen.mapTexCoords(0, 0, sample.getWidth(), sample.getHeight());
+
+	// of/examples/gl/billboardExemple
+	billboards.getVertices().resize(NUM_BILLBOARDS);
+	billboards.getColors().resize(NUM_BILLBOARDS);
+	billboards.getNormals().resize(NUM_BILLBOARDS, glm::vec3(0));
+	billboards.setUsage(GL_DYNAMIC_DRAW);
+	billboards.setMode(OF_PRIMITIVE_POINTS);
+
+	// of/addons/ofxTextureRecorder/example
+	capture.allocate(screenWidth, screenHeight, GL_RGB);
+	ofxTextureRecorder::Settings settings(capture.getTexture());
+	settings.imageFormat = OF_IMAGE_FORMAT_JPEG;
+	settings.numThreads = 2;
+	settings.maxMemoryUsage = 9000000000;
+	settings.folderPath = "capture/";
+	recorder.setup(settings);
+
+	// of/examples/sound/soundPlayerExample
+	// of/addons/ofxDirList/example
 	nShortAudioSample = shortAudioDir.listDir("audio-sample/short");
 	nLongAudioSample = longAudioDir.listDir("audio-sample/long");
-	//std::cout << "Short audio " + ofToString(nShortAudioSample) << endl;
-	//std::cout << "Long audio " + ofToString(nLongAudioSample) << endl;
 	shortAudioSample = new ofSoundPlayer[nShortAudioSample];
 	longAudioSample = new ofSoundPlayer[nLongAudioSample];
 	for(int si = 0; si < nShortAudioSample; si++){
@@ -36,30 +63,6 @@ void ofApp::setup(){
 			);
 	}
 
-
-	screenShader.load("shaders/Screen");
-	billboardShader.load("shaders/Billboard");
-
-	screen.set(screenWidth, screenHeight);
-	screen.setPosition(center.x, center.y, 0);
-	screen.setScale(1, -1, 1);
-	screen.mapTexCoords(0, 0, sample.getWidth(), sample.getHeight());
-
-	// of/exmaples/billboardExemple
-	billboards.getVertices().resize(NUM_BILLBOARDS);
-	billboards.getColors().resize(NUM_BILLBOARDS);
-	billboards.getNormals().resize(NUM_BILLBOARDS, glm::vec3(0));
-	billboards.setUsage(GL_DYNAMIC_DRAW);
-	billboards.setMode(OF_PRIMITIVE_POINTS);
-
-	// of/addons/ofxTextureRecorder/example
-	capture.allocate(screenWidth, screenHeight, GL_RGB);
-	ofxTextureRecorder::Settings settings(capture.getTexture());
-	settings.imageFormat = OF_IMAGE_FORMAT_JPEG;
-	settings.numThreads = 2;
-	settings.maxMemoryUsage = 9000000000;
-	settings.folderPath = "capture/";
-	recorder.setup(settings);
 	nextMove();
 }
 //--------------------------------------------------------------
