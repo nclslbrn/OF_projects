@@ -10,11 +10,31 @@ void ofApp::setup(){
 	center = ofVec2f(screenWidth / 2, screenHeight / 2);
 
 	string imageFile = imageSource[(int)ofRandom(0, sizeof(imageSource) / sizeof(imageSource[0]))];
-	std::cout << imageFile << endl;
-	string imagePath = "images/2880x1620/" + imageFile;
-	exit();
-	//sample.load("images/2880x1620/annie-spratt-MdijqynYQg8-unsplash.jpg");
-	sample.load(imagePath);
+	// std::cout << imageFile << endl;
+	sample.load("images/2880x1620/" + imageFile);
+
+	nShortAudioSample = shortAudioDir.listDir("audio-sample/short");
+	nLongAudioSample = longAudioDir.listDir("audio-sample/long");
+	//std::cout << "Short audio " + ofToString(nShortAudioSample) << endl;
+	//std::cout << "Long audio " + ofToString(nLongAudioSample) << endl;
+	shortAudioSample = new ofSoundPlayer[nShortAudioSample];
+	longAudioSample = new ofSoundPlayer[nLongAudioSample];
+	for(int si = 0; si < nShortAudioSample; si++){
+		string shortSoundFile = shortAudioDir.getPath(si);
+		std::cout << shortAudioDir.getPath(si) << endl;
+		shortAudioSample[si].loadSound(
+			shortSoundFile,
+			true
+			);
+	}
+	for(int si = 0; si < nLongAudioSample; si++){
+		string longSoundFile = shortAudioDir.getPath(si);
+		std::cout << longAudioDir.getPath(si) << endl;
+		longAudioSample[si].loadSound(
+			longSoundFile,
+			true
+			);
+	}
 
 
 	screenShader.load("shaders/Screen");
