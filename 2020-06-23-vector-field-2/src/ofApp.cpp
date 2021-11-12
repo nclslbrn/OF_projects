@@ -26,9 +26,9 @@ ofVec2f ofApp::quadrifolium(ofVec2f v) {
 }
 //--------------------------------------------------------------
 ofVec2f ofApp::rect_hyperbola(ofVec2f v) {
-    return ofVec2f(
-        glm::sec(v.x),
-        glm::tan(v.y));
+    float theta = atan2(v.x, v.y);
+    float sec = 1 / glm::cos(theta);
+    return ofVec2f(sec, glm::tan(theta));
 }
 //--------------------------------------------------------------
 ofVec2f ofApp::trifolium(ofVec2f v) {

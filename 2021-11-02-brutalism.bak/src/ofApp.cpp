@@ -9,7 +9,14 @@ void ofApp::setup(){
 	ofSetWindowShape(screenWidth, screenHeight);
 	center = ofVec2f(screenWidth / 2, screenHeight / 2);
 
-	sample.load("images/2880x1620/carl-nenzen-loven-mbfile7XE44-unsplash.jpg");
+	string imageFile = imageSource[(int)ofRandom(0, sizeof(imageSource) / sizeof(imageSource[0]))];
+	std::cout << imageFile << endl;
+	string imagePath = "images/2880x1620/" + imageFile;
+	exit();
+	//sample.load("images/2880x1620/annie-spratt-MdijqynYQg8-unsplash.jpg");
+	sample.load(imagePath);
+
+
 	screenShader.load("shaders/Screen");
 	billboardShader.load("shaders/Billboard");
 

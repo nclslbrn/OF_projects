@@ -24,6 +24,14 @@ class ofApp : public ofBaseApp {
 		int screenWidth, screenHeight;
 		int numFrame;
 
+		string imageSource[5] = {
+			"annie-spratt-MdijqynYQg8-unsplash.jpg",
+			"carl-nenzen-loven-mbfile7XE44-unsplash.jpg",
+			"moollyem-MXkVCT9hbs4-unsplash.jpg",
+			"pete-wright-mT9d7GFl1Zs-unsplash.jpg",
+			"timelab-pro-xfDnqMh__UQ-unsplash.jpg"
+		};
+
 		ofVec2f center;
 		ofImage sample;
 		ofImage sampleCroped;
