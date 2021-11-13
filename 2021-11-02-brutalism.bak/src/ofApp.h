@@ -16,6 +16,9 @@ class ofApp : public ofBaseApp {
 		void nextFrame();
 		void draw();
 		void keyPressed(int key);
+		void exit();
+
+		float ease(float p, int g);
 
 		bool goForward,
 			 isVertical,
@@ -23,33 +26,26 @@ class ofApp : public ofBaseApp {
 			 isRecording;
 
 		int loop,
-			numLoop,
+			loopNum,
 			d,
-			numFrame,
+			frameNum,
 			size,
 			stepSize,
 			screenWidth,
 			screenHeight,
-			nShortAudioSample,
-			nLongAudioSample,
-			currentShortSample,
-			currentLongSample;
+			imgNum,
+			shortSndNum,
+			longSndNum,
+			currImg,
+			currShortSound,
+			currLongSound;
 
-		string imageSource[5] = {
-			"annie-spratt-MdijqynYQg8-unsplash.jpg",
-			"carl-nenzen-loven-mbfile7XE44-unsplash.jpg",
-			"moollyem-MXkVCT9hbs4-unsplash.jpg",
-			"pete-wright-mT9d7GFl1Zs-unsplash.jpg",
-			"timelab-pro-xfDnqMh__UQ-unsplash.jpg"
-		};
+		ofImage * image;
 		ofRectangle rect;
-		ofxDirList shortAudioDir;
-		ofxDirList longAudioDir;
-		ofSoundPlayer * shortAudioSample;
-		ofSoundPlayer * longAudioSample;
+		ofSoundPlayer * shortSound;
+		ofSoundPlayer * longSound;
 
 		ofVec2f center;
-		ofImage sample;
 		ofImage sampleCroped;
 		ofPixels crop;
 		ofxShader screenShader;
@@ -65,5 +61,10 @@ class ofApp : public ofBaseApp {
 		// Screen recording https://forum.openframeworks.cc/t/screenrecording/7090/9
 		ofxTextureRecorder recorder;
 		ofFbo capture;
+
+		// Assets of/addons/ofxDirList/example
+		ofxDirList shortAudioDir;
+		ofxDirList longAudioDir;
+		ofxDirList imageDir;
 
 };
