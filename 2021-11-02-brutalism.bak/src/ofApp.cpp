@@ -4,6 +4,8 @@
 void ofApp::setup(){
 	screenWidth = 2880;
 	screenHeight = 1620;
+	loop = 0;
+	numLoop = 20;
 	isRecording = false;
 	showInfo = false;
 	ofSetWindowShape(screenWidth, screenHeight);
@@ -14,27 +16,29 @@ void ofApp::setup(){
 	sample.load("images/2880x1620/" + imageFile);
 
 	nShortAudioSample = shortAudioDir.listDir("audio-sample/short");
-	nLongAudioSample = longAudioDir.listDir("audio-sample/long");
+	//nLongAudioSample = longAudioDir.listDir("audio-sample/long");
 	//std::cout << "Short audio " + ofToString(nShortAudioSample) << endl;
 	//std::cout << "Long audio " + ofToString(nLongAudioSample) << endl;
 	shortAudioSample = new ofSoundPlayer[nShortAudioSample];
-	longAudioSample = new ofSoundPlayer[nLongAudioSample];
-	for(int si = 0; si < nShortAudioSample; si++){
-		string shortSoundFile = shortAudioDir.getPath(si);
-		std::cout << shortAudioDir.getPath(si) << endl;
-		shortAudioSample[si].loadSound(
-			shortSoundFile,
-			true
-			);
+	//longAudioSample = new ofSoundPlayer[nLongAudioSample];
+	for(int i = 0; i < nShortAudioSample; i++){
+		string shortSoundFile = shortAudioDir.getPath(i);
+		// std::cout << shortAudioDir.getPath(si) << endl;
+		shortAudioSample[i].setMultiPlay(true);
+		//shortAudioSample[i].setLoop(true);
+		shortAudioSample[i].loadSound(shortSoundFile);
+		shortAudioSample[i].stop();
 	}
-	for(int si = 0; si < nLongAudioSample; si++){
-		string longSoundFile = shortAudioDir.getPath(si);
-		std::cout << longAudioDir.getPath(si) << endl;
-		longAudioSample[si].loadSound(
+	/* for(int i = 0; i < nLongAudioSample; i++){
+		string longSoundFile = shortAudioDir.getPath(i);
+		// std::cout << longAudioDir.getPath(si) << endl;
+		longAudioSample[i].setMultiPlay(false);
+		longAudioSample[i].setLoop(true);
+		longAudioSample[i].loadSound(
 			longSoundFile,
 			true
 			);
-	}
+	} */
 
 
 	screenShader.load("shaders/Screen");
@@ -64,9 +68,10 @@ void ofApp::setup(){
 }
 //--------------------------------------------------------------
 void ofApp::nextMove(){
+	// Graphics
 	isVertical = ofRandomuf() > 0.5;
-	size = 1.0 + (ofRandomuf() * (isVertical ? screenHeight : screenWidth) * 0.015f);
-	stepSize = 1.0f + ofRandomuf() * 320.0f;
+	size = (int)(1 + (ofRandomuf() * (isVertical ? screenHeight : screenWidth) * 0.015));
+	stepSize = (int)(1 + ofRandomuf() * 320);
 	numFrame = 6 * ceil(ofRandomuf() * 16);
 	goForward = ofRandomuf() > 0.5;
 	d = 0;
@@ -82,26 +87,38 @@ void ofApp::nextMove(){
 	sample.getPixels().cropTo(crop, rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
-		ofVec2f particlePos(
-			rect.getX() + (ofRandomf() * rect.getWidth() * 0.5),
-			rect.getY() + (ofRandomf() * rect.getHeight() * 0.5)
-			);
+		size_t x = rect.getX() + (ofRandom(0, sampleWidth));
+		size_t y = rect.getY() + (ofRandom(0, sampleHeight));
 
 		billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
-		billboards.getVertices()[i] = {particlePos.x, particlePos.y, 0};
+		billboards.getVertices()[i] = {x, y, 0};
 		billboards.getColors()[i].set(
-			sample.getColor((int)particlePos.x, (int)particlePos.y));
+			sample.getColor(x, y));
 		billboardSizeTarget[i] = stepSize * ofRandomuf();
 	}
+	// Sounds
+	if(shortAudioSample[currentShortSample].isPlaying()){
+		shortAudioSample[currentShortSample].stop();
+	}
+
+	currentShortSample = (int)ofRandom(0, nShortAudioSample - 1);
+	//currentLongSample = (int)ofRandom(0, nLongAudioSample);
+	if(ofGetFrameNum() > 0 && shortAudioSample[currentShortSample].isLoaded()){
+		shortAudioSample[currentShortSample].play();
+	}
+
+	//}
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	ofSoundUpdate();
 
 	if((int)ofGetFrameNum() % numFrame == 0){
 		nextMove();
-	}else{
+		loop++;
 
+	}else{
 		ofVec2f displace(
 			rect.getX() + (goForward ? 1 : -1) * (isVertical ? d : 0) * rect.getWidth(),
 			rect.getY() + (goForward ? 1 : -1) * (isVertical ? 0 : d) * rect.getHeight()
@@ -114,10 +131,10 @@ void ofApp::update(){
 			displace.y += sample.getHeight();
 		}
 		if(displace.x > screenWidth){
-			displace.x = 1.0f * (int(displace.x) % screenWidth);
+			displace.x = 1.0f * (static_cast <int>(round(displace.x)) % screenWidth);
 		}
 		if(displace.y < screenHeight){
-			displace.y = 1.0f * (int(displace.y) % screenHeight);
+			displace.y = 1.0f * (static_cast <int>(round(displace.y)) % screenHeight);
 		}
 
 		crop.pasteInto(sample.getPixels(), displace.x, displace.y);
@@ -149,6 +166,7 @@ void ofApp::update(){
 			}
 		}
 	}
+
 }
 //--------------------------------------------------------------
 
@@ -175,15 +193,17 @@ void ofApp::nextFrame(){
 }
 //--------------------------------------------------------------
 void ofApp::draw(){
+
 	capture.draw(0, 0, 1920, 1080);
 
 	// debug & info
 	if(showInfo){
-		string frameRate = ofToString(ofGetFrameRate(), 2) + "\n";
-		string particleCount = "Particle Count: " + ofToString(NUM_BILLBOARDS);
-		ofDrawBitmapStringHighlight(frameRate + particleCount, 30, 30);
-		ofSetColor(255);
 		sampleCroped.draw(4, 50);
+		string frameRate = ofToString(ofGetFrameRate(), 2) + "\n";
+		string loopCount = ofToString(loop) + "/" + ofToString(numLoop) + "\n";
+		//string particleCount = "Particle Count: " + ofToString(NUM_BILLBOARDS);
+		ofSetColor(255);
+		ofDrawBitmapStringHighlight(frameRate + loopCount, 30, 30);
 	}
 	if(isRecording && ofGetFrameNum() % 10 == 0){
 		ofPushStyle();
@@ -199,5 +219,7 @@ void ofApp::keyPressed(int key){
 	}
 	if(key == 'i' || key == 'I'){
 		showInfo = !showInfo;
+	}
+	if(key == 'p' || key == 'P'){
 	}
 }
