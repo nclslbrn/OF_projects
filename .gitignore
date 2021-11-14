@@ -42,6 +42,8 @@ config.make
 icon.rc
 *.code-workspace
 *.qbs
+*.qbs.user
+*.plist
 
 # Assets
 */bin/

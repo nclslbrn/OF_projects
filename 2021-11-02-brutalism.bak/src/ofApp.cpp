@@ -1,20 +1,58 @@
 #include "ofApp.h"
 
 //--------------------------------------------------------------
+float ofApp::ease(float p, int g = 0){
+	if(g > 0){
+		return p < 0.5
+			? 0.5 * pow(2 * p, g)
+			: 1 - 0.5 * pow(2 * (1 - p), g);
+	}
+	return 3 * p * p - 2 * p * p * p;
+}
+
+//--------------------------------------------------------------
 void ofApp::setup(){
 	screenWidth = 2880;
 	screenHeight = 1620;
+	loop = 0;
+	loopNum = 10;
 	isRecording = false;
 	showInfo = false;
 	ofSetWindowShape(screenWidth, screenHeight);
 	center = ofVec2f(screenWidth / 2, screenHeight / 2);
+	imgNum = imageDir.listDir("images/2880x1620/");
+	shortSndNum = shortAudioDir.listDir("audio-sample/short");
+	longSndNum = longAudioDir.listDir("audio-sample/long");
 
-	string imageFile = imageSource[(int)ofRandom(0, sizeof(imageSource) / sizeof(imageSource[0]))];
-	// std::cout << imageFile << endl;
-	sample.load("images/2880x1620/" + imageFile);
+	image = new ofImage[imgNum];
+	shortSound = new ofSoundPlayer[shortSndNum];
+	longSound = new ofSoundPlayer[longSndNum];
 
 
-
+	for(int i = 0; i < imgNum; i++){
+		string imageFile = imageDir.getPath(i);
+		//std::cout << "Image n°" << ofToString(i) << " " << ofToString(imageFile) << endl;
+		image[i].load(imageFile);
+	}
+	std::cout << ofToString(imgNum) << " images loaded" << endl;
+	//std::cout << "Long audio " + ofToString(longSndNum) << endl;
+	for(int i = 0; i < shortSndNum; i++){
+		string shortSoundFile = shortAudioDir.getPath(i);
+		// std::cout << shortAudioDir.getPath(si) << endl;
+		shortSound[i].setMultiPlay(true);
+		shortSound[i].loadSound(shortSoundFile);
+		shortSound[i].stop();
+	}
+	std::cout << shortSndNum << " shorts audio samples loaded " << endl;
+	for(int i = 0; i < longSndNum; i++){
+		string longSoundFile = longAudioDir.getPath(i);
+		// std::cout << longAudioDir.getPath(si) << endl;
+		// longSound[i].setMultiPlay(true);
+		longSound[i].loadSound(longSoundFile);
+		longSound[i].setLoop(true);
+		longSound[i].stop();
+	}
+	std::cout << longSndNum << " longs audio samples loaded " << endl;
 
 	screenShader.load("shaders/Screen");
 	billboardShader.load("shaders/Billboard");
@@ -22,7 +60,7 @@ void ofApp::setup(){
 	screen.set(screenWidth, screenHeight);
 	screen.setPosition(center.x, center.y, 0);
 	screen.setScale(1, -1, 1);
-	screen.mapTexCoords(0, 0, sample.getWidth(), sample.getHeight());
+	screen.mapTexCoords(0, 0, screenWidth, screenHeight);
 
 	// of/examples/gl/billboardExemple
 	billboards.getVertices().resize(NUM_BILLBOARDS);
@@ -35,7 +73,7 @@ void ofApp::setup(){
 	capture.allocate(screenWidth, screenHeight, GL_RGB);
 	ofxTextureRecorder::Settings settings(capture.getTexture());
 	settings.imageFormat = OF_IMAGE_FORMAT_JPEG;
-	settings.numThreads = 2;
+	settings.numThreads = 4;
 	settings.maxMemoryUsage = 9000000000;
 	settings.folderPath = "capture/";
 	recorder.setup(settings);
@@ -65,12 +103,13 @@ void ofApp::setup(){
 
 	nextMove();
 }
+
 //--------------------------------------------------------------
 void ofApp::nextMove(){
+	// Graphics
 	isVertical = ofRandomuf() > 0.5;
-	size = 1.0 + (ofRandomuf() * (isVertical ? screenHeight : screenWidth) * 0.015f);
-	stepSize = 1.0f + ofRandomuf() * 320.0f;
-	numFrame = 6 * ceil(ofRandomuf() * 16);
+	size = (int)(1 + (ofRandomuf() * (isVertical ? screenHeight : screenWidth) * 0.015));
+	stepSize = (int)(1 + ofRandomuf() * 320);
 	goForward = ofRandomuf() > 0.5;
 	d = 0;
 	float sampleWidth = isVertical ? size : stepSize;
@@ -80,92 +119,130 @@ void ofApp::nextMove(){
 	rect.setWidth(sampleWidth);
 	rect.setHeight(sampleHeight);
 
-	sampleCroped = sample;
+	sampleCroped = image[currImg];
 	sampleCroped.crop(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
-	sample.getPixels().cropTo(crop, rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
+	image[currImg].getPixels().cropTo(crop, rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
-		ofVec2f particlePos(
-			rect.getX() + (ofRandomf() * rect.getWidth() * 0.5),
-			rect.getY() + (ofRandomf() * rect.getHeight() * 0.5)
-			);
+		size_t x = rect.getX() + (ofRandom(0, sampleWidth));
+		size_t y = rect.getY() + (ofRandom(0, sampleHeight));
 
 		billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
-		billboards.getVertices()[i] = {particlePos.x, particlePos.y, 0};
+		billboards.getVertices()[i] = {x, y, 0};
 		billboards.getColors()[i].set(
-			sample.getColor((int)particlePos.x, (int)particlePos.y));
+			image[currImg].getColor(x, y));
 		billboardSizeTarget[i] = stepSize * ofRandomuf();
+	}
+	// Sounds
+	if(shortSound[currShortSound].isPlaying()){
+		shortSound[currShortSound].stop();
+	}
+
+	currShortSound = (int)ofRandom(0, shortSndNum);
+	if(shortSound[currShortSound].isLoaded()){
+		shortSound[currShortSound].play();
 	}
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	ofSoundUpdate();
 
-	if((int)ofGetFrameNum() % numFrame == 0){
-		nextMove();
-	}else{
+	if(ofGetFrameNum() == 0 || (int)ofGetFrameNum() % frameNum == 0){
 
-		ofVec2f displace(
-			rect.getX() + (goForward ? 1 : -1) * (isVertical ? d : 0) * rect.getWidth(),
-			rect.getY() + (goForward ? 1 : -1) * (isVertical ? 0 : d) * rect.getHeight()
-			);
+		if(ofGetFrameNum() != 0 && loop < loopNum){
 
-		if(displace.x < 0){
-			displace.x += sample.getWidth();
-		}
-		if(displace.y < 0){
-			displace.y += sample.getHeight();
-		}
-		if(displace.x > screenWidth){
-			displace.x = 1.0f * (int(displace.x) % screenWidth);
-		}
-		if(displace.y < screenHeight){
-			displace.y = 1.0f * (int(displace.y) % screenHeight);
-		}
+			loop++;
 
-		crop.pasteInto(sample.getPixels(), displace.x, displace.y);
-		sample.update();
-		d++;
+		}else{
 
-		float t =
-			1.0f - ((ofGetFrameNum() % numFrame) / static_cast <float>(numFrame));
+			if(currImg < imgNum - 1){
+				currImg++;
 
-		for(int i = 0; i < NUM_BILLBOARDS; i++){
+			}else{
+				currImg = 0;
 
-			glm::vec3 vec(0, t + ofSignedNoise(billboards.getVertex(i).x, billboards.getVertex(i).y, 0, 0), 0);
-			billboardVels[i] += vec;
-			// billboardVels[i].y *= 1.01f;
-			billboards.getVertices()[i] += billboardVels[i];
-			billboardVels[i] *= 0.94f;
-			billboards.setNormal(
-				i, glm::vec3(12 + billboardSizeTarget[i] * ofNoise(t + i), 0, 0));
-		}
-
-		capture.begin();
-		ofClear(0, 255);
-		nextFrame();
-		capture.end();
-
-		if(isRecording){
-			if(ofGetFrameNum() > 0){
-				recorder.save(capture.getTexture());
 			}
+			std::cout << "Switch image " << ofToString(currImg) << "/" << ofToString(imgNum - 1) << endl;
+
+			if(longSound[currLongSound].isPlaying()){
+				longSound[currLongSound].stop();
+			}
+			currLongSound = (int)ofRandom(0, longSndNum);
+			if(longSound[currLongSound].isLoaded()){
+				longSound[currLongSound].play();
+				std::cout << "Playing long audio sample " << ofToString(currLongSound) << "/" << ofToString(longSndNum - 1) << endl;
+			}
+			loop = 0;
+		}
+
+		frameNum = 6 * ceil(ofRandomuf() * 16);
+		nextMove();
+
+	}
+
+	ofVec2f displace(
+		rect.getX() + (goForward ? 1 : -1) * (isVertical ? d : 0) * rect.getWidth(),
+		rect.getY() + (goForward ? 1 : -1) * (isVertical ? 0 : d) * rect.getHeight()
+		);
+
+	if(displace.x < 0){
+		displace.x += screenWidth;
+	}
+	if(displace.y < 0){
+		displace.y += screenHeight;
+	}
+	if(displace.x > screenWidth){
+		displace.x = 1.0f * (static_cast <int>(round(displace.x)) % screenWidth);
+	}
+	if(displace.y > screenHeight){
+		displace.y = 1.0f * (static_cast <int>(round(displace.y)) % screenHeight);
+	}
+
+	crop.pasteInto(image[currImg].getPixels(), displace.x, displace.y);
+	image[currImg].update();
+	d++;
+
+	float t =
+		1.0f - ease((ofGetFrameNum() % frameNum) / static_cast <float>(frameNum), 5);
+
+	for(int i = 0; i < NUM_BILLBOARDS; i++){
+
+		glm::vec3 vec(0, t + ofSignedNoise(billboards.getVertex(i).x, billboards.getVertex(i).y, 0, 0), 0);
+		billboardVels[i] += vec;
+		// billboardVels[i].y *= 1.01f;
+		billboards.getVertices()[i] += billboardVels[i];
+		billboardVels[i] *= 0.94f;
+		billboards.setNormal(
+			i, glm::vec3(12 + billboardSizeTarget[i] * ofNoise(t + i), 0, 0));
+	}
+
+	capture.begin();
+	ofClear(0, 255);
+	nextFrame();
+	capture.end();
+
+	if(isRecording){
+		if(ofGetFrameNum() > 0){
+			recorder.save(capture.getTexture());
 		}
 	}
+
+
 }
 //--------------------------------------------------------------
 
 void ofApp::nextFrame(){
-	float animT = 1.0f - ((ofGetFrameNum() % numFrame) / (float)numFrame);
+	float animT = 1.0f - ((ofGetFrameNum() % frameNum) / (float)frameNum);
 	ofEnableAlphaBlending();
 	ofEnablePointSprites();
 
-	sample.getTexture().bind();
+	image[currImg].getTexture().bind();
 	screenShader.begin();
 	screenShader.setUniform2f("u_screen_res", screenWidth, screenHeight);
 	screen.draw();
 	screenShader.end();
-	sample.getTexture().unbind();
+	image[currImg].getTexture().unbind();
 
 	sampleCroped.getTexture().bind();
 	billboardShader.begin();
@@ -178,15 +255,18 @@ void ofApp::nextFrame(){
 }
 //--------------------------------------------------------------
 void ofApp::draw(){
+
 	capture.draw(0, 0, 1920, 1080);
 
 	// debug & info
 	if(showInfo){
-		string frameRate = ofToString(ofGetFrameRate(), 2) + "\n";
-		string particleCount = "Particle Count: " + ofToString(NUM_BILLBOARDS);
-		ofDrawBitmapStringHighlight(frameRate + particleCount, 30, 30);
-		ofSetColor(255);
 		sampleCroped.draw(4, 50);
+		string frameRate = ofToString(ofGetFrameRate(), 2) + " FPS \n";
+		string loopCount = ofToString(loop) + "/" + ofToString(loopNum) + " LOOP \n";
+		string imageNum = ofToString(currImg) + "/" + ofToString(imgNum) + " IMG \n";
+		//string particleCount = "Particle Count: " + ofToString(NUM_BILLBOARDS);
+		ofSetColor(255);
+		ofDrawBitmapStringHighlight(frameRate + loopCount + imageNum, 30, 30);
 	}
 	if(isRecording && ofGetFrameNum() % 10 == 0){
 		ofPushStyle();
@@ -196,6 +276,7 @@ void ofApp::draw(){
 
 	}
 }
+//--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 	if(key == 'r' || key == 'R'){
 		isRecording = !isRecording;
@@ -203,4 +284,11 @@ void ofApp::keyPressed(int key){
 	if(key == 'i' || key == 'I'){
 		showInfo = !showInfo;
 	}
+	if(key == 'p' || key == 'P'){
+	}
+}
+//--------------------------------------------------------------
+void ofApp::exit(){
+	ofSoundStopAll();
+	ofSoundShutdown();
 }
