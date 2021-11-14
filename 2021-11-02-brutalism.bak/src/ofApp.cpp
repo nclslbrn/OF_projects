@@ -18,6 +18,7 @@ void ofApp::setup(){
 	loopNum = 10;
 	isRecording = false;
 	showInfo = false;
+	ofSetFrameRate(25);
 	ofSetWindowShape(screenWidth, screenHeight);
 	center = ofVec2f(screenWidth / 2, screenHeight / 2);
 	imgNum = imageDir.listDir("images/2880x1620/");
@@ -40,6 +41,7 @@ void ofApp::setup(){
 		string shortSoundFile = shortAudioDir.getPath(i);
 		// std::cout << shortAudioDir.getPath(si) << endl;
 		shortSound[i].setMultiPlay(true);
+		shortSound[i].setLoop(true);
 		shortSound[i].loadSound(shortSoundFile);
 		shortSound[i].stop();
 	}
@@ -49,7 +51,8 @@ void ofApp::setup(){
 		// std::cout << longAudioDir.getPath(si) << endl;
 		// longSound[i].setMultiPlay(true);
 		longSound[i].loadSound(longSoundFile);
-		longSound[i].setLoop(true);
+		// longSound[i].setLoop(true);
+		longSound[i].setVolume(0.75);
 		longSound[i].stop();
 	}
 	std::cout << longSndNum << " longs audio samples loaded " << endl;
@@ -62,7 +65,7 @@ void ofApp::setup(){
 	screen.setScale(1, -1, 1);
 	screen.mapTexCoords(0, 0, screenWidth, screenHeight);
 
-	// of/examples/gl/billboardExemple
+	// of/exmaples/billboardExemple
 	billboards.getVertices().resize(NUM_BILLBOARDS);
 	billboards.getColors().resize(NUM_BILLBOARDS);
 	billboards.getNormals().resize(NUM_BILLBOARDS, glm::vec3(0));
@@ -78,30 +81,8 @@ void ofApp::setup(){
 	settings.folderPath = "capture/";
 	recorder.setup(settings);
 
-	// of/examples/sound/soundPlayerExample
-	// of/addons/ofxDirList/example
-	nShortAudioSample = shortAudioDir.listDir("audio-sample/short");
-	nLongAudioSample = longAudioDir.listDir("audio-sample/long");
-	shortAudioSample = new ofSoundPlayer[nShortAudioSample];
-	longAudioSample = new ofSoundPlayer[nLongAudioSample];
-	for(int si = 0; si < nShortAudioSample; si++){
-		string shortSoundFile = shortAudioDir.getPath(si);
-		std::cout << shortAudioDir.getPath(si) << endl;
-		shortAudioSample[si].loadSound(
-			shortSoundFile,
-			true
-			);
-	}
-	for(int si = 0; si < nLongAudioSample; si++){
-		string longSoundFile = shortAudioDir.getPath(si);
-		std::cout << longAudioDir.getPath(si) << endl;
-		longAudioSample[si].loadSound(
-			longSoundFile,
-			true
-			);
-	}
 
-	nextMove();
+	currImg = 0;
 }
 
 //--------------------------------------------------------------
@@ -134,9 +115,9 @@ void ofApp::nextMove(){
 		billboardSizeTarget[i] = stepSize * ofRandomuf();
 	}
 	// Sounds
-	if(shortSound[currShortSound].isPlaying()){
+	/* if(shortSound[currShortSound].isPlaying()){
 		shortSound[currShortSound].stop();
-	}
+	} */
 
 	currShortSound = (int)ofRandom(0, shortSndNum);
 	if(shortSound[currShortSound].isLoaded()){
@@ -170,15 +151,22 @@ void ofApp::update(){
 			}
 			currLongSound = (int)ofRandom(0, longSndNum);
 			if(longSound[currLongSound].isLoaded()){
-				longSound[currLongSound].play();
 				std::cout << "Playing long audio sample " << ofToString(currLongSound) << "/" << ofToString(longSndNum - 1) << endl;
+				longSound[currLongSound].play();
 			}
 			loop = 0;
 		}
 
-		frameNum = 6 * ceil(ofRandomuf() * 16);
+		frameNum = 6 * ceil(ofRandomuf() * 8);
 		nextMove();
 
+	}
+	if(
+		shortSound[currShortSound].isLoaded() &&
+		!shortSound[currShortSound].isPlaying() &&
+		ofGetFrameNum() % (frameNum / 6) == 0
+		){
+		shortSound[currShortSound].play();
 	}
 
 	ofVec2f displace(
