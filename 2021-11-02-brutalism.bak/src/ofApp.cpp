@@ -15,7 +15,7 @@ void ofApp::setup(){
 	screenWidth = 2880;
 	screenHeight = 1620;
 	loop = 0;
-	loopNum = 10;
+	loopNum = 16;
 	isRecording = false;
 	showInfo = false;
 	ofSetFrameRate(25);
@@ -89,8 +89,8 @@ void ofApp::setup(){
 void ofApp::nextMove(){
 	// Graphics
 	isVertical = ofRandomuf() > 0.5;
-	size = (int)(1 + (ofRandomuf() * (isVertical ? screenHeight : screenWidth) * 0.015));
-	stepSize = (int)(1 + ofRandomuf() * 320);
+	size = (int)(1 + (ofRandomuf() * (isVertical ? screenHeight : screenWidth) * 0.02));
+	stepSize = (int)(12 + ofRandomuf() * 400);
 	goForward = ofRandomuf() > 0.5;
 	d = 0;
 	float sampleWidth = isVertical ? size : stepSize;
@@ -100,8 +100,6 @@ void ofApp::nextMove(){
 	rect.setWidth(sampleWidth);
 	rect.setHeight(sampleHeight);
 
-	sampleCroped = image[currImg];
-	sampleCroped.crop(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 	image[currImg].getPixels().cropTo(crop, rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
 
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
@@ -157,7 +155,7 @@ void ofApp::update(){
 			loop = 0;
 		}
 
-		frameNum = 6 * ceil(ofRandomuf() * 8);
+		frameNum = 6 * ceil(ofRandomuf() * 12);
 		nextMove();
 
 	}
@@ -227,17 +225,16 @@ void ofApp::nextFrame(){
 
 	image[currImg].getTexture().bind();
 	screenShader.begin();
+	screenShader.setUniform1f("u_time", animT / 100.0f);
 	screenShader.setUniform2f("u_screen_res", screenWidth, screenHeight);
 	screen.draw();
 	screenShader.end();
 	image[currImg].getTexture().unbind();
 
-	sampleCroped.getTexture().bind();
 	billboardShader.begin();
 	billboardShader.setUniform1f("u_size", animT);
 	billboards.draw();
 	billboardShader.end();
-	sampleCroped.getTexture().unbind();
 	ofDisablePointSprites();
 	ofDisableAlphaBlending();
 }
@@ -248,7 +245,6 @@ void ofApp::draw(){
 
 	// debug & info
 	if(showInfo){
-		sampleCroped.draw(4, 50);
 		string frameRate = ofToString(ofGetFrameRate(), 2) + " FPS \n";
 		string loopCount = ofToString(loop) + "/" + ofToString(loopNum) + " LOOP \n";
 		string imageNum = ofToString(currImg) + "/" + ofToString(imgNum) + " IMG \n";

@@ -46,7 +46,6 @@ class ofApp : public ofBaseApp {
 		ofSoundPlayer * longSound;
 
 		ofVec2f center;
-		ofImage sampleCroped;
 		ofPixels crop;
 		ofxShader screenShader;
 		ofxShader billboardShader;
