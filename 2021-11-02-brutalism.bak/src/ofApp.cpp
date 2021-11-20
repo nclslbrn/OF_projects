@@ -12,18 +12,21 @@ float ofApp::ease(float p, int g = 0){
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+	bool alreadyProcessedImage = true;
 	screenWidth = 2880;
 	screenHeight = 1620;
 	loop = 0;
+	// how many move per image
 	loopNum = 16;
-	isRecording = false;
+	isRecording = true;
 	showInfo = false;
 	ofSetFrameRate(25);
 	ofSetWindowShape(screenWidth, screenHeight);
 	center = ofVec2f(screenWidth / 2, screenHeight / 2);
-	imgNum = imageDir.listDir("images/2880x1620/");
+	imgNum = sizeof(imageSource) / sizeof(imageSource[0]);
 	shortSndNum = shortAudioDir.listDir("audio-sample/short");
 	longSndNum = longAudioDir.listDir("audio-sample/long");
+
 
 	image = new ofImage[imgNum];
 	shortSound = new ofSoundPlayer[shortSndNum];
@@ -31,7 +34,7 @@ void ofApp::setup(){
 
 
 	for(int i = 0; i < imgNum; i++){
-		string imageFile = imageDir.getPath(i);
+		string imageFile = (alreadyProcessedImage ? "processed-image/" : "images/2880x1620/") + imageSource[i];
 		//std::cout << "Image n°" << ofToString(i) << " " << ofToString(imageFile) << endl;
 		image[i].load(imageFile);
 	}
@@ -40,9 +43,10 @@ void ofApp::setup(){
 	for(int i = 0; i < shortSndNum; i++){
 		string shortSoundFile = shortAudioDir.getPath(i);
 		// std::cout << shortAudioDir.getPath(si) << endl;
-		shortSound[i].setMultiPlay(true);
-		shortSound[i].setLoop(true);
+		// shortSound[i].setMultiPlay(true);
+		// shortSound[i].setLoop(true);
 		shortSound[i].loadSound(shortSoundFile);
+		shortSound[i].setVolume(0.65);
 		shortSound[i].stop();
 	}
 	std::cout << shortSndNum << " shorts audio samples loaded " << endl;
@@ -52,7 +56,7 @@ void ofApp::setup(){
 		// longSound[i].setMultiPlay(true);
 		longSound[i].loadSound(longSoundFile);
 		// longSound[i].setLoop(true);
-		longSound[i].setVolume(0.75);
+		longSound[i].setVolume(0.65);
 		longSound[i].stop();
 	}
 	std::cout << longSndNum << " longs audio samples loaded " << endl;
@@ -75,12 +79,14 @@ void ofApp::setup(){
 	// of/addons/ofxTextureRecorder/example
 	capture.allocate(screenWidth, screenHeight, GL_RGB);
 	ofxTextureRecorder::Settings settings(capture.getTexture());
+	settings.w = screenWidth;
+	settings.h = screenHeight;
 	settings.imageFormat = OF_IMAGE_FORMAT_JPEG;
-	settings.numThreads = 4;
+	//settings.pixelFormat = OF_PIXELS_RGB;
+	settings.numThreads = 16;
 	settings.maxMemoryUsage = 9000000000;
 	settings.folderPath = "capture/";
 	recorder.setup(settings);
-
 
 	currImg = 0;
 }
@@ -89,8 +95,8 @@ void ofApp::setup(){
 void ofApp::nextMove(){
 	// Graphics
 	isVertical = ofRandomuf() > 0.5;
-	size = (int)(1 + (ofRandomuf() * (isVertical ? screenHeight : screenWidth) * 0.02));
-	stepSize = (int)(12 + ofRandomuf() * 400);
+	size = ceil((ofRandomuf() * (isVertical ? screenWidth : screenHeight)) * 0.02f);
+	stepSize = ceil((ofRandomuf() * (isVertical ? screenHeight : screenWidth)) * 0.3f);
 	goForward = ofRandomuf() > 0.5;
 	d = 0;
 	float sampleWidth = isVertical ? size : stepSize;
@@ -112,10 +118,11 @@ void ofApp::nextMove(){
 			image[currImg].getColor(x, y));
 		billboardSizeTarget[i] = stepSize * ofRandomuf();
 	}
-	// Sounds
-	/* if(shortSound[currShortSound].isPlaying()){
+	/* Let sound finnish to play to its end
+	if(shortSound[currShortSound].isPlaying()){
 		shortSound[currShortSound].stop();
-	} */
+	}
+	*/
 
 	currShortSound = (int)ofRandom(0, shortSndNum);
 	if(shortSound[currShortSound].isLoaded()){
@@ -126,7 +133,7 @@ void ofApp::nextMove(){
 //--------------------------------------------------------------
 void ofApp::update(){
 	ofSoundUpdate();
-
+	bool isOverFrame = false;
 	if(ofGetFrameNum() == 0 || (int)ofGetFrameNum() % frameNum == 0){
 
 		if(ofGetFrameNum() != 0 && loop < loopNum){
@@ -135,14 +142,27 @@ void ofApp::update(){
 
 		}else{
 
-			if(currImg < imgNum - 1){
+			if(ofGetFrameNum() != 0 && currImg < imgNum - 1){
+
 				currImg++;
 
 			}else{
-				currImg = 0;
+
+
+				// If exery image has been processed one time quit the program
+				if(ofGetFrameNum() != 0){
+					// Quit programm
+					isRecording = false;
+					ofExit();
+				}else{
+					// restart with first image
+					currImg = 0;
+				}
 
 			}
-			std::cout << "Switch image " << ofToString(currImg) << "/" << ofToString(imgNum - 1) << endl;
+			std::cout << "New image "
+					  << imageSource[currImg] << " "
+					  << ofToString(currImg) << "/" << ofToString(imgNum - 1) << endl;
 
 			if(longSound[currLongSound].isPlaying()){
 				longSound[currLongSound].stop();
@@ -154,8 +174,8 @@ void ofApp::update(){
 			}
 			loop = 0;
 		}
-
-		frameNum = 6 * ceil(ofRandomuf() * 12);
+		// how many frame per loop
+		frameNum = 6 * ceil(ofRandomuf() * 16);
 		nextMove();
 
 	}
@@ -172,21 +192,15 @@ void ofApp::update(){
 		rect.getY() + (goForward ? 1 : -1) * (isVertical ? 0 : d) * rect.getHeight()
 		);
 
-	if(displace.x < 0){
-		displace.x += screenWidth;
-	}
-	if(displace.y < 0){
-		displace.y += screenHeight;
-	}
-	if(displace.x > screenWidth){
-		displace.x = 1.0f * (static_cast <int>(round(displace.x)) % screenWidth);
-	}
-	if(displace.y > screenHeight){
-		displace.y = 1.0f * (static_cast <int>(round(displace.y)) % screenHeight);
+	if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
+		isOverFrame = true;
+		crop.pasteInto(image[currImg].getPixels(), displace.x, displace.y);
+		image[currImg].update();
+	}else{
+		nextMove();
 	}
 
-	crop.pasteInto(image[currImg].getPixels(), displace.x, displace.y);
-	image[currImg].update();
+
 	d++;
 
 	float t =
@@ -205,7 +219,7 @@ void ofApp::update(){
 
 	capture.begin();
 	ofClear(0, 255);
-	nextFrame();
+	nextFrame(isOverFrame);
 	capture.end();
 
 	if(isRecording){
@@ -213,12 +227,10 @@ void ofApp::update(){
 			recorder.save(capture.getTexture());
 		}
 	}
-
-
 }
 //--------------------------------------------------------------
 
-void ofApp::nextFrame(){
+void ofApp::nextFrame(bool isOverFrame){
 	float animT = 1.0f - ((ofGetFrameNum() % frameNum) / (float)frameNum);
 	ofEnableAlphaBlending();
 	ofEnablePointSprites();
@@ -227,6 +239,7 @@ void ofApp::nextFrame(){
 	screenShader.begin();
 	screenShader.setUniform1f("u_time", animT / 100.0f);
 	screenShader.setUniform2f("u_screen_res", screenWidth, screenHeight);
+	screenShader.setUniform1f("u_size", isOverFrame ? ease(animT, 5) : 1.0f);
 	screen.draw();
 	screenShader.end();
 	image[currImg].getTexture().unbind();
@@ -235,6 +248,7 @@ void ofApp::nextFrame(){
 	billboardShader.setUniform1f("u_size", animT);
 	billboards.draw();
 	billboardShader.end();
+
 	ofDisablePointSprites();
 	ofDisableAlphaBlending();
 }
@@ -273,6 +287,15 @@ void ofApp::keyPressed(int key){
 }
 //--------------------------------------------------------------
 void ofApp::exit(){
+	// Stop sound
 	ofSoundStopAll();
 	ofSoundShutdown();
+
+	// Save processed image to reuse
+	for(int i = 0; i < imgNum; i++){
+		string imageOut = imageSource[i];
+		//std::cout << "Image n°" << ofToString(i) << " " << ofToString(imageFile) << endl;
+		image[i].save("processed-image/" + imageOut);
+	}
+
 }

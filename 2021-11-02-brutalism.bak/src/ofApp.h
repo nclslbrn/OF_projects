@@ -13,7 +13,7 @@ class ofApp : public ofBaseApp {
 		void setup();
 		void update();
 		void nextMove();
-		void nextFrame();
+		void nextFrame(bool isOverFrame);
 		void draw();
 		void keyPressed(int key);
 		void exit();
@@ -64,6 +64,17 @@ class ofApp : public ofBaseApp {
 		// Assets of/addons/ofxDirList/example
 		ofxDirList shortAudioDir;
 		ofxDirList longAudioDir;
-		ofxDirList imageDir;
+
+		std::string imageSource[8] = {
+			"annie-spratt-MdijqynYQg8-unsplash.jpg",
+			"carl-nenzen-loven-mbfile7XE44-unsplash.jpg",
+			"chris-quintero-1vRSJP2V9Nw-unsplash.jpg",
+			"daniel-abadia-eQUEEHYmLCE-unsplash.jpg",
+			"johannes-mandle-JttyHMcXAns-unsplash.jpg",
+			"pete-wright-mT9d7GFl1Zs-unsplash.jpg",
+			"scarbor-siu-UYG5IUPoWIo-unsplash.jpg",
+			"timelab-pro-xfDnqMh__UQ-unsplash.jpg"
+		};
+
 
 };

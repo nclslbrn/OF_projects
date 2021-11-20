@@ -23,6 +23,7 @@ in vec2 texCoordVarying;
 uniform sampler2DRect tex0;
 uniform vec2 u_screen_res;
 uniform float u_time;
+uniform float u_size;
 
 
 // Perm texture texel-size
@@ -30,10 +31,10 @@ const float permTexUnit = 1.0/256.0;
 // Half perm texture texel-size
 const float permTexUnitHalf = 0.5/256.0;
 //grain amount 0.05 
-const float grainamount = 0.07;
+const float grainamount = 0.05;
 //grain particle size (1.5 - 2.5)
 float grainsize = 1.5;
-float lumamount = 1.2; 
+float lumamount = 0.5; 
 float width = u_screen_res.x / 512.0;
 float height = u_screen_res.y / 512.0;
 //float u_time = u_size ;

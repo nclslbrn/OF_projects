@@ -2,6 +2,7 @@
 
 in vec4 position;
 in vec2 texcoord;
+uniform float u_size;
 
 // these are for the programmable pipeline system and are passed in
 // by default from OpenFrameworks
@@ -18,4 +19,5 @@ void main()
     // send the vertices to the fragment shader
     // texCoordVarying=texcoord;
     gl_Position=modelViewProjectionMatrix*position;
+    gl_PointSize=u_size;
 }
