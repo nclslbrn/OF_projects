@@ -8,6 +8,7 @@
 #define NUM_BILLBOARDS 5000
 #define ITERATIONS 4
 #define MOVE_PER_ITERATION 12
+#define FRAME_PER_ITERATION 30
 
 class ofApp : public ofBaseApp {
 	public:
@@ -20,8 +21,7 @@ class ofApp : public ofBaseApp {
 		void exit();
 
 		float ease(float p, int g);
-		bool showInfo = false,
-			 isRecording = false;
+
 		struct Change {
 			bool * isVertical = new bool[MOVE_PER_ITERATION];
 			bool * goForward = new bool[MOVE_PER_ITERATION];
@@ -33,7 +33,12 @@ class ofApp : public ofBaseApp {
 		};
 		struct Change c;
 
+		bool playingForward = true,
+			 showInfo = false,
+			 isRecording = false;
+
 		int nIter = 0,
+
 			halfLoopNum = 60,
 			screenWidth = 1080,
 			screenHeight = 1080,

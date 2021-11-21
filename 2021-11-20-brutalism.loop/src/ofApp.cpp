@@ -115,13 +115,11 @@ void ofApp::nextMove(){
 		int randRect = (int)ofRandom(0, MOVE_PER_ITERATION);
 		size_t x = c.rect[randRect].getX() + (ofRandom(0, c.rect[randRect].getWidth()));
 		size_t y = c.rect[randRect].getY() + (ofRandom(0, c.rect[randRect].getHeight()));
-
 		billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
 		billboards.getVertices()[i] = {x, y, 0};
 		billboards.getColors()[i].set(
 			copy.getColor(x, y));
 		billboardSizeTarget[i] = 8 * floor(ofRandom(8));
-		// stepSize[randRect] * ofRandomuf();
 	}
 }
 
@@ -140,8 +138,7 @@ void ofApp::update(){
 			);
 
 		if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
-			if(ofGetFrameNum() <= halfLoopNum){
-
+			if(playingForward){
 				c.crop[h].pasteInto(copy.getPixels(), displace.x, displace.y);
 			}else{
 				original.getPixels().cropTo(
@@ -155,7 +152,7 @@ void ofApp::update(){
 			}
 			copy.update();
 		}
-		if(ofGetFrameNum() <= halfLoopNum){
+		if(playingForward){
 			c.distance[h]++;
 		}else{
 			c.distance[h]--;
@@ -164,7 +161,7 @@ void ofApp::update(){
 
 
 	float t =
-		1.0f - ease((ofGetFrameNum() % halfLoopNum) / static_cast <float>(halfLoopNum), 5);
+		1.0f - ease((ofGetFrameNum() % (FRAME_PER_ITERATION / 2)) / static_cast <float>(FRAME_PER_ITERATION / 2), 5);
 
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
 
@@ -187,15 +184,28 @@ void ofApp::update(){
 		recorder.save(capture.getTexture());
 		//}
 	}
-	if(ofGetFrameNum() > 0 && ofGetFrameNum()  == halfLoopNum * 2){
-		isRecording = false;
-		ofExit();
+	if(ofGetFrameNum() > 0 && (ofGetFrameNum() % FRAME_PER_ITERATION) == 0){
+		if(playingForward){
+			if(nIter < ITERATIONS){
+				nIter++;
+			}else{
+				playingForward = false;
+			}
+		}else{
+			if(nIter > 0){
+				nIter--;
+			}else{
+				isRecording = false;
+				ofExit();
+			}
+		}
+		std::cout << ofToString(nIter) << "/" << ofToString(ITERATIONS) << " move " << (playingForward ? "forward" : "backward") << endl;
 	}
 }
 //--------------------------------------------------------------
 
 void ofApp::nextFrame(){
-	float animT = 1.0f - ((ofGetFrameNum() % halfLoopNum) / (float)halfLoopNum);
+	float animT = 1.0f - ((ofGetFrameNum() % (FRAME_PER_ITERATION / 2)) / (float)FRAME_PER_ITERATION / 2);
 	ofEnableAlphaBlending();
 	ofEnablePointSprites();
 
