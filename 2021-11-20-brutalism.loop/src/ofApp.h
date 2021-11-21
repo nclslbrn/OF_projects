@@ -7,7 +7,7 @@
 
 #define NUM_BILLBOARDS 5000
 #define ITERATIONS 4
-#define MOVE_PER_ITERATION 12
+#define MOVE_PER_ITERATION 2
 #define FRAME_PER_ITERATION 30
 
 class ofApp : public ofBaseApp {
@@ -16,6 +16,8 @@ class ofApp : public ofBaseApp {
 		void update();
 		void nextMove();
 		void nextFrame();
+		void resetBillboard();
+		void moveBillboard();
 		void draw();
 		void keyPressed(int key);
 		void exit();
@@ -31,27 +33,25 @@ class ofApp : public ofBaseApp {
 			int * stepSize = new int[MOVE_PER_ITERATION];
 			ofPixels * crop = new ofPixels[MOVE_PER_ITERATION];
 		};
-		struct Change c;
+		Change * c = new Change[ITERATIONS + 1];
+		ofImage * stepFrame = new ofImage[ITERATIONS + 1];
 
 		bool playingForward = true,
 			 showInfo = false,
 			 isRecording = false;
 
 		int nIter = 0,
-
-			halfLoopNum = 60,
 			screenWidth = 1080,
 			screenHeight = 1080,
+			halfFrame = (FRAME_PER_ITERATION / 2),
 			shortSndNum,
 			longSndNum,
 			currShortSound,
 			currLongSound;
 
 		ofImage original;
-		ofImage copy;
 		ofSoundPlayer * shortSound;
 		ofSoundPlayer * longSound;
-
 		ofVec2f center;
 		ofxShader screenShader;
 		ofxShader billboardShader;

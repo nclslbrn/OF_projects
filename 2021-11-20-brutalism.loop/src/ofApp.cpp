@@ -13,7 +13,7 @@ float ofApp::ease(float p, int g = 0){
 //--------------------------------------------------------------
 void ofApp::setup(){
 
-	ofSetFrameRate(25);
+	ofSetFrameRate(12);
 	ofSetWindowShape(screenWidth, screenHeight);
 	center = ofVec2f(screenWidth / 2, screenHeight / 2);
 	//shortSndNum = shortAudioDir.listDir("audio-sample/short");
@@ -21,7 +21,7 @@ void ofApp::setup(){
 	//shortSound = new ofSoundPlayer[shortSndNum];
 	//longSound = new ofSoundPlayer[longSndNum];
 	original.load("images/1080x1080/" + imageSource);
-	copy = original;
+	stepFrame[0] = original;
 	/* //std::cout << "Long audio " + ofToString(longSndNum) << endl;
 	for(int i = 0; i < shortSndNum; i++){
 		string shortSoundFile = shortAudioDir.getPath(i);
@@ -70,10 +70,9 @@ void ofApp::setup(){
 		std::cout << "Playing long audio sample " << ofToString(currLongSound) << "/" << ofToString(longSndNum - 1) << endl;
 		longSound[currLongSound].play();
 	} */
-	// how many frame per loop
-	// frameNum = 6 * ceil(ofRandomuf() * 16);
-	nextMove();
 
+	nextMove();
+	resetBillboard();
 }
 
 //--------------------------------------------------------------
@@ -81,27 +80,27 @@ void ofApp::nextMove(){
 	// Graphics
 
 	for(int h = 0; h < MOVE_PER_ITERATION; h++){
-		c.isVertical[h] = ofRandomuf() > 0.5;
-		c.goForward[h] = ofRandomuf() > 0.5;
-		c.size[h] = ceil((ofRandomuf() * (c.isVertical[h] ? screenWidth : screenHeight)) * 0.02f);
-		c.stepSize[h] = ceil((ofRandomuf() * (c.isVertical[h] ? screenHeight : screenWidth)) * 0.3f);
-		c.distance[h] = 0;
-		float sampleWidth = c.isVertical[h] ? c.size[h] : c.stepSize[h];
-		float sampleHeight = c.isVertical[h] ? c.stepSize[h] : c.size[h];
-		c.rect[h].setX(ofRandom(0, screenWidth - sampleWidth));
-		c.rect[h].setY(ofRandom(0, screenHeight - sampleHeight));
-		c.rect[h].setWidth(sampleWidth);
-		c.rect[h].setHeight(sampleHeight);
+		c[nIter].isVertical[h] = ofRandomuf() > 0.5;
+		c[nIter].goForward[h] = ofRandomuf() > 0.5;
+		c[nIter].size[h] = ceil((ofRandomuf() * (c[nIter].isVertical[h] ? screenWidth : screenHeight)) * 0.02f);
+		c[nIter].stepSize[h] = ceil((ofRandomuf() * (c[nIter].isVertical[h] ? screenHeight : screenWidth)) * 0.3f);
+		c[nIter].distance[h] = 0;
+		float sampleWidth = c[nIter].isVertical[h] ? c[nIter].size[h] : c[nIter].stepSize[h];
+		float sampleHeight = c[nIter].isVertical[h] ? c[nIter].stepSize[h] : c[nIter].size[h];
+		c[nIter].rect[h].setX(ofRandom(0, screenWidth - sampleWidth));
+		c[nIter].rect[h].setY(ofRandom(0, screenHeight - sampleHeight));
+		c[nIter].rect[h].setWidth(sampleWidth);
+		c[nIter].rect[h].setHeight(sampleHeight);
 
-		copy.getPixels().cropTo(
-			c.crop[h],
-			c.rect[h].getX(),
-			c.rect[h].getY(),
-			c.rect[h].getWidth(),
-			c.rect[h].getHeight()
+		stepFrame[nIter].getPixels().cropTo(
+			c[nIter].crop[h],
+			c[nIter].rect[h].getX(),
+			c[nIter].rect[h].getY(),
+			c[nIter].rect[h].getWidth(),
+			c[nIter].rect[h].getHeight()
 			);
 
-/*
+		/*
 		// Let sound finnish to play to its end
 		if(shortSound[currShortSound].isPlaying()){
 			shortSound[currShortSound].stop();
@@ -111,57 +110,31 @@ void ofApp::nextMove(){
 			shortSound[currShortSound].play();
 		} */
 	}
+}
+//--------------------------------------------------------------
+void ofApp::resetBillboard(){
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
 		int randRect = (int)ofRandom(0, MOVE_PER_ITERATION);
-		size_t x = c.rect[randRect].getX() + (ofRandom(0, c.rect[randRect].getWidth()));
-		size_t y = c.rect[randRect].getY() + (ofRandom(0, c.rect[randRect].getHeight()));
+		size_t x, y;
 		billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
+		billboardSizeTarget[i] = 8 * floor(ofRandom(8));
+		if(playingForward){
+			x = c[nIter].rect[randRect].getX() + (ofRandom(0, c[nIter].rect[randRect].getWidth()));
+			y = c[nIter].rect[randRect].getY() + (ofRandom(0, c[nIter].rect[randRect].getHeight()));
+		}else{
+			x = c[nIter - 1].rect[randRect].getX() + (ofRandom(0, c[nIter].rect[randRect].getWidth()));
+			y = c[nIter - 1].rect[randRect].getY() + (ofRandom(0, c[nIter].rect[randRect].getHeight()));
+		}
 		billboards.getVertices()[i] = {x, y, 0};
 		billboards.getColors()[i].set(
-			copy.getColor(x, y));
-		billboardSizeTarget[i] = 8 * floor(ofRandom(8));
+			stepFrame[playingForward ?  nIter : nIter - 1].getColor(x, y));
 	}
 }
 
 //--------------------------------------------------------------
-void ofApp::update(){
-	ofSoundUpdate();
-
-	/* if(shortSound[currShortSound].isLoaded() && !shortSound[currShortSound].isPlaying()){
-		shortSound[currShortSound].play();
-	} */
-
-	for(int h = 0; h < MOVE_PER_ITERATION; h++){
-		ofVec2f displace(
-			c.rect[h].getX() + (c.goForward[h] ? 1 : -1) * (c.isVertical[h] ? c.distance[h] : 0) * c.rect[h].getWidth(),
-			c.rect[h].getY() + (c.goForward[h] ? 1 : -1) * (c.isVertical[h] ? 0 : c.distance[h]) * c.rect[h].getHeight()
-			);
-
-		if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
-			if(playingForward){
-				c.crop[h].pasteInto(copy.getPixels(), displace.x, displace.y);
-			}else{
-				original.getPixels().cropTo(
-					c.crop[h],
-					displace.x,
-					displace.y,
-					c.rect[h].getWidth(),
-					c.rect[h].getHeight()
-					);
-				c.crop[h].pasteInto(copy.getPixels(), displace.x, displace.y);
-			}
-			copy.update();
-		}
-		if(playingForward){
-			c.distance[h]++;
-		}else{
-			c.distance[h]--;
-		}
-	}
-
-
+void ofApp::moveBillboard(){
 	float t =
-		1.0f - ease((ofGetFrameNum() % (FRAME_PER_ITERATION / 2)) / static_cast <float>(FRAME_PER_ITERATION / 2), 5);
+		1.0f - ease((ofGetFrameNum() % FRAME_PER_ITERATION) / static_cast <float>(FRAME_PER_ITERATION), 5);
 
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
 
@@ -173,49 +146,102 @@ void ofApp::update(){
 		billboards.setNormal(
 			i, glm::vec3(12 + billboardSizeTarget[i] * ofNoise(t + i), 0, 0));
 	}
+}
+//--------------------------------------------------------------
+void ofApp::update(){
+	ofSoundUpdate();
 
+	/* if(shortSound[currShortSound].isLoaded() && !shortSound[currShortSound].isPlaying()){
+		shortSound[currShortSound].play();
+	} */
+
+	for(int h = 0; h < MOVE_PER_ITERATION; h++){
+		ofVec2f displace(
+			c[nIter].rect[h].getX() + (c[nIter].goForward[h] ? 1 : -1) * (c[nIter].isVertical[h] ? c[nIter].distance[h] : 0) * c[nIter].rect[h].getWidth(),
+			c[nIter].rect[h].getY() + (c[nIter].goForward[h] ? 1 : -1) * (c[nIter].isVertical[h] ? 0 : c[nIter].distance[h]) * c[nIter].rect[h].getHeight()
+			);
+
+		if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
+			if(playingForward){
+				c[nIter].crop[h].pasteInto(stepFrame[nIter].getPixels(), displace.x, displace.y);
+			}else{
+				if(nIter > 0){
+					stepFrame[nIter - 1].getPixels().cropTo(
+						c[nIter].crop[h],
+						displace.x,
+						displace.y,
+						c[nIter].rect[h].getWidth(),
+						c[nIter].rect[h].getHeight()
+						);
+				}else{
+					original.getPixels().cropTo(
+						c[nIter].crop[h],
+						displace.x,
+						displace.y,
+						c[nIter].rect[h].getWidth(),
+						c[nIter].rect[h].getHeight()
+						);
+				}
+
+				c[nIter].crop[h].pasteInto(stepFrame[nIter].getPixels(), displace.x, displace.y);
+			}
+			stepFrame[nIter].update();
+		}
+		if(playingForward){
+			c[nIter].distance[h]++;
+		}else{
+			c[nIter].distance[h]--;
+		}
+	}
+	moveBillboard();
 	capture.begin();
 	ofClear(0, 255);
 	nextFrame();
 	capture.end();
 
 	if(isRecording){
-		// if(ofGetFrameNum() > 0){
 		recorder.save(capture.getTexture());
-		//}
 	}
+
 	if(ofGetFrameNum() > 0 && (ofGetFrameNum() % FRAME_PER_ITERATION) == 0){
+		resetBillboard();
 		if(playingForward){
 			if(nIter < ITERATIONS){
 				nIter++;
+				stepFrame[nIter] = stepFrame[nIter - 1];
+				nextMove();
 			}else{
 				playingForward = false;
+				nIter--;
 			}
 		}else{
 			if(nIter > 0){
 				nIter--;
 			}else{
+				std::cout << "Shutdown" << endl;
 				isRecording = false;
 				ofExit();
 			}
 		}
 		std::cout << ofToString(nIter) << "/" << ofToString(ITERATIONS) << " move " << (playingForward ? "forward" : "backward") << endl;
 	}
+
+
 }
 //--------------------------------------------------------------
 
 void ofApp::nextFrame(){
-	float animT = 1.0f - ((ofGetFrameNum() % (FRAME_PER_ITERATION / 2)) / (float)FRAME_PER_ITERATION / 2);
+	float animT = 1.0f - (ofGetFrameNum() % FRAME_PER_ITERATION) / static_cast <float>(FRAME_PER_ITERATION);
 	ofEnableAlphaBlending();
 	ofEnablePointSprites();
 
-	copy.getTexture().bind();
+	stepFrame[nIter].getTexture().bind();
 	screenShader.begin();
 	screenShader.setUniform1f("u_time", animT / 100.0f);
 	screenShader.setUniform2f("u_screen_res", screenWidth, screenHeight);
 	screen.draw();
 	screenShader.end();
-	copy.getTexture().unbind();
+	stepFrame[nIter].getTexture().unbind();
 
 	billboardShader.begin();
 	billboardShader.setUniform1f("u_size", animT);
