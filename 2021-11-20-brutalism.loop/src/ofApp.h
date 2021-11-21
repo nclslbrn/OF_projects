@@ -6,7 +6,8 @@
 #include "ofxDirList.h"
 
 #define NUM_BILLBOARDS 5000
-
+#define ITERATIONS 4
+#define MOVE_PER_ITERATION 12
 
 class ofApp : public ofBaseApp {
 	public:
@@ -19,20 +20,23 @@ class ofApp : public ofBaseApp {
 		void exit();
 
 		float ease(float p, int g);
-		bool * goForward,
-			 * isVertical;
+		bool showInfo = false,
+			 isRecording = false;
+		struct Change {
+			bool * isVertical = new bool[MOVE_PER_ITERATION];
+			bool * goForward = new bool[MOVE_PER_ITERATION];
+			ofRectangle * rect = new ofRectangle[MOVE_PER_ITERATION];
+			int * distance = new int[MOVE_PER_ITERATION];
+			int * size = new int[MOVE_PER_ITERATION];
+			int * stepSize = new int[MOVE_PER_ITERATION];
+			ofPixels * crop = new ofPixels[MOVE_PER_ITERATION];
+		};
+		struct Change c;
 
-		bool showInfo,
-			 isRecording;
-
-		int * size,
-			* stepSize,
-			* d;
-
-		int halfLoopNum,
-			movePerLoop,
-			screenWidth,
-			screenHeight,
+		int nIter = 0,
+			halfLoopNum = 60,
+			screenWidth = 1080,
+			screenHeight = 1080,
 			shortSndNum,
 			longSndNum,
 			currShortSound,
@@ -40,10 +44,8 @@ class ofApp : public ofBaseApp {
 
 		ofImage original;
 		ofImage copy;
-		ofRectangle * rect;
 		ofSoundPlayer * shortSound;
 		ofSoundPlayer * longSound;
-		ofPixels * crop;
 
 		ofVec2f center;
 		ofxShader screenShader;
@@ -64,7 +66,8 @@ class ofApp : public ofBaseApp {
 		ofxDirList shortAudioDir;
 		ofxDirList longAudioDir;
 
-		string imageSource = "johannes-mandle-JttyHMcXAns-unsplash.jpg";
+		string imageSource = "sergio-rola-viNlSqFX09k-unsplash.jpg";
+		// "johannes-mandle-JttyHMcXAns-unsplash.jpg";
 		//"Dmitri-Popov-on-flickr.com-Herlev-Hospital.jpg";
 
 };
