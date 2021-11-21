@@ -9,34 +9,54 @@ float ofApp::ease(float p, int g = 0){
 	}
 	return 3 * p * p - 2 * p * p * p;
 }
-
 //--------------------------------------------------------------
-void ofApp::setup(){
-
-	ofSetFrameRate(12);
-	ofSetWindowShape(screenWidth, screenHeight);
-	center = ofVec2f(screenWidth / 2, screenHeight / 2);
-	//shortSndNum = shortAudioDir.listDir("audio-sample/short");
-	//longSndNum = longAudioDir.listDir("audio-sample/long");
-	//shortSound = new ofSoundPlayer[shortSndNum];
-	//longSound = new ofSoundPlayer[longSndNum];
-	original.load("images/1080x1080/" + imageSource);
-	stepFrame[0] = original;
-	/* //std::cout << "Long audio " + ofToString(longSndNum) << endl;
+void ofApp::loadSound(){
+	shortSndNum = shortAudioDir.listDir("audio-sample/short");
+	longSndNum = longAudioDir.listDir("audio-sample/long");
+	shortSound = new ofSoundPlayer[shortSndNum];
+	longSound = new ofSoundPlayer[longSndNum];
 	for(int i = 0; i < shortSndNum; i++){
 		string shortSoundFile = shortAudioDir.getPath(i);
 		shortSound[i].loadSound(shortSoundFile);
 		shortSound[i].setVolume(0.65);
 		shortSound[i].stop();
 	}
-	std::cout << shortSndNum << " shorts audio samples loaded " << endl;
 	for(int i = 0; i < longSndNum; i++){
 		string longSoundFile = longAudioDir.getPath(i);
 		longSound[i].loadSound(longSoundFile);
 		longSound[i].setVolume(0.65);
 		longSound[i].stop();
 	}
-	std::cout << longSndNum << " longs audio samples loaded " << endl; */
+}
+//--------------------------------------------------------------
+void ofApp::playSound(string soundType){
+	if(soundType == "long"){
+		currLongSound = (int)ofRandom(0, longSndNum);
+		if(longSound[currLongSound].isLoaded()){
+			std::cout << "Playing long audio sample " << ofToString(currLongSound) << "/" << ofToString(longSndNum - 1) << endl;
+			longSound[currLongSound].play();
+		}
+	}else{
+		if(shortSound[currShortSound].isPlaying()){
+			shortSound[currShortSound].stop();
+		}
+		currShortSound = (int)ofRandom(0, shortSndNum);
+		if(shortSound[currShortSound].isLoaded()){
+			shortSound[currShortSound].play();
+		}
+	}
+}
+//--------------------------------------------------------------
+void ofApp::setup(){
+
+	ofSetFrameRate(24);
+	ofSetWindowShape(screenWidth, screenHeight);
+	center = ofVec2f(screenWidth / 2, screenHeight / 2);
+
+	original.load("images/1080x1080/" + imageSource);
+	stepFrame[0] = original;
+
+	// loadSound();
 
 	screenShader.load("shaders/Screen");
 	billboardShader.load("shaders/Billboard");
@@ -60,25 +80,19 @@ void ofApp::setup(){
 	settings.h = screenHeight;
 	settings.imageFormat = OF_IMAGE_FORMAT_JPEG;
 	//settings.pixelFormat = OF_PIXELS_RGB;
-	settings.numThreads = 16;
+	settings.numThreads = 12;
 	settings.maxMemoryUsage = 9000000000;
 	settings.folderPath = "capture/";
 	recorder.setup(settings);
 
-	/* currLongSound = (int)ofRandom(0, longSndNum);
-	if(longSound[currLongSound].isLoaded()){
-		std::cout << "Playing long audio sample " << ofToString(currLongSound) << "/" << ofToString(longSndNum - 1) << endl;
-		longSound[currLongSound].play();
-	} */
-
 	nextMove();
 	resetBillboard();
+
+	// playSound("long");
 }
 
 //--------------------------------------------------------------
 void ofApp::nextMove(){
-	// Graphics
-
 	for(int h = 0; h < MOVE_PER_ITERATION; h++){
 		c[nIter].isVertical[h] = ofRandomuf() > 0.5;
 		c[nIter].goForward[h] = ofRandomuf() > 0.5;
@@ -99,35 +113,28 @@ void ofApp::nextMove(){
 			c[nIter].rect[h].getWidth(),
 			c[nIter].rect[h].getHeight()
 			);
-
-		/*
-		// Let sound finnish to play to its end
-		if(shortSound[currShortSound].isPlaying()){
-			shortSound[currShortSound].stop();
-		}
-		currShortSound = (int)ofRandom(0, shortSndNum);
-		if(shortSound[currShortSound].isLoaded()){
-			shortSound[currShortSound].play();
-		} */
 	}
 }
 //--------------------------------------------------------------
 void ofApp::resetBillboard(){
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
-		int randRect = (int)ofRandom(0, MOVE_PER_ITERATION);
+		int r = (int)ofRandom(0, MOVE_PER_ITERATION);
 		size_t x, y;
 		billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
 		billboardSizeTarget[i] = 8 * floor(ofRandom(8));
 		if(playingForward){
-			x = c[nIter].rect[randRect].getX() + (ofRandom(0, c[nIter].rect[randRect].getWidth()));
-			y = c[nIter].rect[randRect].getY() + (ofRandom(0, c[nIter].rect[randRect].getHeight()));
+			x = c[nIter].rect[r].getX() + (ofRandom(0, c[nIter].rect[r].getWidth()));
+			y = c[nIter].rect[r].getY() + (ofRandom(0, c[nIter].rect[r].getHeight()));
 		}else{
-			x = c[nIter - 1].rect[randRect].getX() + (ofRandom(0, c[nIter].rect[randRect].getWidth()));
-			y = c[nIter - 1].rect[randRect].getY() + (ofRandom(0, c[nIter].rect[randRect].getHeight()));
+			int way = c[nIter].goForward[r] ? 1 : -1;
+			int distX = c[nIter].isVertical[r] ? c[nIter].rect[r].getWidth() * c[nIter].distance[r] : c[nIter].rect[r].getHeight();
+			int distY = c[nIter].isVertical[r] ? c[nIter].rect[r].getWidth() : c[nIter].rect[r].getHeight() * c[nIter].distance[r];
+			x = c[nIter].rect[r].getX() + (ofRandom(1) * way * distX);
+			y = c[nIter].rect[r].getY() + (ofRandom(1) * way * distY);
 		}
 		billboards.getVertices()[i] = {x, y, 0};
 		billboards.getColors()[i].set(
-			stepFrame[playingForward ?  nIter : nIter - 1].getColor(x, y));
+			stepFrame[nIter].getColor(x, y));
 	}
 }
 
@@ -150,15 +157,15 @@ void ofApp::moveBillboard(){
 //--------------------------------------------------------------
 void ofApp::update(){
 	ofSoundUpdate();
-
-	/* if(shortSound[currShortSound].isLoaded() && !shortSound[currShortSound].isPlaying()){
-		shortSound[currShortSound].play();
-	} */
+	moveBillboard();
 
 	for(int h = 0; h < MOVE_PER_ITERATION; h++){
+		int way = c[nIter].goForward[h] ? 1 : -1;
+		int distX = c[nIter].isVertical[h] ? c[nIter].distance[h] : 0;
+		int distY = c[nIter].isVertical[h] ? 0 : c[nIter].distance[h];
 		ofVec2f displace(
-			c[nIter].rect[h].getX() + (c[nIter].goForward[h] ? 1 : -1) * (c[nIter].isVertical[h] ? c[nIter].distance[h] : 0) * c[nIter].rect[h].getWidth(),
-			c[nIter].rect[h].getY() + (c[nIter].goForward[h] ? 1 : -1) * (c[nIter].isVertical[h] ? 0 : c[nIter].distance[h]) * c[nIter].rect[h].getHeight()
+			c[nIter].rect[h].getX() + way * distX * c[nIter].rect[h].getWidth(),
+			c[nIter].rect[h].getY() + way * distY * c[nIter].rect[h].getHeight()
 			);
 
 		if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
@@ -193,7 +200,9 @@ void ofApp::update(){
 			c[nIter].distance[h]--;
 		}
 	}
-	moveBillboard();
+
+	//playSound("short");
+
 	capture.begin();
 	ofClear(0, 255);
 	nextFrame();
@@ -204,19 +213,24 @@ void ofApp::update(){
 	}
 
 	if(ofGetFrameNum() > 0 && (ofGetFrameNum() % FRAME_PER_ITERATION) == 0){
-		resetBillboard();
+
 		if(playingForward){
 			if(nIter < ITERATIONS){
 				nIter++;
 				stepFrame[nIter] = stepFrame[nIter - 1];
 				nextMove();
+				resetBillboard();
 			}else{
 				playingForward = false;
-				nIter--;
+				resetBillboard();
+
+				// nIter--;
+				// playSound("long");
 			}
 		}else{
 			if(nIter > 0){
 				nIter--;
+				resetBillboard();
 			}else{
 				std::cout << "Shutdown" << endl;
 				isRecording = false;
@@ -225,8 +239,6 @@ void ofApp::update(){
 		}
 		std::cout << ofToString(nIter) << "/" << ofToString(ITERATIONS) << " move " << (playingForward ? "forward" : "backward") << endl;
 	}
-
-
 }
 //--------------------------------------------------------------
 

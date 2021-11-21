@@ -7,8 +7,8 @@
 
 #define NUM_BILLBOARDS 5000
 #define ITERATIONS 4
-#define MOVE_PER_ITERATION 2
-#define FRAME_PER_ITERATION 30
+#define MOVE_PER_ITERATION 8
+#define FRAME_PER_ITERATION 10
 
 class ofApp : public ofBaseApp {
 	public:
@@ -18,6 +18,8 @@ class ofApp : public ofBaseApp {
 		void nextFrame();
 		void resetBillboard();
 		void moveBillboard();
+		void loadSound();
+		void playSound(string soundType);
 		void draw();
 		void keyPressed(int key);
 		void exit();
@@ -38,12 +40,11 @@ class ofApp : public ofBaseApp {
 
 		bool playingForward = true,
 			 showInfo = false,
-			 isRecording = false;
+			 isRecording = true;
 
 		int nIter = 0,
 			screenWidth = 1080,
 			screenHeight = 1080,
-			halfFrame = (FRAME_PER_ITERATION / 2),
 			shortSndNum,
 			longSndNum,
 			currShortSound,
@@ -71,8 +72,8 @@ class ofApp : public ofBaseApp {
 		ofxDirList shortAudioDir;
 		ofxDirList longAudioDir;
 
-		string imageSource = "sergio-rola-viNlSqFX09k-unsplash.jpg";
-		// "johannes-mandle-JttyHMcXAns-unsplash.jpg";
-		//"Dmitri-Popov-on-flickr.com-Herlev-Hospital.jpg";
+		string imageSource = "johannes-mandle-JttyHMcXAns-unsplash.jpg";
+		// "Dmitri-Popov-on-flickr.com-Herlev-Hospital.jpg";
+		// "sergio-rola-viNlSqFX09k-unsplash.jpg";
 
 };
