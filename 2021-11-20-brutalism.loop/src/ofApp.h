@@ -7,8 +7,8 @@
 
 #define NUM_BILLBOARDS 5000
 #define ITERATIONS 4
-#define MOVE_PER_ITERATION 8
-#define FRAME_PER_ITERATION 10
+#define MOVE_PER_ITERATION 12
+#define FRAME_PER_ITERATION 60
 
 class ofApp : public ofBaseApp {
 	public:
@@ -72,7 +72,16 @@ class ofApp : public ofBaseApp {
 		ofxDirList shortAudioDir;
 		ofxDirList longAudioDir;
 
-		string imageSource = "johannes-mandle-JttyHMcXAns-unsplash.jpg";
+		string imageSource = "chapman-chow-FntjQwDYtXs-unsplash.jpg";
+		// "sergio-rola-viNlSqFX09k-unsplash.jpg";
+		// "david-gabric-rL3wztxbxTo-unsplash.jpg";
+		// "scarbor-siu-UYG5IUPoWIo-unsplash.jpg";
+		// "johannes-mandle-JttyHMcXAns-unsplash.jpg";
+
+		//
+		// "david-gabric-rL3wztxbxTo-unsplash.jpg";
+
+		// "johannes-mandle-JttyHMcXAns-unsplash.jpg";
 		// "Dmitri-Popov-on-flickr.com-Herlev-Hospital.jpg";
 		// "sergio-rola-viNlSqFX09k-unsplash.jpg";
 
