@@ -1,0 +1,3 @@
+ofxShader
+ofxTextureRecorder
+ofxDirList
