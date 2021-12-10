@@ -79,14 +79,13 @@ void ofApp::setup(){
 	settings.w = screenWidth;
 	settings.h = screenHeight;
 	settings.imageFormat = OF_IMAGE_FORMAT_JPEG;
-	//settings.pixelFormat = OF_PIXELS_RGB;
 	settings.numThreads = 12;
 	settings.maxMemoryUsage = 9000000000;
 	settings.folderPath = "capture/";
 	recorder.setup(settings);
 
 	nextMove();
-	resetBillboard();
+	// resetBillboard();
 
 }
 
@@ -96,8 +95,10 @@ void ofApp::nextMove(){
 		c[t].isVertical[i] = ofRandomuf() > 0.5;
 		c[t].goForward[i] = ofRandomuf() > 0.5;
 		c[t].size[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenWidth : screenHeight)) * 0.01f);
-		c[t].stepSize[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenHeight : screenWidth)) * 0.2f);
+		c[t].stepSize[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenHeight : screenWidth)) * 0.17f);
 		c[t].distance[i] = 0;
+		c[t].spreadSize[i] = 12 + ofRandom(24);
+		c[t].noiseScale[i] = 250 + ofRandom(1750);
 		float sampleWidth = c[t].isVertical[i] ? c[t].size[i] : c[t].stepSize[i];
 		float sampleHeight = c[t].isVertical[i] ? c[t].stepSize[i] : c[t].size[i];
 		c[t].rect[i].setX(ofRandom(0, screenWidth - sampleWidth));
@@ -114,7 +115,6 @@ void ofApp::nextMove(){
 			);
 
 	}
-	// playSound("long");
 }
 //--------------------------------------------------------------
 void ofApp::resetBillboard(){
@@ -122,7 +122,7 @@ void ofApp::resetBillboard(){
 		int r = (int)ofRandom(0, MOVE_PER_ITERATION);
 		size_t x, y;
 		billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
-		billboardSizeTarget[i] = (playingForward ?  6 : 4) * floor(ofRandom(8));
+		billboardSizeTarget[i] = 6 * floor(ofRandom(8));
 		if(playingForward){
 			x = c[t].rect[r].getX() + (ofRandom(0, c[t].rect[r].getWidth()));
 			y = c[t].rect[r].getY() + (ofRandom(0, c[t].rect[r].getHeight()));
@@ -169,9 +169,8 @@ void ofApp::update(){
 			c[t].rect[i].getY() + way * distY * c[t].rect[i].getHeight()
 			);
 		float spreadNoise = ofNoise(displace.x, displace.y, t);
-		displace.x += glm::cos(spreadNoise + (playingForward ? 0 : glm::two_pi <float>())) * spreadSize;
-		displace.y += glm::sin(spreadNoise + (playingForward ? 0 : glm::two_pi <float>())) * spreadSize;
-
+		displace.x += glm::cos(spreadNoise + (playingForward ? 0 : glm::two_pi <float>())) * c[t].spreadSize[i];
+		displace.y += glm::sin(spreadNoise + (playingForward ? 0 : glm::two_pi <float>())) * c[t].spreadSize[i];
 
 		if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
 
@@ -192,20 +191,16 @@ void ofApp::update(){
 							ofColor sliceColor = c[t].crop[i].getColor(x, y);
 
 							float noise = ease(
-								ofNoise((displace.x + x) / noiseScale,
-										(displace.y + y) / noiseScale,
+								ofNoise((displace.x + x) / c[t].noiseScale[i],
+										(displace.y + y) / c[t].noiseScale[i],
 										t * i),
 								500);
 							ofColor between = sampleColor.lerp(sliceColor, noise);
-
-
-							//alphaNoise.setColor(x, y, ofColor(pixColor.r, pixColor.g, pixColor.b, floor(noise * 255.0f)));
 							mixedFrame.setColor(x, y, between);
 						}
 					}
 
 					mixedFrame.pasteInto(stepFrame[t].getPixels(), displace.x, displace.y);
-					//c[t].crop[i].pasteInto(stepFrame[t].getPixels(), displace.x, displace.y);
 				}
 				// RESTRUCTURING
 			}else{
@@ -226,10 +221,7 @@ void ofApp::update(){
 						c[t].rect[i].getHeight()
 						);
 				}
-
-
 				c[t].crop[i].pasteInto(stepFrame[t].getPixels(), displace.x, displace.y);
-
 			}
 			stepFrame[t].update();
 		}
@@ -242,7 +234,7 @@ void ofApp::update(){
 			playSound("short");
 		}
 	}
-
+	moveBillboard();
 
 	capture.begin();
 	ofClear(0, 255);
@@ -254,8 +246,6 @@ void ofApp::update(){
 	}
 
 	if(ofGetFrameNum() > 0 && (ofGetFrameNum() % FRAME_PER_ITERATION) == 0){
-		resetBillboard();
-
 
 		if(playingForward){
 			if(t < ITERATIONS){
@@ -264,26 +254,19 @@ void ofApp::update(){
 				nextMove();
 			}else{
 				playingForward = false;
-				// resetBillboard();
-
-				// t--;
-				// playSound("long");
+				resetBillboard();
 			}
 		}else{
 			if(t > 0){
 				t--;
-				// resetBillboard();
+				resetBillboard();
 			}else{
 				std::cout << "Shutdown" << endl;
 				isRecording = false;
 				ofExit();
-				//return;
 			}
 		}
 		std::cout << ofToString(t) << "/" << ofToString(ITERATIONS) << " move " << (playingForward ? "forward" : "backward") << endl;
-	}else{
-		moveBillboard();
-
 	}
 }
 //--------------------------------------------------------------
@@ -317,7 +300,6 @@ void ofApp::draw(){
 	// debug & info
 	if(showInfo){
 		string frameRate = ofToString(ofGetFrameRate(), 2) + " FPS \n";
-		//string particleCount = "Particle Count: " + ofToString(NUM_BILLBOARDS);
 		ofSetColor(255);
 	}
 	if(isRecording && ofGetFrameNum() % 16 == 0){

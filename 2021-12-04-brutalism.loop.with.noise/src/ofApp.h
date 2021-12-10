@@ -6,9 +6,9 @@
 #include "ofxDirList.h"
 
 #define NUM_BILLBOARDS 5000
-#define ITERATIONS 8
-#define MOVE_PER_ITERATION 36
-#define FRAME_PER_ITERATION 80 // <- Don't change this
+#define ITERATIONS 16
+#define MOVE_PER_ITERATION 54
+#define FRAME_PER_ITERATION 50 // video 50 / gif 30
 
 class ofApp : public ofBaseApp {
 	public:
@@ -25,7 +25,6 @@ class ofApp : public ofBaseApp {
 		void exit();
 		float ease(float p, int g);
 
-
 		struct Change {
 			bool * isVertical = new bool[MOVE_PER_ITERATION];
 			bool * goForward = new bool[MOVE_PER_ITERATION];
@@ -33,6 +32,8 @@ class ofApp : public ofBaseApp {
 			int * distance = new int[MOVE_PER_ITERATION];
 			int * size = new int[MOVE_PER_ITERATION];
 			int * stepSize = new int[MOVE_PER_ITERATION];
+			float * spreadSize = new float[MOVE_PER_ITERATION];
+			float * noiseScale = new float[MOVE_PER_ITERATION];
 			ofPixels * crop = new ofPixels[MOVE_PER_ITERATION];
 		};
 		Change * c = new Change[ITERATIONS + 1];
@@ -41,9 +42,6 @@ class ofApp : public ofBaseApp {
 		bool playingForward = true,
 			 showInfo = false,
 			 isRecording = false;
-
-		float noiseScale = 5000.0f,
-			  spreadSize = 12.0f;
 
 		int t = 0,
 			screenWidth = 1080,
@@ -75,9 +73,14 @@ class ofApp : public ofBaseApp {
 		ofxDirList shortAudioDir;
 		ofxDirList longAudioDir;
 
-		string imageSource = "scarbor-siu-UYG5IUPoWIo-unsplash.jpg";
+		string imageSource = "Dmitri-Popov-on-flickr.com-Herlev-Hospital.jpg";
+		// "skull-kat-nMHY0SHuiVQ-unsplash.jpg";
+		// "mark-hang-fung-so-xKakOOJ04ZM-unsplash.jpg";
+		// "bob-letens-OmaCizJXZUk-unsplash.jpg";
+		// "lethu-zimu-nv7E7KmXXnw-unsplash.jpg";
 
 
+		// "scarbor-siu-UYG5IUPoWIo-unsplash.jpg";
 		// "sergio-rola-viNlSqFX09k-unsplash.jpg";
 		// "chapman-chow-FntjQwDYtXs-unsplash.jpg";
 		// "scarbor-siu-UYG5IUPoWIo-unsplash.jpg";
