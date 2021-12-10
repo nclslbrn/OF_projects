@@ -6,9 +6,9 @@
 #include "ofxDirList.h"
 
 #define NUM_BILLBOARDS 5000
-#define ITERATIONS 32
-#define MOVE_PER_ITERATION 24
-#define FRAME_PER_ITERATION 30
+#define ITERATIONS 8
+#define MOVE_PER_ITERATION 36
+#define FRAME_PER_ITERATION 80 // <- Don't change this
 
 class ofApp : public ofBaseApp {
 	public:
@@ -23,9 +23,9 @@ class ofApp : public ofBaseApp {
 		void draw();
 		void keyPressed(int key);
 		void exit();
-
 		float ease(float p, int g);
-		float noiseScale = 500.0f;
+
+
 		struct Change {
 			bool * isVertical = new bool[MOVE_PER_ITERATION];
 			bool * goForward = new bool[MOVE_PER_ITERATION];
@@ -42,7 +42,10 @@ class ofApp : public ofBaseApp {
 			 showInfo = false,
 			 isRecording = false;
 
-		int nIter = 0,
+		float noiseScale = 5000.0f,
+			  spreadSize = 12.0f;
+
+		int t = 0,
 			screenWidth = 1080,
 			screenHeight = 1080,
 			shortSndNum,
@@ -72,7 +75,7 @@ class ofApp : public ofBaseApp {
 		ofxDirList shortAudioDir;
 		ofxDirList longAudioDir;
 
-		string imageSource = "chapman-chow-FntjQwDYtXs-unsplash.jpg";
+		string imageSource = "scarbor-siu-UYG5IUPoWIo-unsplash.jpg";
 
 
 		// "sergio-rola-viNlSqFX09k-unsplash.jpg";
