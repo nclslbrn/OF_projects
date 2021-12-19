@@ -16,8 +16,6 @@ in vec2 texcoord;
 
 uniform float u_time;
 uniform float u_layer;
-uniform float u_noiseFreq;
-uniform float u_noiseScale;
 
 uniform vec2 u_screenRes;
 uniform float u_scale;
@@ -71,7 +69,8 @@ float ease(float p,float g){
 }
 
 void main(){
-    
+    float nScale=250.;
+    float nFreq=.0075;
     int x=gl_InstanceID*4;
     mat4 transformMatrix=mat4(
         texelFetch(u_frameTex,x),
@@ -83,24 +82,22 @@ void main(){
     vec4 pos=modelViewProjectionMatrix*modelPos;
     
     // u_layer 0 ot 1 from first to last frame
-    float smoothDepth=smoothstep(0.,.8,u_layer);
-    float easeDepth=ease(u_layer,1.5);
-    float noiseScale=easeDepth*u_noiseScale;
+    float smoothDepth=smoothstep(0.,1.,u_layer/6.);
+    float easeDepth=ease(u_layer*.16,2.);
     
     vec2 st=normalize(modelPos.xy);
-    float noisePosValue=noise(vec3(modelPos.xy,u_time)/u_noiseFreq);
-    float noiseSizeValue=noise(vec3((pos.xy+u_layer)/u_noiseFreq,u_time));
+    float noisePosValue=noise(vec3(modelPos.xy*nScale,u_time*nScale))/nFreq;
+    float noiseSizeValue=noise(vec3((pos.xy+u_layer)*nScale,u_time+u_layer*.16));
     // noise displacement increase from front to back
-    float noiseDisplacement=noiseScale*noisePosValue;
+    float noiseDisplacement=nScale*noisePosValue;
     vec4 newPos=pos+normal*(easeDepth*noiseDisplacement);
-    
-    vec4 diedColor=vec4(.0);
-    vec4 particleColor=mix(instanceColor,diedColor,easeDepth);
-    //vec4 posColor=vec4(1.);
-    //posColor.bg=st;
-    //posColor.r=noisePosValue;
+    vec4 posColor=vec4(.5);
+    posColor.bg=st;
+    posColor.r=noisePosValue;
     //posColor.a=u_layer*.1;
-    //vec4 particleColor=mix(posColor,instanceColor,easeDepth);
+    vec4 diedColor=mix(vec4(0.),posColor,smoothDepth);
+    vec4 particleColor=mix(instanceColor,diedColor,-smoothDepth);
+    
     float aSize=u_layer;
     float vSize=2.*sqrt(aSize/PI);
     float edgeSize=u_time;
@@ -108,7 +105,7 @@ void main(){
     uEdgeSize=edgeSize;
     color=particleColor;
     
-    //gl_PointSize=noiseSizeValue*2.5;
-    gl_PointSize=vSize+edgeSize+1.;
+    gl_PointSize=(1.-(u_layer*.20))*4.;
+    // gl_PointSize=vSize+edgeSize*32.;
     gl_Position=newPos;
 }

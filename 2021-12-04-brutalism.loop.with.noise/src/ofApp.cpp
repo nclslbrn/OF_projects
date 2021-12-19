@@ -85,8 +85,7 @@ void ofApp::setup(){
 	recorder.setup(settings);
 
 	nextMove();
-	// resetBillboard();
-
+	playSound("long");
 }
 
 //--------------------------------------------------------------
@@ -94,8 +93,8 @@ void ofApp::nextMove(){
 	for(int i = 0; i < MOVE_PER_ITERATION; i++){
 		c[t].isVertical[i] = ofRandomuf() > 0.5;
 		c[t].goForward[i] = ofRandomuf() > 0.5;
-		c[t].size[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenWidth : screenHeight)) * 0.01f);
-		c[t].stepSize[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenHeight : screenWidth)) * 0.17f);
+		c[t].size[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenWidth : screenHeight)) * 0.015);
+		c[t].stepSize[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenHeight : screenWidth)) * 0.17);
 		c[t].distance[i] = 0;
 		c[t].spreadSize[i] = 12 + ofRandom(24);
 		c[t].noiseScale[i] = 250 + ofRandom(1750);
@@ -121,21 +120,24 @@ void ofApp::resetBillboard(){
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
 		int r = (int)ofRandom(0, MOVE_PER_ITERATION);
 		size_t x, y;
-		billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
-		billboardSizeTarget[i] = 6 * floor(ofRandom(8));
-		if(playingForward){
-			x = c[t].rect[r].getX() + (ofRandom(0, c[t].rect[r].getWidth()));
-			y = c[t].rect[r].getY() + (ofRandom(0, c[t].rect[r].getHeight()));
-		}else{
-			int way = c[t].goForward[r] ? 1 : -1;
-			int distX = c[t].isVertical[r] ? c[t].rect[r].getWidth() * c[t].distance[r] : c[t].rect[r].getHeight();
-			int distY = c[t].isVertical[r] ? c[t].rect[r].getWidth() : c[t].rect[r].getHeight() * c[t].distance[r];
-			x = c[t].rect[r].getX() + (ofRandom(1) * way * distX);
-			y = c[t].rect[r].getY() + (ofRandom(1) * way * distY);
-		}
+		float weight = ofRandom(1);
+		billboardVels[i] = {ofRandomf(), -0.5 + (-weight / 2), ofRandomf()};
+		billboardSizeTarget[i] = 8 * floor(ofRandom(16 * weight));
+
+		int way = c[t].goForward[r] ? 1 : -1;
+		int distance = ceil(ofRandom(c[t].distance[r] + 1));
+
+		int distX = c[t].isVertical[r] ? c[t].rect[r].getWidth() * distance : c[t].rect[r].getHeight();
+		int distY = c[t].isVertical[r] ? c[t].rect[r].getWidth() : c[t].rect[r].getHeight() * c[t].distance[r];
+
+		x = c[t].rect[r].getX() + (ofRandom(2) * way * distX);
+		y = c[t].rect[r].getY() + (ofRandom(2) * way * distY);
+		x += glm::cos(ofRandom(1) * glm::two_pi <float>()) * c[t].spreadSize[r];
+		y += glm::sin(ofRandom(1) * glm::two_pi <float>()) * c[t].spreadSize[r];
+
 		billboards.getVertices()[i] = {x, y, 0};
 		billboards.getColors()[i].set(
-			stepFrame[t].getColor(x, y));
+			stepFrame[t == ITERATIONS ? t : t + 1].getColor(x, y));
 	}
 }
 
@@ -158,29 +160,25 @@ void ofApp::moveBillboard(){
 //--------------------------------------------------------------
 void ofApp::update(){
 	ofSoundUpdate();
+	// DESTRUCTURING
+	if(playingForward){
+		for(int i = 0; i < MOVE_PER_ITERATION; i++){
+			int way = c[t].goForward[i] ? 1 : -1;
+			int distX = c[t].isVertical[i] ? c[t].distance[i] : 0;
+			int distY = c[t].isVertical[i] ? 0 : c[t].distance[i];
 
-	for(int i = 0; i < MOVE_PER_ITERATION; i++){
-		int way = c[t].goForward[i] ? 1 : -1;
-		int distX = c[t].isVertical[i] ? c[t].distance[i] : 0;
-		int distY = c[t].isVertical[i] ? 0 : c[t].distance[i];
+			ofVec2f displace(
+				c[t].rect[i].getX() + way * distX * c[t].rect[i].getWidth(),
+				c[t].rect[i].getY() + way * distY * c[t].rect[i].getHeight()
+				);
+			float spreadNoise = ofNoise(displace.x, displace.y, t);
+			displace.x += glm::cos(spreadNoise + (playingForward ? 0 : glm::two_pi <float>())) * c[t].spreadSize[i];
+			displace.y += glm::sin(spreadNoise + (playingForward ? 0 : glm::two_pi <float>())) * c[t].spreadSize[i];
 
-		ofVec2f displace(
-			c[t].rect[i].getX() + way * distX * c[t].rect[i].getWidth(),
-			c[t].rect[i].getY() + way * distY * c[t].rect[i].getHeight()
-			);
-		float spreadNoise = ofNoise(displace.x, displace.y, t);
-		displace.x += glm::cos(spreadNoise + (playingForward ? 0 : glm::two_pi <float>())) * c[t].spreadSize[i];
-		displace.y += glm::sin(spreadNoise + (playingForward ? 0 : glm::two_pi <float>())) * c[t].spreadSize[i];
-
-		if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
-
-			// DESTRUCTURING
-			if(playingForward){
+			if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
 				// Random gaps
 				if(ofRandom(1.0f) < 0.8){
-
 					ofPixels mixedFrame = c[t].crop[i];
-
 					for(int y = 0; y < c[t].crop[i].getHeight(); y++){
 						for(int x = 0; x < c[t].crop[i].getWidth(); x++){
 
@@ -202,39 +200,21 @@ void ofApp::update(){
 
 					mixedFrame.pasteInto(stepFrame[t].getPixels(), displace.x, displace.y);
 				}
-				// RESTRUCTURING
-			}else{
-				if(t > 0){
-					stepFrame[t - 1].getPixels().cropTo(
-						c[t].crop[i],
-						displace.x,
-						displace.y,
-						c[t].rect[i].getWidth(),
-						c[t].rect[i].getHeight()
-						);
-				}else{
-					original.getPixels().cropTo(
-						c[t].crop[i],
-						displace.x,
-						displace.y,
-						c[t].rect[i].getWidth(),
-						c[t].rect[i].getHeight()
-						);
-				}
-				c[t].crop[i].pasteInto(stepFrame[t].getPixels(), displace.x, displace.y);
+
+				stepFrame[t].update();
 			}
-			stepFrame[t].update();
-		}
-		if(playingForward){
 			c[t].distance[i]++;
-		}else{
-			c[t].distance[i]--;
 		}
-		if(ofGetFrameNum() % 16 + i == 0){
-			playSound("short");
-		}
+
 	}
-	moveBillboard();
+	// RESTRUCTURING
+	else{
+		moveBillboard();
+	}
+
+	if(ofGetFrameNum() % 16 == 0){
+		playSound("short");
+	}
 
 	capture.begin();
 	ofClear(0, 255);
@@ -246,7 +226,6 @@ void ofApp::update(){
 	}
 
 	if(ofGetFrameNum() > 0 && (ofGetFrameNum() % FRAME_PER_ITERATION) == 0){
-
 		if(playingForward){
 			if(t < ITERATIONS){
 				t++;
@@ -254,12 +233,13 @@ void ofApp::update(){
 				nextMove();
 			}else{
 				playingForward = false;
-				resetBillboard();
+				stepFrame[0] = original;
 			}
 		}else{
+
 			if(t > 0){
-				t--;
 				resetBillboard();
+				t--;
 			}else{
 				std::cout << "Shutdown" << endl;
 				isRecording = false;
@@ -284,10 +264,12 @@ void ofApp::nextFrame(){
 	screenShader.end();
 	stepFrame[t].getTexture().unbind();
 
+
 	billboardShader.begin();
 	billboardShader.setUniform1f("u_size", ease(animT));
 	billboards.draw();
 	billboardShader.end();
+
 
 	ofDisablePointSprites();
 	ofDisableAlphaBlending();

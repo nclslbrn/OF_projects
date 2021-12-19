@@ -5,9 +5,9 @@
 #include "ofxTextureRecorder.h"
 #include "ofxDirList.h"
 
-#define NUM_BILLBOARDS 5000
-#define ITERATIONS 16
-#define MOVE_PER_ITERATION 54
+#define NUM_BILLBOARDS 50000
+#define ITERATIONS 4
+#define MOVE_PER_ITERATION 54 // 54
 #define FRAME_PER_ITERATION 50 // video 50 / gif 30
 
 class ofApp : public ofBaseApp {
@@ -41,7 +41,7 @@ class ofApp : public ofBaseApp {
 
 		bool playingForward = true,
 			 showInfo = false,
-			 isRecording = false;
+			 isRecording = true;
 
 		int t = 0,
 			screenWidth = 1080,
