@@ -67,7 +67,7 @@ void ofApp::setup(){
 		string imageFile = (alreadyProcessedImage ? "processed-image/" : "images/2880x1620/") + imageSource[i];
 		image[i].load(imageFile);
 	}
-	loadSound(true);
+	// loadSound(true);
 
 	screenShader.load("shaders/Screen");
 	billboardShader.load("shaders/Billboard");
@@ -97,12 +97,12 @@ void ofApp::setup(){
 	recorder.setup(settings);
 
 	currImg = 0;
+	loadSound(false);
 	nextMove();
 }
 
 //--------------------------------------------------------------
 void ofApp::nextMove(){
-	frameNum = 6 * ceil(ofRandomuf() * 16);
 
 	for(int i = 0; i < NUM_MOVE; i++){
 		m[i].isVertical = ofRandomuf() > 0.5;
@@ -141,7 +141,6 @@ void ofApp::nextMove(){
 			image[currImg].getColor(x, y));
 		billboardSizeTarget[i] = m[rm].stepSize * ofRandomuf();
 	}
-	playSound("short");
 }
 //--------------------------------------------------------------
 void ofApp::move(){
@@ -168,7 +167,6 @@ void ofApp::move(){
 			image[currImg].update();
 		}else{
 			m[i].isStopped = true;
-
 		}
 	}
 
@@ -191,9 +189,6 @@ void ofApp::update(){
 					// Quit programm
 					isRecording = false;
 					ofExit();
-				}else{
-					// restart with first image
-					currImg = 0;
 				}
 			}
 			std::cout << "New image "
@@ -204,6 +199,8 @@ void ofApp::update(){
 			loop = 0;
 		}
 		// how many frame per loop
+		frameNum = 4 * ceil(ofRandomuf() * 16);
+		playSound("short");
 		move();
 
 	}
