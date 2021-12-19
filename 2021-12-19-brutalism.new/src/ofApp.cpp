@@ -9,57 +9,65 @@ float ofApp::ease(float p, int g = 0){
 	}
 	return 3 * p * p - 2 * p * p * p;
 }
-
 //--------------------------------------------------------------
-void ofApp::setup(){
-	bool alreadyProcessedImage = false;
-	screenWidth = 2880;
-	screenHeight = 1620;
-	loop = 0;
-	// how many move per image
-	loopNum = 16;
-	isRecording = false;
-	showInfo = false;
-	ofSetFrameRate(25);
-	ofSetWindowShape(screenWidth, screenHeight);
-	center = ofVec2f(screenWidth / 2, screenHeight / 2);
-	imgNum = sizeof(imageSource) / sizeof(imageSource[0]);
+void ofApp::loadSound(bool verbose = false){
 	shortSndNum = shortAudioDir.listDir("audio-sample/short");
 	longSndNum = longAudioDir.listDir("audio-sample/long");
-
-
-	image = new ofImage[imgNum];
 	shortSound = new ofSoundPlayer[shortSndNum];
 	longSound = new ofSoundPlayer[longSndNum];
-
-
-	for(int i = 0; i < imgNum; i++){
-		string imageFile = (alreadyProcessedImage ? "processed-image/" : "images/2880x1620/") + imageSource[i];
-		//std::cout << "Image n°" << ofToString(i) << " " << ofToString(imageFile) << endl;
-		image[i].load(imageFile);
-	}
-	std::cout << ofToString(imgNum) << " images loaded" << endl;
-	//std::cout << "Long audio " + ofToString(longSndNum) << endl;
 	for(int i = 0; i < shortSndNum; i++){
 		string shortSoundFile = shortAudioDir.getPath(i);
-		// std::cout << shortAudioDir.getPath(si) << endl;
-		// shortSound[i].setMultiPlay(true);
-		// shortSound[i].setLoop(true);
 		shortSound[i].loadSound(shortSoundFile);
 		shortSound[i].setVolume(0.65);
 		shortSound[i].stop();
 	}
-	std::cout << shortSndNum << " shorts audio samples loaded " << endl;
+	if(verbose){
+		std::cout << shortSndNum << " shorts audio samples loaded " << endl;
+	}
+
 	for(int i = 0; i < longSndNum; i++){
 		string longSoundFile = longAudioDir.getPath(i);
-		// std::cout << longAudioDir.getPath(si) << endl;
-		// longSound[i].setMultiPlay(true);
 		longSound[i].loadSound(longSoundFile);
-		// longSound[i].setLoop(true);
-		longSound[i].setVolume(0.65);
+		longSound[i].setVolume(0.5);
 		longSound[i].stop();
 	}
-	std::cout << longSndNum << " longs audio samples loaded " << endl;
+	if(verbose){
+		std::cout << longSndNum << " longs audio samples loaded " << endl;
+	}
+
+}
+//--------------------------------------------------------------
+void ofApp::playSound(string soundType){
+	if(soundType == "long"){
+		if(longSound[currLongSound].isPlaying()){
+			longSound[currLongSound].stop();
+		}
+		currLongSound = (int)ofRandom(0, longSndNum);
+		if(longSound[currLongSound].isLoaded()){
+			std::cout << "Playing long audio sample " << ofToString(currLongSound) << "/" << ofToString(longSndNum - 1) << endl;
+			longSound[currLongSound].play();
+		}
+	}else{
+
+		currShortSound = (int)ofRandom(0, shortSndNum);
+		if(shortSound[currShortSound].isLoaded()){
+			shortSound[currShortSound].play();
+		}
+	}
+}
+//--------------------------------------------------------------
+void ofApp::setup(){
+	ofSetFrameRate(25);
+	ofSetWindowShape(screenWidth, screenHeight);
+
+	imgNum = sizeof(imageSource) / sizeof(imageSource[0]);
+	image = new ofImage[imgNum];
+
+	for(int i = 0; i < imgNum; i++){
+		string imageFile = (alreadyProcessedImage ? "processed-image/" : "images/2880x1620/") + imageSource[i];
+		image[i].load(imageFile);
+	}
+	loadSound(true);
 
 	screenShader.load("shaders/Screen");
 	billboardShader.load("shaders/Billboard");
@@ -89,66 +97,95 @@ void ofApp::setup(){
 	recorder.setup(settings);
 
 	currImg = 0;
+	nextMove();
 }
 
 //--------------------------------------------------------------
 void ofApp::nextMove(){
-	// Graphics
-	isVertical = ofRandomuf() > 0.5;
-	size = ceil((ofRandomuf() * (isVertical ? screenWidth : screenHeight)) * 0.02f);
-	stepSize = ceil((ofRandomuf() * (isVertical ? screenHeight : screenWidth)) * 0.3f);
-	goForward = ofRandomuf() > 0.5;
-	d = 0;
-	float sampleWidth = isVertical ? size : stepSize;
-	float sampleHeight = isVertical ? stepSize : size;
-	rect.setX(ofRandom(0, screenWidth - sampleWidth));
-	rect.setY(ofRandom(0, screenHeight - sampleHeight));
-	rect.setWidth(sampleWidth);
-	rect.setHeight(sampleHeight);
+	frameNum = 6 * ceil(ofRandomuf() * 16);
 
-	image[currImg].getPixels().cropTo(crop, rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
+	for(int i = 0; i < NUM_MOVE; i++){
+		m[i].isVertical = ofRandomuf() > 0.5;
+		m[i].isStopped = false;
+		m[i].goForward = ofRandomuf() > 0.5;
+		m[i].size = ceil((ofRandomuf() * (m[i].isVertical ? screenWidth : screenHeight)) * 0.015);
+		m[i].stepSize = ceil((ofRandomuf() * (m[i].isVertical ? screenHeight : screenWidth)) * 0.17);
+		m[i].distance = 0;
+		m[i].spreadSize = 12 + ofRandom(24);
+		m[i].noiseScale = 250 + ofRandom(1750);
+		ofVec2f sampleSize(
+			m[i].isVertical ? m[i].size : m[i].stepSize,
+			m[i].isVertical ? m[i].stepSize : m[i].size
+			);
+		m[i].rect.setX(ofRandom(0, screenWidth - sampleSize.x));
+		m[i].rect.setY(ofRandom(0, screenHeight - sampleSize.y));
+		m[i].rect.setWidth(sampleSize.x);
+		m[i].rect.setHeight(sampleSize.y);
+		image[currImg].getPixels().cropTo(
+			m[i].crop,
+			m[i].rect.getX(),
+			m[i].rect.getY(),
+			m[i].rect.getWidth(),
+			m[i].rect.getHeight()
+			);
+	}
 
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
-		size_t x = rect.getX() + (ofRandom(0, sampleWidth));
-		size_t y = rect.getY() + (ofRandom(0, sampleHeight));
+		int rm = (int)ofRandom(0, NUM_MOVE);
+		size_t x = m[rm].rect.getX() + (ofRandom(0, m[rm].rect.getWidth()));
+		size_t y = m[rm].rect.getY() + (ofRandom(0, m[rm].rect.getHeight()));
 
 		billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
 		billboards.getVertices()[i] = {x, y, 0};
 		billboards.getColors()[i].set(
 			image[currImg].getColor(x, y));
-		billboardSizeTarget[i] = stepSize * ofRandomuf();
+		billboardSizeTarget[i] = m[rm].stepSize * ofRandomuf();
 	}
-	/* Let sound finnish to play to its end
-	if(shortSound[currShortSound].isPlaying()){
-		shortSound[currShortSound].stop();
-	}
-	*/
-
-	currShortSound = (int)ofRandom(0, shortSndNum);
-	if(shortSound[currShortSound].isLoaded()){
-		shortSound[currShortSound].play();
-	}
+	playSound("short");
 }
+//--------------------------------------------------------------
+void ofApp::move(){
+	float t = 1.0f - ease((ofGetFrameNum() % frameNum) / static_cast <float>(frameNum), 5);
+	for(int i = 0; i < NUM_MOVE; i++){
+		if(m[i].isStopped){
+			return;
+		}
+		int way = m[i].goForward ? 1 : -1;
+		int distX = m[i].isVertical ? m[i].distance : 0;
+		int distY = m[i].isVertical ? 0 : m[i].distance;
+		ofVec2f displace(
+			m[i].rect.getX() + way * distX * m[i].rect.getWidth(),
+			m[i].rect.getY() + way * distY * m[i].rect.getHeight()
+			);
+		float spreadNoise = ofNoise(displace.x, displace.y, t);
+		displace.x += glm::cos(spreadNoise) * m[i].spreadSize;
+		displace.y += glm::sin(spreadNoise) * m[i].spreadSize;
 
+
+		if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
+			m[i].distance++;
+			m[i].crop.pasteInto(image[currImg].getPixels(), displace.x, displace.y);
+			image[currImg].update();
+		}else{
+			m[i].isStopped = true;
+
+		}
+	}
+
+
+}
 //--------------------------------------------------------------
 void ofApp::update(){
 	ofSoundUpdate();
-	bool isOverFrame = false;
+
 	if(ofGetFrameNum() == 0 || (int)ofGetFrameNum() % frameNum == 0){
-
 		if(ofGetFrameNum() != 0 && loop < loopNum){
-
 			loop++;
-
 		}else{
-
 			if(ofGetFrameNum() != 0 && currImg < imgNum - 1){
-
 				currImg++;
-
+				nextMove();
 			}else{
-
-
 				// If exery image has been processed one time quit the program
 				if(ofGetFrameNum() != 0){
 					// Quit programm
@@ -158,56 +195,22 @@ void ofApp::update(){
 					// restart with first image
 					currImg = 0;
 				}
-
 			}
 			std::cout << "New image "
 					  << imageSource[currImg] << " "
 					  << ofToString(currImg) << "/" << ofToString(imgNum - 1) << endl;
+			playSound("long");
 
-			if(longSound[currLongSound].isPlaying()){
-				longSound[currLongSound].stop();
-			}
-			currLongSound = (int)ofRandom(0, longSndNum);
-			if(longSound[currLongSound].isLoaded()){
-				std::cout << "Playing long audio sample " << ofToString(currLongSound) << "/" << ofToString(longSndNum - 1) << endl;
-				longSound[currLongSound].play();
-			}
 			loop = 0;
 		}
 		// how many frame per loop
-		frameNum = 6 * ceil(ofRandomuf() * 16);
-		nextMove();
+		move();
 
 	}
-	if(
-		shortSound[currShortSound].isLoaded() &&
-		!shortSound[currShortSound].isPlaying() &&
-		ofGetFrameNum() % (frameNum / 6) == 0
-		){
-		shortSound[currShortSound].play();
-	}
+	float t = 1.0f - ease((ofGetFrameNum() % frameNum) / static_cast <float>(frameNum), 5);
 
-	ofVec2f displace(
-		rect.getX() + (goForward ? 1 : -1) * (isVertical ? d : 0) * rect.getWidth(),
-		rect.getY() + (goForward ? 1 : -1) * (isVertical ? 0 : d) * rect.getHeight()
-		);
-
-	if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
-		isOverFrame = true;
-		crop.pasteInto(image[currImg].getPixels(), displace.x, displace.y);
-		image[currImg].update();
-	}else{
-		nextMove();
-	}
-
-
-	d++;
-
-	float t =
-		1.0f - ease((ofGetFrameNum() % frameNum) / static_cast <float>(frameNum), 5);
-
+	//playSound("short");
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
-
 		glm::vec3 vec(0, t + ofSignedNoise(billboards.getVertex(i).x, billboards.getVertex(i).y, 0, 0), 0);
 		billboardVels[i] += vec;
 		// billboardVels[i].y *= 1.01f;
@@ -216,10 +219,9 @@ void ofApp::update(){
 		billboards.setNormal(
 			i, glm::vec3(12 + billboardSizeTarget[i] * ofNoise(t + i), 0, 0));
 	}
-
 	capture.begin();
 	ofClear(0, 255);
-	nextFrame(isOverFrame);
+	nextFrame();
 	capture.end();
 
 	if(isRecording){
@@ -229,8 +231,7 @@ void ofApp::update(){
 	}
 }
 //--------------------------------------------------------------
-
-void ofApp::nextFrame(bool isOverFrame){
+void ofApp::nextFrame(){
 	float animT = 1.0f - ((ofGetFrameNum() % frameNum) / (float)frameNum);
 	ofEnableAlphaBlending();
 	ofEnablePointSprites();
@@ -239,7 +240,7 @@ void ofApp::nextFrame(bool isOverFrame){
 	screenShader.begin();
 	screenShader.setUniform1f("u_time", animT / 100.0f);
 	screenShader.setUniform2f("u_screen_res", screenWidth, screenHeight);
-	screenShader.setUniform1f("u_size", isOverFrame ? ease(animT, 5) : 1.0f);
+	screenShader.setUniform1f("u_size", ease(animT, 5));
 	screen.draw();
 	screenShader.end();
 	image[currImg].getTexture().unbind();
