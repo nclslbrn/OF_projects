@@ -2,7 +2,12 @@
 
 
 //--------------------------------------------------------------
-float ofApp::ease(float p){
+float ofApp::ease(float p, int g = 0){
+	if(g > 0){
+		return p < 0.5
+			? 0.5 * pow(2 * p, g)
+			: 1 - 0.5 * pow(2 * (1 - p), g);
+	}
 	return 3 * p * p - 2 * p * p * p;
 }
 //--------------------------------------------------------------
@@ -27,13 +32,14 @@ void ofApp::setup(){
 	cam.setGlobalPosition(ofVec3f(25.0f, 25.0f, -25.0f));
 	cam.lookAt(ofVec3f(0, 0, 0));
 
-	cubeDomain.set(domain * 2, domain * 2, domain * 2);
+	cubeDomain.set(domain * 2.0f, domain * 2.0f, domain * 2.0f);
 
 	for(int i = 0; i < numRuler; i++){
 		before[i].position = getRandomPosition();
 		before[i].size = getRandomSize();
 		after[i].position = getRandomPosition();
 		after[i].size = getRandomSize();
+		colors[i] = ofColor(ofRandom(0, 255), 25);
 	}
 }
 
@@ -42,11 +48,11 @@ void ofApp::update(){
 
 	if(ofGetFrameNum() > 0 && ((ofGetFrameNum() % numFrame) != 0)){
 
-		t = (ofGetFrameNum() % numFrame) / static_cast <float>(numFrame);
+		float t = 1.0f * (ofGetFrameNum() % numFrame) / static_cast <float>(numFrame);
 
 		for(int i = 0; i < numRuler; i++){
-			current[i].position = before[i].position.getInterpolated(after[i].position, t);
-			current[i].size = before[i].size.getInterpolated(after[i].size, t);
+			current[i].position = before[i].position.getInterpolated(after[i].position, ease(t, 5));
+			current[i].size = before[i].size.getInterpolated(after[i].size, ease(t, 5));
 		}
 
 	}else{
@@ -66,36 +72,36 @@ void ofApp::draw(){
 	ofBackground(0);
 	cam.begin();
 	ofEnableDepthTest();
-	ofSetColor(255, 75);
 	// ofFill();
 	// cubeDomain.drawWireframe();
 
 	for(int i = 0; i < numRuler; i++){
-		for(float z = 0; z < current[i].size.z; z += step){
+		ofSetColor(colors[i]);
 
-			ofDrawRectangle(
-				glm::vec3(
-					current[i].position.x,
-					current[i].position.y,
-					current[i].position.z + z
-					),
-				current[i].size.x,
-				current[i].size.y
-				);
-		}
-		/*
+		/* for(float x = 0; x < current[i].size.x; x += step){
+			for(float y = 0; y < current[i].size.y; y += step){
+				for(float z = 0; z < current[i].size.z; z += step){
+					ofDrawCircle(
+						current[i].position.x + x,
+						current[i].position.y + y,
+						current[i].position.z + z,
+						step * 0.5
+						);
+				}
+			}
+		} */
+
+
 		ofDrawBox(
 			current[i].position,
 			current[i].size.x,
 			current[i].size.y,
 			current[i].size.z
 			);
-		*/
+
 	}
 	ofDisableDepthTest();
 	cam.end();
-
-	ofDrawBitmapString(ofToString(t) + "/1", ofVec2f(12, 12));
 }
 
 //--------------------------------------------------------------

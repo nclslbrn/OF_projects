@@ -5,7 +5,7 @@
 class ofApp : public ofBaseApp {
 
 	public:
-		float ease(float p);
+		float ease(float p, int g);
 		ofVec3f getRandomSize();
 		ofVec3f getRandomPosition();
 
@@ -32,11 +32,12 @@ class ofApp : public ofBaseApp {
 			bool isVertical;
 		};
 
+		ofColor * colors = new ofColor[numRuler + 1];
+
 		int numFrame = 60;
 		int numRuler = 56;
-		float step = 0.5f;
+		float step = 0.7f;
 		float domain = 10.0f;
-		float t = 0;
 		ofVec2f size = ofVec2f(0.3f, 7.0f);
 
 		Ruler * before = new Ruler[numRuler + 1];
