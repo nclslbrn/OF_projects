@@ -5,18 +5,19 @@
 #include "ofxTextureRecorder.h"
 #include "ofxDirList.h"
 
-#define NUM_BILLBOARDS 5000
-#define NUM_MOVE 54 // 54
+#define NUM_BILLBOARDS 8000
+#define NUM_MOVE 4 // 54
 
 class ofApp : public ofBaseApp {
 	public:
 		void loadSound(bool verbose);
-		void playSound(string soundType);
+		void playSound(string soundType, bool verbose);
+		void fadeOutSound(string soundType);
 		void setup();
 		void update();
 		void nextMove();
-		void move();
-		void nextFrame();
+		void move(float animT);
+		void nextFrame(float animT);
 		void draw();
 		void keyPressed(int key);
 		void exit();
@@ -24,8 +25,8 @@ class ofApp : public ofBaseApp {
 		float ease(float p, int g);
 
 		bool showInfo = false,
-			 isRecording = false,
-			 alreadyProcessedImage = false;
+			 isRecording = true,
+			 alreadyProcessedImage = true;
 
 		struct Move {
 			bool isVertical;
@@ -43,7 +44,7 @@ class ofApp : public ofBaseApp {
 
 
 		int loop = 0,
-			loopNum = 16,
+			loopNum = 4,
 			screenWidth = 2880,
 			screenHeight = 1620,
 			frameNum,

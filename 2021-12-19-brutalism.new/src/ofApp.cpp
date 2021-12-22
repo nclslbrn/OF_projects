@@ -37,21 +37,46 @@ void ofApp::loadSound(bool verbose = false){
 
 }
 //--------------------------------------------------------------
-void ofApp::playSound(string soundType){
+void ofApp::fadeOutSound(string soundType){
+	float fade = 0.98;
+	if(soundType == "long" || soundType == "both"){
+		float volume = longSound[currLongSound].getVolume();
+		volume *= fade;
+		longSound[currLongSound].setVolume(volume);
+	}
+	if(soundType == "short" || soundType == "both"){
+		float volume = shortSound[currShortSound].getVolume();
+		volume *= fade;
+		shortSound[currShortSound].setVolume(volume);
+	}
+}
+//--------------------------------------------------------------
+void ofApp::playSound(string soundType, bool verbose = false){
 	if(soundType == "long"){
 		if(longSound[currLongSound].isPlaying()){
 			longSound[currLongSound].stop();
 		}
 		currLongSound = (int)ofRandom(0, longSndNum);
 		if(longSound[currLongSound].isLoaded()){
-			std::cout << "Playing long audio sample " << ofToString(currLongSound) << "/" << ofToString(longSndNum - 1) << endl;
+			longSound[currLongSound].setVolume(0.5);
 			longSound[currLongSound].play();
+			if(verbose){
+				std::cout << "Playing long audio sample " << ofToString(currLongSound) << "/" << ofToString(longSndNum - 1) << endl;
+			}
 		}
 	}else{
-
+		/*
+		if(shortSound[currShortSound].isPlaying()){
+			shortSound[currShortSound].stop();
+		}
+		*/
 		currShortSound = (int)ofRandom(0, shortSndNum);
 		if(shortSound[currShortSound].isLoaded()){
+			shortSound[currShortSound].setVolume(0.65);
 			shortSound[currShortSound].play();
+			if(verbose){
+				std::cout << "Playing short audio sample " << ofToString(currShortSound) << "/" << ofToString(shortSndNum - 1) << endl;
+			}
 		}
 	}
 }
@@ -99,6 +124,9 @@ void ofApp::setup(){
 	currImg = 0;
 	loadSound(false);
 	nextMove();
+	playSound("long");
+	playSound("short");
+
 }
 
 //--------------------------------------------------------------
@@ -109,10 +137,10 @@ void ofApp::nextMove(){
 		m[i].isStopped = false;
 		m[i].goForward = ofRandomuf() > 0.5;
 		m[i].size = ceil((ofRandomuf() * (m[i].isVertical ? screenWidth : screenHeight)) * 0.015);
-		m[i].stepSize = ceil((ofRandomuf() * (m[i].isVertical ? screenHeight : screenWidth)) * 0.17);
+		m[i].stepSize = ceil((ofRandomuf() * (m[i].isVertical ? screenHeight : screenWidth)) * 0.2);
 		m[i].distance = 0;
-		m[i].spreadSize = 12 + ofRandom(24);
-		m[i].noiseScale = 250 + ofRandom(1750);
+		m[i].spreadSize = 8.0f + ofRandom(12);
+		m[i].noiseScale = ofRandom(500) + 3000.0f;
 		ofVec2f sampleSize(
 			m[i].isVertical ? m[i].size : m[i].stepSize,
 			m[i].isVertical ? m[i].stepSize : m[i].size
@@ -132,45 +160,90 @@ void ofApp::nextMove(){
 
 	for(int i = 0; i < NUM_BILLBOARDS; i++){
 		int rm = (int)ofRandom(0, NUM_MOVE);
+		float weight = 0.5f + ofRandom(0.5f);
 		size_t x = m[rm].rect.getX() + (ofRandom(0, m[rm].rect.getWidth()));
 		size_t y = m[rm].rect.getY() + (ofRandom(0, m[rm].rect.getHeight()));
 
-		billboardVels[i] = {ofRandomf(), -1.0, ofRandomf()};
 		billboards.getVertices()[i] = {x, y, 0};
 		billboards.getColors()[i].set(
 			image[currImg].getColor(x, y));
-		billboardSizeTarget[i] = m[rm].stepSize * ofRandomuf();
+
+		billboardVels[i] = {ofRandomf(), ofRandomf(), ofRandomf()};
+		billboardSizeTarget[i] = 72.0f + ofRandom(4);
+
+		/* billboardVels[i] = {
+			sin(weight) * sin(n),
+			cos(n),
+			cos(weight) * sin(n)
+		};
+		billboardSizeTarget[i] = 92.0f + floor(4 * weight); */
 	}
+
+	frameNum = 72 + ceil(ofRandomuf() * 72);
+
 }
 //--------------------------------------------------------------
-void ofApp::move(){
-	float t = 1.0f - ease((ofGetFrameNum() % frameNum) / static_cast <float>(frameNum), 5);
+void ofApp::move(float animT = 0.0f){
 	for(int i = 0; i < NUM_MOVE; i++){
-		if(m[i].isStopped){
-			return;
-		}
-		int way = m[i].goForward ? 1 : -1;
-		int distX = m[i].isVertical ? m[i].distance : 0;
-		int distY = m[i].isVertical ? 0 : m[i].distance;
-		ofVec2f displace(
-			m[i].rect.getX() + way * distX * m[i].rect.getWidth(),
-			m[i].rect.getY() + way * distY * m[i].rect.getHeight()
-			);
-		float spreadNoise = ofNoise(displace.x, displace.y, t);
-		displace.x += glm::cos(spreadNoise) * m[i].spreadSize;
-		displace.y += glm::sin(spreadNoise) * m[i].spreadSize;
+		if(!m[i].isStopped){
+			int way = m[i].goForward ? 1 : -1;
+			int distX = m[i].isVertical ? m[i].distance : 0;
+			int distY = m[i].isVertical ? 0 : m[i].distance;
+			ofVec2f displace(
+				m[i].rect.getX() + way * distX * m[i].rect.getWidth(),
+				m[i].rect.getY() + way * distY * m[i].rect.getHeight()
+				);
+			float spreadNoise = ofNoise(displace.x, displace.y, animT);
+			displace.x += glm::cos(spreadNoise) * m[i].spreadSize;
+			displace.y += glm::sin(spreadNoise) * m[i].spreadSize;
 
 
-		if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
-			m[i].distance++;
-			m[i].crop.pasteInto(image[currImg].getPixels(), displace.x, displace.y);
-			image[currImg].update();
-		}else{
-			m[i].isStopped = true;
+			if(displace.x > 0 && displace.y > 0 && displace.x < screenWidth && displace.y < screenHeight){
+				// Random gaps
+				if(ofRandom(1.0f) < 0.75){
+					ofPixels mixed = m[i].crop;
+					for(int y = 0; y < m[i].crop.getHeight(); y++){
+						for(int x = 0; x < m[i].crop.getWidth(); x++){
+							if(
+								displace.x + x > 0 &&
+								displace.y + y > 0 &&
+								displace.x + x < screenWidth &&
+								displace.y + y < screenHeight
+								){
+
+								ofColor sampleColor = image[currImg].getColor(
+									displace.x + x,
+									displace.y + y
+									);
+								ofColor sliceColor = m[i].crop.getColor(x, y);
+
+								float noise = ofNoise(
+									(displace.x + x) / m[i].noiseScale,
+									(displace.y + y) / m[i].noiseScale,
+									loop * i) > 0.5 ? 1.0 : 0.0;
+								ofColor between = sampleColor.lerp(sliceColor, noise);
+								mixed.setColor(x, y, between);
+							}
+						}
+					}
+					mixed.pasteInto(image[currImg].getPixels(), displace.x, displace.y);
+					image[currImg].update();
+				}
+				m[i].distance++;
+			}else{
+				m[i].isStopped = true;
+			}
 		}
 	}
-
-
+	for(int i = 0; i < NUM_BILLBOARDS; i++){
+		float vec = ofNoise(animT + billboards.getVertex(i).x, animT + billboards.getVertex(i).y);
+		billboardVels[i] *= glm::vec3(0.5f + vec, 0.5f + vec, 0.5f + vec);
+		//billboardVels[i] *= 1.01f;
+		billboards.getVertices()[i] += billboardVels[i];
+		//billboardVels[i] *= 0.74f;
+		billboards.setNormal(
+			i, glm::vec3(billboardSizeTarget[i] * ofNoise(animT + i), 0, 0));
+	}
 }
 //--------------------------------------------------------------
 void ofApp::update(){
@@ -179,10 +252,15 @@ void ofApp::update(){
 	if(ofGetFrameNum() == 0 || (int)ofGetFrameNum() % frameNum == 0){
 		if(ofGetFrameNum() != 0 && loop < loopNum){
 			loop++;
+			playSound("short");
+			nextMove();
+
 		}else{
 			if(ofGetFrameNum() != 0 && currImg < imgNum - 1){
 				currImg++;
 				nextMove();
+				playSound("long");
+
 			}else{
 				// If exery image has been processed one time quit the program
 				if(ofGetFrameNum() != 0){
@@ -194,31 +272,16 @@ void ofApp::update(){
 			std::cout << "New image "
 					  << imageSource[currImg] << " "
 					  << ofToString(currImg) << "/" << ofToString(imgNum - 1) << endl;
-			playSound("long");
 
 			loop = 0;
 		}
 		// how many frame per loop
-		frameNum = 4 * ceil(ofRandomuf() * 16);
-		playSound("short");
-		move();
-
 	}
-	float t = 1.0f - ease((ofGetFrameNum() % frameNum) / static_cast <float>(frameNum), 5);
+	float t = 1.0f - (ease((ofGetFrameNum() % frameNum) / static_cast <float>(frameNum), 5));
 
-	//playSound("short");
-	for(int i = 0; i < NUM_BILLBOARDS; i++){
-		glm::vec3 vec(0, t + ofSignedNoise(billboards.getVertex(i).x, billboards.getVertex(i).y, 0, 0), 0);
-		billboardVels[i] += vec;
-		// billboardVels[i].y *= 1.01f;
-		billboards.getVertices()[i] += billboardVels[i];
-		billboardVels[i] *= 0.94f;
-		billboards.setNormal(
-			i, glm::vec3(12 + billboardSizeTarget[i] * ofNoise(t + i), 0, 0));
-	}
 	capture.begin();
 	ofClear(0, 255);
-	nextFrame();
+	nextFrame(t);
 	capture.end();
 
 	if(isRecording){
@@ -226,10 +289,11 @@ void ofApp::update(){
 			recorder.save(capture.getTexture());
 		}
 	}
+	move(t);
+	//fadeOutSound("both");
 }
 //--------------------------------------------------------------
-void ofApp::nextFrame(){
-	float animT = 1.0f - ((ofGetFrameNum() % frameNum) / (float)frameNum);
+void ofApp::nextFrame(float animT = 0.0f){
 	ofEnableAlphaBlending();
 	ofEnablePointSprites();
 
