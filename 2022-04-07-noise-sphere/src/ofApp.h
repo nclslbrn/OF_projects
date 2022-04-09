@@ -3,8 +3,6 @@
 #include "ofMain.h"
 #include "ofxGifEncoder.h"
 
-#define NUM_POINTS 5000
-
 class ofApp : public ofBaseApp {
 	public:
 		void setup();
@@ -17,42 +15,31 @@ class ofApp : public ofBaseApp {
 		float ease(float p);
 		float softPlus(float q, float p);
 
-		ofVec2f circle(float n);
-		ofVec2f astroid(ofVec2f v);
-		ofVec2f quadrifolium(ofVec2f v);
-		ofVec2f rect_hyperbola(ofVec2f v);
-		ofVec2f trifolium(ofVec2f v);
-		ofVec2f cardioid(ofVec2f v);
-		ofVec2f deltoid(ofVec2f v);
-		ofVec2f ranunculoid(ofVec2f v);
-		ofVec2f cycloid(ofVec2f v);
 
-		ofVec2f move(ofVec2f pos, float t);
-		ofVec2f init();
+		float sample = 2.5f,
+			  density = 0.03f,
+			  radius = 300.0f,
+			  phi = (sqrt(5) + 1) / 2;
 
-		float frequency = 10.0f,
-			  turbulence = 10.0f,
-			  radius = 400.0f,
-			  sample = 1.0f;
-
-		int trails = 10,
-			margin = 60;
+		int trails = 5,
+			margin = 10;
 
 		vector <ofColor> palette = {
-			ofColor(247, 222, 232, 5),
-			ofColor(253, 239, 217, 5),
-			ofColor(215, 254, 239, 5),
-			ofColor(218, 231, 251, 5),
-			ofColor(26, 34, 45, 5),
+			ofColor(247, 222, 232),
+			ofColor(253, 239, 217),
+			ofColor(215, 254, 239),
+			ofColor(218, 231, 251),
+			ofColor(26, 34, 45),
 		};
 
 		struct Point {
 			ofVec2f pos;
 			ofColor col;
 		};
-		Point * points = new Point[NUM_POINTS];
+		vector <Point> points;
 
 		ofFbo screen;
+		ofEasyCam cam;
 		ofxGifEncoder gifEncoder;
 		int numFrames{60};
 		int currFrame = 0;

@@ -119,9 +119,9 @@ void ofApp::animation(float t, float alpha) {
                 p++;
             }
         }
-    } 
+    }
     float te = ease(t + t);
-    float et = ease(2.0 - (t + t));    
+    float et = ease(2.0 - (t + t));
     */
     int index = 0;
     for (ofVec2f& p : pos) {
@@ -141,8 +141,8 @@ void ofApp::animation(float t, float alpha) {
         float ry = 15 * glm::sin(glm::pi<float>() * t);
 
         // third noise arg: t * glm::two_pi<float>()
-        float n1a = 15 * ofMap(ofNoise(p.x / 30, p.y / 30, rx, ry), 0, 1, -1, 1);
-        float n1b = 15 * ofMap(ofNoise(p.y / 30, p.x / 30, rx, ry), 0, 1, -1, 1);
+        float n1a = 5 * ofMap(ofNoise(p.x / 30, p.y / 30, rx, ry), 0, 1, -1, 1);
+        float n1b = 5 * ofMap(ofNoise(p.y / 30, p.x / 30, rx, ry), 0, 1, -1, 1);
 
         ofVec2f v1 = rect_hyperbola(n1a);
         ofVec2f v2 = astroid(n1b);

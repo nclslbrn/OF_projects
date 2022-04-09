@@ -15,37 +15,19 @@ float ofApp::softPlus(float q, float p){
 	}
 	return 1 / (4 * p) * qq * qq;
 }
-//--------------------------------------------------------------
-ofVec2f ofApp::init(){
-	float theta = ofRandomuf() * glm::two_pi <float>();
-	float r = ofRandomuf() / sample;
-	return ofVec2f(cos(theta) * r, sin(theta) * r);
-}
-//--------------------------------------------------------------
-ofVec2f ofApp::move(ofVec2f pos, float t){
-	float tt = glm::two_pi <float>() * t;
-	float a0 = atan2(pos.y, pos.x);
 
-	float a1 = ofMap(
-		ofNoise(
-			pos.x * frequency,
-			pos.y * frequency,
-			cos(tt) / sample,
-			sin(tt) / sample
-			),
-		0, 1, -1, 1);
-	ofVec2f v1 = astroid(pos / sample);
-	ofVec2f v2(cos(a1 * turbulence), sin(a1 * turbulence));
-	ofVec2f v3 = v1.getInterpolated(v2, 0.5);
-	ofVec2f v4(sin(v3.x) * sample, sin(v3.y) * sample);
-	pos.x += v4.x * 0.007;
-	pos.y += v4.y * 0.007;
-
-	return pos;
-}
 //--------------------------------------------------------------
 void ofApp::setup(){
 	ofSetFrameRate(25);
+
+	cam.removeAllInteractions();
+	cam.addInteraction(ofEasyCam::TRANSFORM_TRANSLATE_XY, OF_MOUSE_BUTTON_LEFT);
+	cam.addInteraction(ofEasyCam::TRANSFORM_TRANSLATE_Z, OF_MOUSE_BUTTON_RIGHT);
+	cam.enableOrtho();
+	cam.setNearClip(-1000000);
+	cam.setFarClip(1000000);
+	cam.setVFlip(true);
+
 
 	gifEncoder.setup(ofGetWidth(), ofGetHeight(), 0.25f, 8);  // colors = 8
 	ofAddListener(ofxGifEncoder::OFX_GIF_SAVE_FINISHED, this, &ofApp::onGifSaved);
@@ -53,21 +35,34 @@ void ofApp::setup(){
 	screen.allocate(ofGetWidth(), ofGetHeight(), GL_RGB);
 	ofClear(0);
 	screen.end();
+	int total = 1000;
 
-	for(int i = 0; i < NUM_POINTS; i++){
+	for(int i = 0; i <= total; i++){
+		float longitude = phi * i; // Set the longitude to the golden ration multiplied by each particle
+		longitude -= floor(longitude); // Flooring it
+		longitude *= TWO_PI; // Rotate 360 degrees ( Full Circle )
+		float latitude = asin(-1.0 + 2.0 * i / total);
+
 		Point newPoint;
-		newPoint.pos = init();
+		newPoint.pos = ofVec3f(
+			radius * cos(latitude) * cos(longitude),
+			radius * cos(latitude) * sin(longitude),
+			radius * sin(latitude)
+			);
 		newPoint.col = palette[floor(palette.size() * ofRandom(1))];
-		points[i] = newPoint;
+		points.push_back(newPoint);
+
 	}
 }
 //--------------------------------------------------------------
 void ofApp::update(){
 	ofEnableAlphaBlending();
 	screen.begin();
+	cam.begin();
 	ofBackground(20, 26, 34);
 	ofClear(20, 26, 34);
 	frame(currFrame / static_cast <float>(numFrames));
+	cam.end();
 	screen.end();
 	ofDisableAlphaBlending();
 
@@ -94,28 +89,14 @@ void ofApp::update(){
 		}
 	}
 }
+// todo implement this https://therandomwalk.org/wp/3d-attractor-animation/
 //--------------------------------------------------------------
 void ofApp::frame(float t){
-	for(int i = 0; i < NUM_POINTS; i++){
-		ofVec2f pos = points[i].pos;
-		for(int j = 0; j < trails; j++){
+	for(Point p : points){
 
-			float xx = ofMap(pos.x, -sample, sample, margin, ofGetWidth() - margin);
-			float yy = ofMap(pos.y, -sample, sample, margin, ofGetHeight() - margin);
-
-			float dist = sqrt(
-				pow(abs(ofGetWidth() * 0.5f - xx), 2)
-				+ pow(abs(ofGetHeight() * 0.5f - yy), 2)
-				);
-			if(dist > radius){
-				pos = init();
-			}
-			ofSetColor(points[i].col);
-			ofFill();
-			ofDrawCircle(xx, yy, 1);
-
-			pos = move(pos, t);
-		}
+		ofSetColor(p.col);
+		ofFill();
+		ofDrawCircle(p.pos, 1);
 	}
 }
 //--------------------------------------------------------------
@@ -167,57 +148,3 @@ void ofApp::keyPressed(int key){
 void ofApp::exit(){
 	gifEncoder.exit();
 }
-//--------------------------------------------------------------
-
-ofVec2f ofApp::circle(float n){
-	return ofVec2f(glm::cos(n), glm::sin(n));
-}
-//--------------------------------------------------------------
-ofVec2f ofApp::astroid(ofVec2f v){
-	return ofVec2f(
-		pow(glm::sin(v.x), 3),
-		pow(glm::cos(v.y), 3));
-}
-//--------------------------------------------------------------
-ofVec2f ofApp::quadrifolium(ofVec2f v){
-	return ofVec2f(
-		glm::sin(v.x * 2) * glm::cos(v.x),
-		glm::cos(v.y) * glm::sin(v.y * 2));
-}
-//--------------------------------------------------------------
-ofVec2f ofApp::rect_hyperbola(ofVec2f v){
-	float theta = atan2(v.x, v.y);
-	float sec = 1 / glm::cos(theta);
-	return ofVec2f(sec, glm::tan(theta));
-}
-//--------------------------------------------------------------
-ofVec2f ofApp::trifolium(ofVec2f v){
-	return ofVec2f(
-		-1.0f * glm::cos(v.x) * glm::cos(3.0 * v.x),
-		glm::sin(v.y) - glm::cos(3.0f * v.y));
-}
-//--------------------------------------------------------------
-ofVec2f ofApp::cardioid(ofVec2f v){
-	return ofVec2f(
-		1.0f - glm::cos(v.x) * glm::cos(v.x),
-		glm::sin(v.y) * (1.0f - glm::cos(v.y)));
-}
-//--------------------------------------------------------------
-ofVec2f ofApp::deltoid(ofVec2f v){
-	return ofVec2f(
-		(2 * cos(v.x) / 3.0f) + (1 / 3.0f * cos(2 * v.x)),
-		(2 * sin(v.y) / 3.0f) - (1 / 3.0f * sin(2 * v.y)));
-}
-//--------------------------------------------------------------
-ofVec2f ofApp::ranunculoid(ofVec2f v){
-	return ofVec2f(
-		6.0f * glm::cos(v.x) - glm::cos(6.0f * v.y),
-		6.0f * glm::sin(v.y) - glm::sin(6.0f * v.y));
-}
-//--------------------------------------------------------------
-ofVec2f ofApp::cycloid(ofVec2f v){
-	return ofVec2f(
-		v.x - glm::sin(v.x),
-		1.0f - glm::cos(v.y));
-}
-//--------------------------------------------------------------
