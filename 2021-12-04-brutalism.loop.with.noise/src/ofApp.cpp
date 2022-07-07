@@ -54,9 +54,9 @@ void ofApp::setup(){
 	ofSetWindowShape(screenWidth, screenHeight);
 	center = ofVec2f(screenWidth / 2, screenHeight / 2);
 
-	original.load("images/1080x1080/" + imageSource);
+	original.load("images/1080x1920/" + imageSource);
 	stepFrame[0] = original;
-	loadSound();
+	//loadSound();
 
 	screenShader.load("shaders/Screen");
 	billboardShader.load("shaders/Billboard");
@@ -85,7 +85,7 @@ void ofApp::setup(){
 	recorder.setup(settings);
 
 	nextMove();
-	playSound("long");
+	//playSound("long");
 }
 
 //--------------------------------------------------------------
@@ -93,8 +93,8 @@ void ofApp::nextMove(){
 	for(int i = 0; i < MOVE_PER_ITERATION; i++){
 		c[t].isVertical[i] = ofRandomuf() > 0.5;
 		c[t].goForward[i] = ofRandomuf() > 0.5;
-		c[t].size[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenWidth : screenHeight)) * 0.015);
-		c[t].stepSize[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenHeight : screenWidth)) * 0.17);
+		c[t].size[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenWidth : screenHeight)) * 0.02);
+		c[t].stepSize[i] = ceil((ofRandomuf() * (c[t].isVertical[i] ? screenHeight : screenWidth)) * 0.3);
 		c[t].distance[i] = 0;
 		c[t].spreadSize[i] = 12 + ofRandom(24);
 		c[t].noiseScale[i] = 250 + ofRandom(1750);
@@ -122,7 +122,7 @@ void ofApp::resetBillboard(){
 		size_t x, y;
 		float weight = ofRandom(1);
 		billboardVels[i] = {ofRandomf(), -0.5 + (-weight / 2), ofRandomf()};
-		billboardSizeTarget[i] = 8 * floor(ofRandom(16 * weight));
+		billboardSizeTarget[i] = 8 * floor(ofRandom(32 * weight));
 
 		int way = c[t].goForward[r] ? 1 : -1;
 		int distance = ceil(ofRandom(c[t].distance[r] + 1));
@@ -212,9 +212,9 @@ void ofApp::update(){
 		moveBillboard();
 	}
 
-	if(ofGetFrameNum() % 16 == 0){
+	/* if(ofGetFrameNum() % 16 == 0){
 		playSound("short");
-	}
+	} */
 
 	capture.begin();
 	ofClear(0, 255);

@@ -7,8 +7,8 @@
 
 #define NUM_BILLBOARDS 50000
 #define ITERATIONS 4
-#define MOVE_PER_ITERATION 54 // 54
-#define FRAME_PER_ITERATION 50 // video 50 / gif 30
+#define MOVE_PER_ITERATION 50 // 54
+#define FRAME_PER_ITERATION 30 // video 50 / gif 30
 
 class ofApp : public ofBaseApp {
 	public:
@@ -41,11 +41,11 @@ class ofApp : public ofBaseApp {
 
 		bool playingForward = true,
 			 showInfo = false,
-			 isRecording = true;
+			 isRecording = false;
 
 		int t = 0,
 			screenWidth = 1080,
-			screenHeight = 1080,
+			screenHeight = 1920,
 			shortSndNum,
 			longSndNum,
 			currShortSound,
@@ -73,7 +73,7 @@ class ofApp : public ofBaseApp {
 		ofxDirList shortAudioDir;
 		ofxDirList longAudioDir;
 
-		string imageSource = "Dmitri-Popov-on-flickr.com-Herlev-Hospital.jpg";
+		string imageSource = "jamie-street-XcmVu1ZMv6M-unsplash.jpg";
 		// "skull-kat-nMHY0SHuiVQ-unsplash.jpg";
 		// "mark-hang-fung-so-xKakOOJ04ZM-unsplash.jpg";
 		// "bob-letens-OmaCizJXZUk-unsplash.jpg";

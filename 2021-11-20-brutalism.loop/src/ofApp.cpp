@@ -49,11 +49,11 @@ void ofApp::playSound(string soundType){
 //--------------------------------------------------------------
 void ofApp::setup(){
 
-	ofSetFrameRate(24);
+	ofSetFrameRate(25);
 	ofSetWindowShape(screenWidth, screenHeight);
 	center = ofVec2f(screenWidth / 2, screenHeight / 2);
 
-	original.load("images/1080x1080/" + imageSource);
+	original.load("images/1080x1920/" + imageSource);
 	stepFrame[0] = original;
 
 	loadSound();
@@ -113,7 +113,7 @@ void ofApp::nextMove(){
 			c[nIter].rect[h].getHeight()
 			);
 	}
-	playSound("long");
+	//playSound("long");
 }
 //--------------------------------------------------------------
 void ofApp::resetBillboard(){
@@ -200,9 +200,9 @@ void ofApp::update(){
 			c[nIter].distance[h]--;
 		}
 	}
-	if(ofGetFrameNum() % 16 == 0){
+	/* if(ofGetFrameNum() % 16 == 0){
 		playSound("short");
-	}
+	} */
 
 	capture.begin();
 	ofClear(0, 255);
@@ -255,12 +255,12 @@ void ofApp::nextFrame(){
 	screen.draw();
 	screenShader.end();
 	stepFrame[nIter].getTexture().unbind();
-/*
+
 	billboardShader.begin();
 	billboardShader.setUniform1f("u_size", ease(animT));
 	billboards.draw();
 	billboardShader.end();
- */
+
 	ofDisablePointSprites();
 	ofDisableAlphaBlending();
 }

@@ -5,10 +5,12 @@
 #include "ofxTextureRecorder.h"
 #include "ofxDirList.h"
 
+// 250 frame
+
 #define NUM_BILLBOARDS 5000
 #define ITERATIONS 4
-#define MOVE_PER_ITERATION 12
-#define FRAME_PER_ITERATION 60
+#define MOVE_PER_ITERATION 50
+#define FRAME_PER_ITERATION 25
 
 class ofApp : public ofBaseApp {
 	public:
@@ -44,7 +46,7 @@ class ofApp : public ofBaseApp {
 
 		int nIter = 0,
 			screenWidth = 1080,
-			screenHeight = 1080,
+			screenHeight = 1920,
 			shortSndNum,
 			longSndNum,
 			currShortSound,
@@ -71,8 +73,20 @@ class ofApp : public ofBaseApp {
 		// Assets of/addons/ofxDirList/example
 		ofxDirList shortAudioDir;
 		ofxDirList longAudioDir;
-
-		string imageSource = "chapman-chow-FntjQwDYtXs-unsplash.jpg";
+		// 1080x1080
+		// "chapman-chow-FntjQwDYtXs-unsplash.jpg"
+		// "sergio-rola-gA-vxrqmYV8-unsplash.jpg"
+		// "mark-hang-fung-so-n9XVNuR_TQU-unsplash.jpg";
+		// "skull-kat-nMHY0SHuiVQ-unsplash.jpg"
+		// "sergio-rola-viNlSqFX09k-unsplash.jpg"
+		// "serge-george-fRCA008qXPs-unsplash.jpg"
+		// "chuttersnap-7HBiUfgwBzo-unsplash.jpg"
+		// "chuttersnap-DoetkvzRrss-unsplash.jpg"
+		// "raphael-koh-VJ9JYFkZv5A-unsplash.jpg";
+		// "thanh-le-7UdFnHMu7q8-unsplash.jpg";
+		// "usamah-khan-fFy__IX0lpM-unsplash.jpg"
+		string imageSource = "alex-rodriguez-santibanez-U0PCvzknU7c-unsplash.jpg";
+		// "chapman-chow-FntjQwDYtXs-unsplash.jpg";
 		// "sergio-rola-viNlSqFX09k-unsplash.jpg";
 		// "david-gabric-rL3wztxbxTo-unsplash.jpg";
 		// "scarbor-siu-UYG5IUPoWIo-unsplash.jpg";
